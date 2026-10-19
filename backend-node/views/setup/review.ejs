@@ -1,0 +1,58 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<% const blocking = items.filter((i) => !i.ok && i.level === 'error').length;
+   const warns = items.filter((i) => !i.ok && i.level === 'warning').length; %>
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Checklist kelengkapan</div>
+      <ul class="list-group list-group-flush">
+        <% for (const i of items) { %>
+          <li class="list-group-item d-flex gap-2">
+            <% if (i.ok) { %><i class="bi bi-check-circle-fill text-success"></i>
+            <% } else if (i.level === 'warning') { %><i class="bi bi-exclamation-circle-fill text-warning"></i>
+            <% } else { %><i class="bi bi-x-circle-fill text-danger"></i><% } %>
+            <span><%= i.text %></span>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header">Ringkasan</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Baseline</dt><dd class="col-7"><%= h.date(program.baseline_start) %> – <%= h.date(program.baseline_end) %></dd>
+          <dt class="col-5">Program</dt><dd class="col-7"><%= h.date(program.program_start) %> – <%= h.date(program.program_end) %> (<%= program.programMonths %> bln)</dd>
+          <dt class="col-5">Pendaftaran</dt><dd class="col-7"><%= h.date(program.registration_start) %> – <%= h.date(program.registration_end) %></dd>
+          <dt class="col-5">Channel</dt><dd class="col-7"><%= program.channels.map((c) => c.channel_name + ' (' + c.classes.length + ' kelas)').join(', ') || '-' %></dd>
+          <dt class="col-5">Matriks</dt><dd class="col-7"><%= program.pillars.length %> pilar · <%= program.leadMeasures.length %> lead measure</dd>
+          <dt class="col-5">Pencairan</dt><dd class="col-7"><%= program.periods.map((p) => p.name).join(', ') || '-' %> · <%= program.components.filter((c) => c.is_active).length %> komponen</dd>
+          <dt class="col-5">Approval</dt><dd class="col-7">Daftar: <%= program.steps.filter((s) => s.phase === 'registration').map((s) => s.name).join(' → ') || 'langsung aktif' %><br>Cair: <%= program.steps.filter((s) => s.phase === 'disbursement').map((s) => s.name).join(' → ') || 'langsung cair' %></dd>
+        </dl>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-2">Status saat ini: <%- h.badge(program.status) %></div>
+        <% if (blocking) { %><div class="alert alert-danger py-2 small"><%= blocking %> item wajib belum lengkap.</div><% } %>
+        <% if (warns) { %><div class="alert alert-warning py-2 small"><%= warns %> peringatan (tidak menghalangi aktivasi).</div><% } %>
+        <form method="post" action="/setup/<%= program.id %>/status" class="d-flex gap-2 flex-wrap">
+          <% if (program.status !== 'active') { %><button name="status" value="active" class="btn btn-success" <%= blocking ? 'disabled' : '' %>><i class="bi bi-play-fill"></i> Aktifkan program</button><% } %>
+          <% if (program.status === 'active') { %>
+            <button name="status" value="draft" class="btn btn-outline-secondary" data-confirm="Kembalikan ke draft? CBD tidak bisa mendaftarkan toko selama draft.">Kembali ke draft</button>
+            <button name="status" value="closed" class="btn btn-outline-dark" data-confirm="Tutup program? Pendaftaran berhenti, pencairan tetap bisa diproses.">Tutup program</button>
+          <% } %>
+          <% if (program.status === 'closed') { %><button name="status" value="draft" class="btn btn-outline-secondary">Buka lagi (draft)</button><% } %>
+        </form>
+        <% if (participantCount === 0) { %>
+          <form method="post" action="/setup/<%= program.id %>/delete" class="mt-3">
+            <button class="btn btn-sm btn-link text-danger px-0" data-confirm="Hapus program ini beserta seluruh setup-nya?"><i class="bi bi-trash"></i> Hapus program</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/foot') %>

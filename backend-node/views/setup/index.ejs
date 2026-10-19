@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <h1>Setup Program <%= year %></h1>
+    <div class="sub">Admin HO membuat & mengatur program loyalty. Semua parameter diatur dari sini, tanpa hardcode.</div>
+  </div>
+  <a href="/setup/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Program baru</a>
+</div>
+
+<div class="card mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Kode</th><th>Nama</th><th>Periode program</th><th>Basis</th><th class="num">Channel</th><th class="num">Peserta</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% for (const p of programs) { %>
+          <tr>
+            <td><code><%= p.code %></code></td>
+            <td class="fw-semibold"><%= p.name %></td>
+            <td><%= h.date(p.program_start) %> – <%= h.date(p.program_end) %></td>
+            <td><%= p.basis === 'sellin' ? 'Sell in' : 'Sell out' %></td>
+            <td class="num"><%= p.channel_count %></td>
+            <td class="num"><%= p.participant_count %></td>
+            <td><%- h.badge(p.status) %></td>
+            <td class="text-end"><a href="/setup/<%= p.id %>/general" class="btn btn-sm btn-outline-primary">Buka setup</a></td>
+          </tr>
+        <% } %>
+        <% if (!programs.length) { %><tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun <%= year %>.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% if (others.length) { %>
+<div class="card">
+  <div class="card-header"><i class="bi bi-copy"></i> Duplikat program dari tahun lain</div>
+  <div class="card-body">
+    <p class="small text-muted">Salin seluruh setup (channel, kelas, matriks JTBD, kolom, pencairan, alur approval) ke tahun <%= year %>. Tanggal digeser otomatis; angka bisa disesuaikan setelahnya.</p>
+    <form method="post" action="/setup/clone" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label small">Program sumber</label>
+        <select name="source_id" class="form-select" required>
+          <% for (const o of others) { %><option value="<%= o.id %>"><%= o.year %> · <%= o.name %> (<%= o.code %>)</option><% } %>
+        </select>
+      </div>
+      <div class="col-md-2"><label class="form-label small">Kode baru</label><input name="code" class="form-control" placeholder="VC28" required></div>
+      <div class="col-md-3"><label class="form-label small">Nama baru</label><input name="name" class="form-control" placeholder="Vision Compass <%= year %>" required></div>
+      <div class="col-md-2"><button class="btn btn-outline-primary w-100">Duplikat</button></div>
+    </form>
+  </div>
+</div>
+<% } %>
+<%- include('../partials/foot') %>

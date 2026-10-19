@@ -1,0 +1,93 @@
+<%- include('../partials/head') %>
+<% const isEdit = !!participant;
+   const cls = isEdit ? (pc.classes.find((c) => c.id === participant.class_id) || elig.cls) : elig.cls;
+   const base = isEdit ? participant.baseline : baseline;
+   const action = isEdit ? '/registration/participant/' + participant.id + '/edit' : '/registration/program/' + program.id + '/' + pc.id + '/store/' + store.customer_id;
+   const valOf = (k) => (typeof rawValues !== 'undefined' && rawValues) ? values['f_' + k] : values[k]; %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/registration">Pendaftaran</a> / <a href="/registration/program/<%= program.id %>/<%= pc.id %>"><%= program.name %> · <%= pc.channel_name %></a></div>
+    <h1><%= isEdit ? 'Revisi' : 'Daftarkan' %> <%= store.name %></h1>
+    <div class="sub"><%= store.customer_id %> · <%= store.city %> · <%= store.dc_name %></div>
+  </div>
+</div>
+<% if (errors.length) { %><div class="alert alert-danger"><ul class="mb-0"><% for (const e of errors) { %><li><%= e %></li><% } %></ul></div><% } %>
+<% if (!isOpen) { %><div class="alert alert-secondary">Periode pendaftaran ditutup.</div><% } %>
+
+<form method="post" action="<%= action %>">
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header">Data otomatis dari sell out</div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4"><div class="stat bg-light rounded"><div class="label">Baseline / bulan</div><div class="value"><%= h.rpShort(base) %></div><div class="small text-muted"><%= h.rp(Math.round(base)) %></div></div></div>
+          <div class="col-sm-4"><div class="stat bg-light rounded"><div class="label">Kelas</div><div class="value"><% if (cls) { %><span class="class-pill fs-5"><%= cls.name %></span><% } else { %>-<% } %></div><div class="small text-muted"><%= cls ? 'min growth ' + cls.min_growth + '% · rebate ' + cls.rebate_pct + '%' : 'tidak eligible' %></div></div></div>
+          <div class="col-sm-4"><div class="stat bg-light rounded"><div class="label">Rasio SO : SI</div><div class="value"><%= h.pct(ratio) %></div><div class="small text-muted"><%= pc.min_sellout_ratio !== null ? 'syarat ≥ ' + pc.min_sellout_ratio + '%' : 'informasi saja' %></div></div></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm small mb-0">
+            <thead><tr><th></th><% for (const m of monthly) { %><th class="num"><%= h.month(m.m) %></th><% } %></tr></thead>
+            <tbody>
+              <tr><td>Sell out</td><% for (const m of monthly) { %><td class="num <%= m.sellout ? '' : 'text-danger' %>"><%= h.rpShort(m.sellout) %></td><% } %></tr>
+              <tr class="text-muted"><td>Sell in</td><% for (const m of monthly) { %><td class="num"><%= h.rpShort(m.sellin) %></td><% } %></tr>
+            </tbody>
+          </table>
+        </div>
+        <% if (!elig.eligible && !isEdit) { %><div class="alert alert-warning mt-3 mb-0 py-2 small">Tidak eligible: <%= elig.reasons.join('; ') %></div><% } %>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Data dari CBD <span class="text-muted fw-normal small">— kolom sesuai setup program</span></div>
+      <div class="card-body">
+        <% for (const f of fields) { %><%- include('../partials/field_input', { f, value: valOf(f.key) }) %><% } %>
+        <% if (!fields.length) { %><div class="text-muted small">Program ini tidak punya kolom tambahan.</div><% } %>
+        <% if (isEdit) { %>
+          <div class="mb-3"><label class="form-label">Catatan revisi</label><textarea name="note" class="form-control" rows="2"></textarea></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card sticky-summary">
+      <div class="card-header">Target</div>
+      <div class="card-body">
+        <label class="form-label">Growth (%) <span class="text-danger">*</span></label>
+        <div class="input-group mb-1">
+          <input type="number" step="any" name="growth" id="growth" class="form-control" value="<%= growth %>"
+            min="<%= cls ? cls.min_growth : 0 %>" <%= cls && cls.max_growth !== null ? 'max=' + cls.max_growth : '' %> <%= pc.growth_editable ? '' : 'readonly' %> required>
+          <span class="input-group-text">%</span>
+        </div>
+        <div class="form-text mb-3"><%= cls ? 'Minimal ' + cls.min_growth + '%' + (cls.max_growth !== null ? ', maksimal ' + cls.max_growth + '%' : '') : '' %><%= pc.growth_editable ? '' : ' (dikunci HO)' %></div>
+        <dl class="row small mb-3">
+          <dt class="col-6">Target / bulan</dt><dd class="col-6 num" id="tMonth">-</dd>
+          <dt class="col-6">Target program (<%= program.programMonths %> bln)</dt><dd class="col-6 num fw-bold" id="tPeriod">-</dd>
+          <% for (const per of program.periods) { const n = (new Date(per.achieve_end).getFullYear() - new Date(per.achieve_start).getFullYear()) * 12 + new Date(per.achieve_end).getMonth() - new Date(per.achieve_start).getMonth() + 1; %>
+            <dt class="col-6 fw-normal text-muted"><%= per.name %> (<%= n %> bln)</dt><dd class="col-6 num text-muted" data-months="<%= n %>">-</dd>
+          <% } %>
+        </dl>
+        <button class="btn btn-primary w-100" <%= (isOpen && (elig.eligible || isEdit)) ? '' : 'disabled' %>><i class="bi bi-check2-circle"></i> <%= isEdit ? 'Kirim ulang' : 'Daftarkan toko' %></button>
+        <div class="form-text">
+          <% const st = program.steps.filter((s) => s.phase === 'registration'); %>
+          <%= st.length ? 'Setelah submit toko langsung terdaftar & menunggu: ' + st.map((s) => s.name).join(' → ') : 'Setelah submit toko langsung aktif.' %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+<script>
+  const base = <%= Number(base) || 0 %>, months = <%= program.programMonths %>;
+  const g = document.getElementById('growth');
+  function calc() {
+    const v = parseFloat(g.value);
+    const m = isNaN(v) ? null : base * (1 + v / 100);
+    document.getElementById('tMonth').textContent = m === null ? '-' : fmtRp(Math.round(m));
+    document.getElementById('tPeriod').textContent = m === null ? '-' : fmtRp(Math.round(m * months));
+    document.querySelectorAll('[data-months]').forEach((d) => { d.textContent = m === null ? '-' : fmtRp(Math.round(m * d.dataset.months)); });
+  }
+  g.addEventListener('input', calc); calc();
+</script>
+<%- include('../partials/foot') %>

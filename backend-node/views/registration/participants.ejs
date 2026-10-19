@@ -1,0 +1,43 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Peserta Program <%= year %></h1><div class="sub"><%= rows.length %> peserta sesuai filter & scope Anda</div></div>
+</div>
+<form class="card card-body py-2 mb-3 d-flex flex-row flex-wrap gap-2 align-items-center">
+  <select name="program" class="form-select form-select-sm" style="width:auto">
+    <option value="">Semua program</option>
+    <% for (const p of programs) { %><option value="<%= p.id %>" <%= String(query.program) === String(p.id) ? 'selected' : '' %>><%= p.name %></option><% } %>
+  </select>
+  <select name="channel" class="form-select form-select-sm" style="width:auto">
+    <option value="">Semua channel</option>
+    <% for (const c of channels) { %><option value="<%= c.code %>" <%= query.channel === c.code ? 'selected' : '' %>><%= c.name %></option><% } %>
+  </select>
+  <select name="status" class="form-select form-select-sm" style="width:auto">
+    <option value="">Semua status</option>
+    <% for (const s of ['active', 'in_review', 'returned', 'rejected']) { %><option value="<%= s %>" <%= query.status === s ? 'selected' : '' %>><%= h.STATUS[s][0] %></option><% } %>
+  </select>
+  <button class="btn btn-sm btn-outline-primary">Filter</button>
+</form>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Toko</th><th>Program</th><th>Channel</th><th>Kelas</th><th class="num">Baseline</th><th class="num">Growth</th><th class="num">Target / bln</th><th>Status</th><th>Didaftarkan</th></tr></thead>
+      <tbody>
+        <% for (const r of rows) { %>
+          <tr>
+            <td><a href="/registration/participant/<%= r.id %>" class="fw-semibold"><%= r.store_name %></a><div class="small text-muted"><%= r.customer_id %> · <%= r.dc_code %></div></td>
+            <td class="small"><%= r.program_code %></td>
+            <td class="small"><%= r.channel_name %></td>
+            <td><span class="class-pill"><%= r.class_name %></span></td>
+            <td class="num"><%= h.rpShort(r.baseline) %></td>
+            <td class="num"><%= h.pct(r.growth_pct, 0) %></td>
+            <td class="num"><%= h.rpShort(r.target_monthly) %></td>
+            <td><%- h.badge(r.status) %><% if (r.step_name) { %><div class="small text-muted"><%= r.step_name %></div><% } %></td>
+            <td class="small"><%= r.registered_by_name %><div class="text-muted"><%= h.datetime(r.registered_at) %></div></td>
+          </tr>
+        <% } %>
+        <% if (!rows.length) { %><tr><td colspan="9" class="text-center text-muted py-4">Tidak ada data.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/foot') %>

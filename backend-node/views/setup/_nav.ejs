@@ -1,0 +1,22 @@
+<% const steps = [
+  ['general', 'Umum'], ['channels', 'Channel & Kelas'], ['jtbd', 'Matriks JTBD'], ['fields', 'Kolom Input'],
+  ['disbursement', 'Pencairan'], ['workflow', 'Alur Approval'], ['review', 'Review & Aktivasi'],
+]; %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/setup">Setup Program</a> / <%= program.year %></div>
+    <h1><%= program.name %> <span class="text-muted fw-normal fs-6"><%= program.code %></span> <%- h.badge(program.status) %></h1>
+  </div>
+  <div class="small text-muted text-end">
+    <%= program.channels.length %> channel · <%= program.leadMeasures.length %> lead measure · <%= participantCount %> peserta
+  </div>
+</div>
+<% if (program.status === 'active' && participantCount > 0) { %>
+  <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle"></i>
+    Program sudah aktif & punya peserta. Perubahan kelas/target tidak mengubah peserta yang sudah terdaftar (target peserta tersimpan saat pendaftaran), tapi perubahan komponen pencairan berlaku untuk pengajuan berikutnya.</div>
+<% } %>
+<div class="wizard">
+  <% steps.forEach(([key, label], i) => { %>
+    <a href="/setup/<%= program.id %>/<%= key %>" class="<%= tab === key ? 'active' : '' %>"><span class="n"><%= i + 1 %></span> <%= label %></a>
+  <% }) %>
+</div>

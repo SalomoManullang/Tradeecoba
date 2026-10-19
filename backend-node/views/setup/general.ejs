@@ -1,0 +1,110 @@
+<%- include('../partials/head') %>
+<% const isNew = !program; const f = form; %>
+<% if (isNew) { %>
+  <div class="page-head"><div><div class="small text-muted"><a href="/setup">Setup Program</a> / <%= year %></div><h1>Program Baru</h1></div></div>
+<% } else { %>
+  <%- include('_nav') %>
+<% } %>
+<% if (typeof errors !== 'undefined' && errors.length) { %>
+  <div class="alert alert-danger"><ul class="mb-0"><% for (const e of errors) { %><li><%= e %></li><% } %></ul></div>
+<% } %>
+
+<form method="post" action="<%= isNew ? '/setup/new' : '/setup/' + program.id + '/general' %>">
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-header">Identitas program</div>
+      <div class="card-body row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Kode</label>
+          <input name="code" class="form-control text-uppercase" value="<%= f.code %>" <%= isNew ? 'required' : 'disabled' %> placeholder="VC27">
+        </div>
+        <div class="col-md-9">
+          <label class="form-label">Nama program</label>
+          <input name="name" class="form-control" value="<%= f.name %>" required placeholder="Vision Compass <%= year %>">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Deskripsi</label>
+          <textarea name="description" class="form-control" rows="2"><%= f.description || '' %></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Basis perhitungan</label>
+          <select name="basis" class="form-select">
+            <option value="sellout" <%= f.basis === 'sellout' ? 'selected' : '' %>>Sell out</option>
+            <option value="sellin" <%= f.basis === 'sellin' ? 'selected' : '' %>>Sell in</option>
+          </select>
+          <div class="form-text">Dipakai untuk baseline & aktual. Basis lain (mis. promosi) bisa ditambah lewat komponen rumus.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Metode baseline</label>
+          <select name="baseline_method" class="form-select">
+            <option value="avg_monthly" <%= f.baseline_method === 'avg_monthly' ? 'selected' : '' %>>Rata-rata per bulan (total ÷ jumlah bulan periode)</option>
+            <option value="avg_active_month" <%= f.baseline_method === 'avg_active_month' ? 'selected' : '' %>>Rata-rata bulan aktif saja</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Periode</div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Periode baseline</label>
+          <div class="input-group"><input type="date" name="baseline_start" class="form-control" value="<%= f.baseline_start %>" required><span class="input-group-text">s/d</span><input type="date" name="baseline_end" class="form-control" value="<%= f.baseline_end %>" required></div>
+          <div class="form-text">Data sell out di periode ini = baseline toko → menentukan kelas.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Periode program</label>
+          <div class="input-group"><input type="date" name="program_start" class="form-control" value="<%= f.program_start %>" required><span class="input-group-text">s/d</span><input type="date" name="program_end" class="form-control" value="<%= f.program_end %>" required></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Periode pendaftaran (CBD)</label>
+          <div class="input-group"><input type="date" name="registration_start" class="form-control" value="<%= f.registration_start || '' %>"><span class="input-group-text">s/d</span><input type="date" name="registration_end" class="form-control" value="<%= f.registration_end || '' %>"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header">Pencairan & pajak</div>
+      <div class="card-body row g-3">
+        <div class="col-6">
+          <label class="form-label">Pajak ber-NPWP</label>
+          <div class="input-group"><input type="number" step="any" name="tax_rate_npwp" class="form-control" value="<%= f.tax_rate_npwp %>"><span class="input-group-text">%</span></div>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Pajak tanpa NPWP</label>
+          <div class="input-group"><input type="number" step="any" name="tax_rate_non_npwp" class="form-control" value="<%= f.tax_rate_non_npwp %>"><span class="input-group-text">%</span></div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Yang mengajukan pencairan</label>
+          <select name="disbursement_submitter_role" class="form-select">
+            <option value="ADMIN_DC" <%= f.disbursement_submitter_role === 'ADMIN_DC' ? 'selected' : '' %>>Admin DC (input NPWP & rekening)</option>
+            <option value="CBD" <%= f.disbursement_submitter_role === 'CBD' ? 'selected' : '' %>>CBD</option>
+          </select>
+          <div class="form-text">Tahapan approval setelahnya diatur di tab "Alur Approval".</div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" name="demo_open_windows" id="demo" <%= f.demo_open_windows ? 'checked' : '' %>>
+          <label class="form-check-label" for="demo">Mode prototype: abaikan jendela tanggal</label>
+        </div>
+        <div class="form-text">Pendaftaran & klaim pencairan tetap bisa dicoba walau di luar tanggalnya. Matikan untuk perilaku sebenarnya.</div>
+        <% if (isNew) { %>
+          <div class="form-check form-switch mt-3">
+            <input class="form-check-input" type="checkbox" name="use_template" id="tpl" <%= f.use_template ? 'checked' : '' %>>
+            <label class="form-check-label" for="tpl">Isi template awal</label>
+          </div>
+          <div class="form-text">Semester 1 & 2, komponen rebate growth + JTBD, alur RSM → Finance → HO. Semua bisa diubah.</div>
+        <% } %>
+      </div>
+    </div>
+    <button class="btn btn-primary w-100"><i class="bi bi-save"></i> <%= isNew ? 'Buat program & lanjut ke Channel' : 'Simpan' %></button>
+  </div>
+</div>
+</form>
+<%- include('../partials/foot') %>

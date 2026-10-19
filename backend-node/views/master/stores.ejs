@@ -1,0 +1,26 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Master Toko</h1><div class="sub"><%= stores.length %> toko dalam scope Anda</div></div>
+</div>
+<form class="card card-body py-2 mb-3 d-flex flex-row gap-2">
+  <select name="channel" class="form-select form-select-sm" style="width:auto">
+    <option value="">Semua channel</option>
+    <% for (const c of channels) { %><option value="<%= c.code %>" <%= query.channel === c.code ? 'selected' : '' %>><%= c.name %></option><% } %>
+  </select>
+  <input name="q" class="form-control form-control-sm" style="max-width: 260px" placeholder="Cari nama / ID" value="<%= query.q || '' %>">
+  <button class="btn btn-sm btn-outline-primary">Cari</button>
+</form>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead><tr><th>ID</th><th>Nama</th><th>Channel</th><th>DC</th><th>Kota</th><th>NPWP</th><th>Rekening</th><th class="num">Sell out 12 bln</th></tr></thead>
+      <tbody>
+        <% for (const s of stores) { %>
+          <tr><td><code><%= s.customer_id %></code></td><td><%= s.name %></td><td><%= s.channel_name %></td><td><%= s.dc_name %></td><td><%= s.city %></td>
+            <td class="small"><%= s.npwp_no || '-' %></td><td class="small"><%= s.bank_name %> <%= s.bank_account_no %></td><td class="num"><%= h.rpShort(s.sellout_12m) %></td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/foot') %>

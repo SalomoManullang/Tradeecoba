@@ -1,0 +1,51 @@
+<%- include('partials/head', { bare: true }) %>
+<div class="card" style="width: 100%; max-width: 640px;">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h1 class="h4 fw-bold mb-0">Pilih Tahun Program</h1>
+        <div class="text-muted small">Halo <%= user.name %> (<%= h.ROLE_LABEL[user.role] %>)</div>
+      </div>
+      <a href="/logout" class="btn btn-sm btn-outline-secondary">Keluar</a>
+    </div>
+    <% if (flash) { %><div class="alert alert-<%= flash.type %> py-2"><%- flash.message %></div><% } %>
+    <div class="row g-2 mb-3">
+      <% for (const y of years) { %>
+        <div class="col-6 col-sm-4">
+          <form method="post" action="/lobby/choose">
+            <input type="hidden" name="year" value="<%= y.year %>">
+            <button class="btn <%= y.is_active ? 'btn-outline-primary' : 'btn-outline-secondary' %> w-100 py-3">
+              <div class="fs-3 fw-bold"><%= y.year %></div>
+              <div class="small"><%= y.program_count %> program<%= y.is_active ? '' : ' · nonaktif' %></div>
+            </button>
+          </form>
+        </div>
+      <% } %>
+      <% if (!years.length) { %><div class="text-muted">Belum ada tahun program.</div><% } %>
+    </div>
+    <% if (user.role === 'ADMIN_HO') { %>
+      <hr>
+      <form method="post" action="/lobby/year" class="row g-2 align-items-end">
+        <div class="col-4">
+          <label class="form-label small mb-1">Tambah tahun baru</label>
+          <input type="number" name="year" class="form-control" min="2020" max="2100" placeholder="<%= new Date().getFullYear() + 1 %>" required>
+        </div>
+        <div class="col-5">
+          <input type="text" name="note" class="form-control" placeholder="Catatan (opsional)">
+        </div>
+        <div class="col-3"><button class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Tambah</button></div>
+      </form>
+      <div class="form-text">Tahun baru langsung tersedia tanpa membuat database baru (aplikasi lama: <code>db2025</code>, <code>db2026</code>, ...).</div>
+      <% if (years.length) { %>
+        <div class="mt-2 small">Aktif/nonaktifkan:
+          <% for (const y of years) { %>
+            <form method="post" action="/lobby/year/<%= y.year %>/toggle" class="d-inline">
+              <button class="btn btn-link btn-sm p-0 me-2"><%= y.year %> <i class="bi bi-toggle-<%= y.is_active ? 'on' : 'off' %>"></i></button>
+            </form>
+          <% } %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/foot', { bare: true }) %>

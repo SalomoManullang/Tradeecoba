@@ -1,0 +1,34 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Pendaftaran Toko <%= year %></h1><div class="sub">Pilih program & channel. Sistem menyarankan toko eligible dari data sell out.</div></div>
+</div>
+<% for (const p of programs) { %>
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between">
+      <span><%= p.name %> <span class="text-muted fw-normal">· <%= p.code %></span></span>
+      <span class="small fw-normal">
+        Pendaftaran <%= h.date(p.registration_start) %> – <%= h.date(p.registration_end) %>
+        <%- p.isOpen ? '<span class="badge text-bg-success">dibuka</span>' : '<span class="badge text-bg-secondary">ditutup</span>' %>
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <% for (const c of p.channels) { %>
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100 d-flex flex-column">
+              <div class="fw-semibold"><%= c.channel_name %></div>
+              <div class="small text-muted mb-2">Kelas: <%= c.classes.map((x) => x.name + ' (≥' + x.min_growth + '%)').join(', ') %></div>
+              <div class="small mb-3"><strong><%= c.registered %></strong> toko terdaftar<% if (c.returned > 0) { %> · <span class="text-info"><%= c.returned %> perlu revisi</span><% } %></div>
+              <% if (c.classes.length) { %>
+                <a href="/registration/program/<%= p.id %>/<%= c.id %>" class="btn btn-primary btn-sm mt-auto">Lihat saran toko <i class="bi bi-arrow-right"></i></a>
+              <% } else { %><span class="small text-muted mt-auto">Channel belum di-setup HO.</span><% } %>
+            </div>
+          </div>
+        <% } %>
+        <% if (!p.channels.length) { %><div class="text-muted">Tidak ada channel dalam scope Anda.</div><% } %>
+      </div>
+    </div>
+  </div>
+<% } %>
+<% if (!programs.length) { %><div class="card"><div class="card-body text-muted">Belum ada program aktif di tahun <%= year %>.</div></div><% } %>
+<%- include('../partials/foot') %>

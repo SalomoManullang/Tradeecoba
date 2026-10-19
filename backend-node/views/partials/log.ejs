@@ -1,0 +1,15 @@
+<%# Riwayat workflow. locals: logs %>
+<% const ACT = { submit: ['Diajukan', 'primary', 'send'], resubmit: ['Diajukan ulang', 'primary', 'arrow-repeat'], approve: ['Disetujui', 'success', 'check-circle'], reject: ['Ditolak', 'danger', 'x-circle'], return: ['Dikembalikan', 'info', 'arrow-return-left'] }; %>
+<ul class="timeline">
+  <% for (const l of logs) { const [label, color, icon] = ACT[l.action] || [l.action, 'secondary', 'dot']; %>
+    <li>
+      <i class="bi bi-<%= icon %> text-<%= color %>"></i>
+      <div>
+        <strong><%= label %></strong><% if (l.step_name) { %> · <%= l.step_name %><% } %>
+        <div class="small text-muted"><%= l.user_name || '-' %> (<%= h.ROLE_LABEL[l.user_role] || '' %>) · <%= h.datetime(l.created_at) %></div>
+        <% if (l.note) { %><div class="small fst-italic">"<%= l.note %>"</div><% } %>
+      </div>
+    </li>
+  <% } %>
+  <% if (!logs.length) { %><li class="text-muted small">Belum ada riwayat.</li><% } %>
+</ul>

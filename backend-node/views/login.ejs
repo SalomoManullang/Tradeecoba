@@ -1,0 +1,40 @@
+<%- include('partials/head', { bare: true }) %>
+<div class="card" style="width: 100%; max-width: 860px;">
+  <div class="row g-0">
+    <div class="col-md-6 p-4">
+      <h1 class="h4 fw-bold mb-1"><i class="bi bi-compass text-brand"></i> Tradee 2027</h1>
+      <p class="text-muted small mb-4">Prototype Setup Program dinamis</p>
+      <% if (error) { %><div class="alert alert-danger py-2"><%= error %></div><% } %>
+      <form method="post" action="/login">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" id="email" class="form-control" value="<%= email %>" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" id="password" class="form-control" required>
+        </div>
+        <button class="btn btn-primary w-100">Masuk</button>
+      </form>
+    </div>
+    <div class="col-md-6 p-4 bg-light border-start">
+      <div class="fw-semibold mb-2">Akun demo <span class="text-muted fw-normal small">(password: <code>tradee2027</code>)</span></div>
+      <div class="list-group list-group-flush small">
+        <% for (const u of demoUsers) { %>
+          <button type="button" class="list-group-item list-group-item-action bg-transparent d-flex justify-content-between" data-email="<%= u.email %>">
+            <span><strong><%= h.ROLE_LABEL[u.role] %></strong><br><span class="text-muted"><%= u.email %></span></span>
+            <i class="bi bi-box-arrow-in-right align-self-center"></i>
+          </button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('[data-email]').forEach((b) => b.addEventListener('click', () => {
+    document.getElementById('email').value = b.dataset.email;
+    document.getElementById('password').value = 'tradee2027';
+    document.querySelector('form').submit();
+  }));
+</script>
+<%- include('partials/foot', { bare: true }) %>

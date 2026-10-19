@@ -1,0 +1,158 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<%
+  const tree = program.pillars.map((p) => ({ id: p.id, name: p.name, description: p.description,
+    jtbds: p.jtbds.map((j) => ({ id: j.id, name: j.name,
+      lead_measures: j.lead_measures.map((l) => ({ id: l.id, name: l.name, unit: l.unit, input_type: l.input_type })) })) }));
+  const json = JSON.stringify(tree).replace(/</g, '\\u003c');
+%>
+<div class="row g-3">
+  <div class="col-xxl-5">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>1. Struktur Pilar → JTBD → Lead Measure</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="addPillar"><i class="bi bi-plus"></i> Pilar</button>
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-2">Struktur berlaku untuk semua channel. Parameter & reward diatur per kelas di sebelah (per channel). Lead measure tanpa parameter = tidak berlaku untuk kelas tsb.</p>
+        <div id="tree"></div>
+        <form method="post" action="/setup/<%= program.id %>/jtbd/structure<%= pc ? '?channel=' + pc.id : '' %>" id="treeForm">
+          <input type="hidden" name="structure" id="structure">
+          <button class="btn btn-primary mt-2"><i class="bi bi-save"></i> Simpan struktur</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xxl-7">
+    <ul class="nav nav-pills mb-2">
+      <% for (const ch of program.channels) { %>
+        <li class="nav-item"><a class="nav-link <%= pc && pc.id === ch.id ? 'active' : '' %>" href="?channel=<%= ch.id %>"><%= ch.channel_name %></a></li>
+      <% } %>
+    </ul>
+    <% if (!pc) { %>
+      <div class="card"><div class="card-body text-muted">Tambahkan channel & kelas terlebih dahulu.</div></div>
+    <% } else if (!pc.classes.length) { %>
+      <div class="card"><div class="card-body text-muted">Channel <%= pc.channel_name %> belum punya kelas. <a href="/setup/<%= program.id %>/channels/<%= pc.id %>">Atur kelas</a>.</div></div>
+    <% } else { %>
+      <div class="card mb-3">
+        <div class="card-header">2. Parameter per kelas — <%= pc.channel_name %></div>
+        <div class="card-body">
+          <% if (!program.leadMeasures.length) { %>
+            <p class="text-muted">Belum ada lead measure. Buat struktur di kiri atau upload Excel di bawah.</p>
+          <% } else { %>
+          <form method="post" action="/setup/<%= program.id %>/jtbd/params/<%= pc.id %>">
+            <div class="small text-muted mb-2">Per sel: <strong>target</strong> · <strong>reward %</strong> (× aktual periode) · <strong>reward Rp</strong> (nominal tetap). Kosongkan semua = tidak berlaku.</div>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered table-matrix">
+                <thead>
+                  <tr>
+                    <th rowspan="2">Pilar / JTBD / Lead measure</th>
+                    <% for (const c of pc.classes) { %><th colspan="3" class="text-center"><span class="class-pill"><%= c.name %></span></th><% } %>
+                  </tr>
+                  <tr><% for (const c of pc.classes) { %><th>Target</th><th>Rew %</th><th>Rew Rp</th><% } %></tr>
+                </thead>
+                <tbody>
+                  <% for (const p of program.pillars) { %>
+                    <tr class="table-light"><td colspan="<%= 1 + pc.classes.length * 3 %>" class="fw-semibold"><i class="bi bi-flag"></i> <%= p.name %></td></tr>
+                    <% for (const j of p.jtbds) { %>
+                      <tr><td colspan="<%= 1 + pc.classes.length * 3 %>" class="ps-3 text-brand small fw-semibold"><%= j.name %></td></tr>
+                      <% for (const lm of j.lead_measures) { %>
+                        <tr>
+                          <td class="ps-4 small"><%= lm.name %><% if (lm.unit) { %> <span class="text-muted">(<%= lm.unit %>)</span><% } %>
+                            <span class="badge text-bg-light"><%= lm.input_type %></span></td>
+                          <% for (const c of pc.classes) { const prm = lm.params[c.id] || {}; const k = lm.id + '_' + c.id; %>
+                            <td>
+                              <% if (lm.input_type === 'yesno') { %>
+                                <select name="t_<%= k %>" class="form-select form-select-sm"><option value=""></option><option <%= prm.target_value === 'Ya' ? 'selected' : '' %>>Ya</option></select>
+                              <% } else { %>
+                                <input name="t_<%= k %>" class="form-control form-control-sm" value="<%= prm.target_value || '' %>">
+                              <% } %>
+                            </td>
+                            <td><input name="r_<%= k %>" type="number" step="any" class="form-control form-control-sm" value="<%= prm.reward_pct || '' %>"></td>
+                            <td><input name="n_<%= k %>" type="number" step="any" class="form-control form-control-sm" value="<%= prm.reward_nominal || '' %>"></td>
+                          <% } %>
+                        </tr>
+                      <% } %>
+                    <% } %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save"></i> Simpan parameter <%= pc.channel_name %></button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><i class="bi bi-file-earmark-excel"></i> Upload matriks dari Excel — <%= pc.channel_name %></div>
+        <div class="card-body">
+          <p class="small text-muted mb-2">Format kolom: Pilar | JTBD | Lead Measure | Satuan | Tipe Input | Kelas | Parameter | Reward % | Reward Nominal. Item baru otomatis dibuat; yang sudah ada dicocokkan berdasarkan nama.</p>
+          <form method="post" action="/setup/<%= program.id %>/jtbd/upload/<%= pc.id %>" enctype="multipart/form-data" class="d-flex gap-2 flex-wrap">
+            <input type="file" name="file" accept=".xlsx,.csv" class="form-control" style="max-width: 320px" required>
+            <button class="btn btn-outline-primary"><i class="bi bi-upload"></i> Upload</button>
+            <a href="/setup/<%= program.id %>/jtbd/template/<%= pc.id %>" class="btn btn-link"><i class="bi bi-download"></i> Download template / isi saat ini</a>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  let tree = <%- json %>;
+  const el = document.getElementById('tree');
+  const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+  function render() {
+    el.innerHTML = tree.map((p, pi) => `
+      <div class="tree-pillar ps-2 mb-3">
+        <div class="input-group input-group-sm mb-1">
+          <span class="input-group-text"><i class="bi bi-flag"></i></span>
+          <input class="form-control fw-semibold" data-p="${pi}" data-f="name" value="${esc(p.name)}" placeholder="Nama pilar">
+          <button type="button" class="btn btn-outline-primary" data-act="addJ" data-p="${pi}" title="Tambah JTBD"><i class="bi bi-plus"></i> JTBD</button>
+          <button type="button" class="btn btn-outline-danger" data-act="delP" data-p="${pi}" title="Hapus pilar"><i class="bi bi-trash"></i></button>
+        </div>
+        ${(p.jtbds || []).map((j, ji) => `
+          <div class="tree-jtbd ps-2 mb-2">
+            <div class="input-group input-group-sm mb-1">
+              <span class="input-group-text">JTBD</span>
+              <input class="form-control" data-p="${pi}" data-j="${ji}" data-f="name" value="${esc(j.name)}" placeholder="Job to be done">
+              <button type="button" class="btn btn-outline-primary" data-act="addL" data-p="${pi}" data-j="${ji}" title="Tambah lead measure"><i class="bi bi-plus"></i> LM</button>
+              <button type="button" class="btn btn-outline-danger" data-act="delJ" data-p="${pi}" data-j="${ji}"><i class="bi bi-trash"></i></button>
+            </div>
+            ${(j.lead_measures || []).map((l, li) => `
+              <div class="tree-lm input-group input-group-sm mb-1">
+                <input class="form-control" style="flex:3" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="name" value="${esc(l.name)}" placeholder="Lead measure">
+                <input class="form-control" style="flex:1.3" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="unit" value="${esc(l.unit)}" placeholder="satuan">
+                <select class="form-select" style="flex:1.2" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="input_type">
+                  ${['number', 'yesno', 'text'].map((t) => `<option ${l.input_type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+                <button type="button" class="btn btn-outline-danger" data-act="delL" data-p="${pi}" data-j="${ji}" data-l="${li}"><i class="bi bi-x"></i></button>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>`).join('') || '<div class="text-muted small">Belum ada pilar.</div>';
+  }
+  el.addEventListener('input', (e) => {
+    const d = e.target.dataset; if (!d.f) return;
+    let o = tree[d.p];
+    if (d.j !== undefined) o = o.jtbds[d.j];
+    if (d.l !== undefined) o = o.lead_measures[d.l];
+    o[d.f] = e.target.value;
+  });
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const d = b.dataset;
+    if (d.act === 'addJ') tree[d.p].jtbds.push({ name: '', lead_measures: [] });
+    if (d.act === 'addL') tree[d.p].jtbds[d.j].lead_measures.push({ name: '', unit: '', input_type: 'number' });
+    if (d.act === 'delP' && confirm('Hapus pilar beserta JTBD & parameternya?')) tree.splice(d.p, 1);
+    if (d.act === 'delJ' && confirm('Hapus JTBD beserta lead measure & parameternya?')) tree[d.p].jtbds.splice(d.j, 1);
+    if (d.act === 'delL') tree[d.p].jtbds[d.j].lead_measures.splice(d.l, 1);
+    render();
+  });
+  document.getElementById('addPillar').addEventListener('click', () => { tree.push({ name: '', jtbds: [{ name: '', lead_measures: [] }] }); render(); });
+  document.getElementById('treeForm').addEventListener('submit', () => { document.getElementById('structure').value = JSON.stringify(tree); });
+  render();
+</script>
+<%- include('../partials/foot') %>

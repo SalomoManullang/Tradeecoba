@@ -1,0 +1,73 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/registration/participants">Peserta</a> / <%= program.name %> · <%= pc.channel_name %></div>
+    <h1><%= pa.store_name %> <%- h.badge(pa.status) %></h1>
+    <div class="sub"><%= pa.customer_id %> · <%= pa.city %> · DC <%= pa.dc_code %> · didaftarkan <%= pa.registered_by_name %> <%= h.datetime(pa.registered_at) %></div>
+  </div>
+  <% if (canEdit) { %><a href="/registration/participant/<%= pa.id %>/edit" class="btn btn-primary"><i class="bi bi-pencil"></i> Revisi & kirim ulang</a><% } %>
+</div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <% if (canAct) { %><%- include('../partials/approval_box', { entity: 'participant', id: pa.id, step, back: '/registration/participant/' + pa.id }) %><% } %>
+    <div class="card mb-3">
+      <div class="card-header">Target</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-6 col-md-3"><div class="stat bg-light rounded"><div class="label">Kelas</div><div class="value"><span class="class-pill"><%= pa.class_name %></span></div></div></div>
+          <div class="col-6 col-md-3"><div class="stat bg-light rounded"><div class="label">Baseline / bln</div><div class="value"><%= h.rpShort(pa.baseline) %></div></div></div>
+          <div class="col-6 col-md-3"><div class="stat bg-light rounded"><div class="label">Growth</div><div class="value"><%= h.pct(pa.growth_pct, 0) %></div></div></div>
+          <div class="col-6 col-md-3"><div class="stat bg-light rounded"><div class="label">Target program</div><div class="value"><%= h.rpShort(pa.target_period) %></div><div class="small text-muted"><%= h.rp(Math.round(pa.target_monthly)) %>/bln</div></div></div>
+        </div>
+        <div class="small text-muted mt-2">Rasio SO:SI saat daftar: <%= h.pct(pa.sellout_ratio) %></div>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header">Data dari CBD</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <% for (const f of fields) { %><dt class="col-sm-4"><%= f.label %></dt><dd class="col-sm-8"><%= pa.data[f.key] !== undefined ? pa.data[f.key] : '-' %></dd><% } %>
+          <% for (const [k, v] of Object.entries(pa.data).filter(([k]) => !fields.find((f) => f.key === k))) { %><dt class="col-sm-4 text-muted"><%= k %> <span class="small">(kolom lama)</span></dt><dd class="col-sm-8"><%= v %></dd><% } %>
+        </dl>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header">Parameter JTBD kelas <%= pa.class_name %></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Pilar</th><th>JTBD</th><th>Lead measure</th><th>Target</th><th class="num">Reward</th></tr></thead>
+          <tbody>
+            <% for (const lm of lmForClass) { const prm = lm.params[cls.id]; %>
+              <tr><td class="small"><%= lm.pillar_name %></td><td class="small"><%= lm.jtbd_name %></td><td><%= lm.name %></td>
+                <td><%= prm.target_value %> <span class="text-muted small"><%= lm.unit || '' %></span></td>
+                <td class="num small"><%= prm.reward_pct ? h.pct(prm.reward_pct, 2) : '' %><%= prm.reward_nominal ? ' + ' + h.rp(prm.reward_nominal) : '' %></td></tr>
+            <% } %>
+            <% if (!lmForClass.length) { %><tr><td colspan="5" class="text-muted">Tidak ada lead measure untuk kelas ini.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Pencairan</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Periode</th><th class="num">Pencapaian</th><th class="num">Netto</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% for (const d of disb) { %>
+              <tr><td><%= d.period_name %></td><td class="num"><%= h.pct(d.achievement_pct) %></td><td class="num"><%= h.rp(d.net_amount) %></td><td><%- h.badge(d.status) %></td>
+                <td class="text-end"><a href="/disbursement/item/<%= d.id %>" class="btn btn-sm btn-link">Detail</a></td></tr>
+            <% } %>
+            <% if (!disb.length) { %><tr><td colspan="5" class="text-muted">Belum ada pengajuan.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">Riwayat</div>
+      <div class="card-body"><%- include('../partials/log', { logs }) %></div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/foot') %>

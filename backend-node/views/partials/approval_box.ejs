@@ -1,0 +1,15 @@
+<%# Form aksi approval. locals: entity, id, step, back %>
+<div class="card border-warning mb-3">
+  <div class="card-header bg-warning-subtle"><i class="bi bi-hourglass-split"></i> Menunggu Anda: <strong><%= step.name %></strong></div>
+  <div class="card-body">
+    <form method="post" action="/inbox/<%= entity %>/<%= id %>">
+      <input type="hidden" name="back" value="<%= back %>">
+      <textarea name="note" class="form-control mb-2" rows="2" placeholder="Catatan (wajib untuk tolak / kembalikan)"></textarea>
+      <div class="d-flex gap-2 flex-wrap">
+        <button name="action" value="approve" class="btn btn-success"><i class="bi bi-check-lg"></i> Setujui</button>
+        <button name="action" value="return" class="btn btn-outline-info"><i class="bi bi-arrow-return-left"></i> Kembalikan untuk revisi</button>
+        <button name="action" value="reject" class="btn btn-outline-danger" data-confirm="Tolak data ini? Status akhir tidak bisa diajukan ulang."><i class="bi bi-x-lg"></i> Tolak</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,123 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<% const e = edit || { id: '', stage: 'registration', key: '', label: '', field_type: 'text', required: false, options: [], help: '', sort: 0, program_channel_id: null };
+   const chName = (id) => id ? (program.channels.find((c) => c.id === id) || {}).channel_name : 'Semua channel'; %>
+<div class="row g-3">
+  <div class="col-xl-7">
+    <% for (const [stage, label, note] of [
+      ['registration', 'Form pendaftaran (diisi CBD)', 'Kolom sistem yang selalu ada: toko, baseline & kelas (otomatis), growth % (input CBD), target (otomatis).'],
+      ['disbursement', 'Form pencairan', 'Kolom sistem yang selalu ada: realisasi lead measure sesuai kelas, NPWP, rekening bank.'],
+    ]) { const list = program.fields.filter((f) => f.stage === stage); %>
+      <div class="card mb-3">
+        <div class="card-header"><%= label %></div>
+        <div class="card-body">
+          <p class="small text-muted"><%= note %></p>
+          <table class="table table-sm">
+            <thead><tr><th>#</th><th>Label</th><th>Key</th><th>Tipe</th><th>Channel</th><th>Wajib</th><th></th></tr></thead>
+            <tbody>
+              <% for (const f of list) { %>
+                <tr>
+                  <td><%= f.sort %></td>
+                  <td><%= f.label %><% if (f.options) { %><div class="small text-muted"><%= f.options.join(' / ') %></div><% } %></td>
+                  <td><code><%= f.key %></code></td>
+                  <td><%= h.FIELD_TYPES[f.field_type] %></td>
+                  <td><%= chName(f.program_channel_id) %></td>
+                  <td><%- f.required ? '<i class="bi bi-check-lg text-success"></i>' : '' %></td>
+                  <td class="text-end text-nowrap">
+                    <a href="?edit=<%= f.id %>" class="btn btn-sm btn-link">Edit</a>
+                    <form method="post" action="/setup/<%= program.id %>/fields/<%= f.id %>/delete" class="d-inline">
+                      <button class="btn btn-sm btn-link text-danger" data-confirm="Hapus kolom <%= f.label %>?">Hapus</button>
+                    </form>
+                  </td>
+                </tr>
+              <% } %>
+              <% if (!list.length) { %><tr><td colspan="7" class="text-muted">Belum ada kolom tambahan.</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-eye"></i> Preview form pendaftaran CBD</span>
+        <select id="pvChannel" class="form-select form-select-sm" style="width:auto">
+          <% for (const ch of program.channels) { %><option value="<%= ch.id %>"><%= ch.channel_name %></option><% } %>
+        </select>
+      </div>
+      <div class="card-body">
+        <% for (const ch of program.channels) { %>
+          <div class="pv" data-ch="<%= ch.id %>" style="display:none">
+            <div class="row g-2 mb-3 small">
+              <div class="col-4"><div class="bg-light rounded p-2">Baseline<br><strong>otomatis</strong></div></div>
+              <div class="col-4"><div class="bg-light rounded p-2">Kelas<br><strong>otomatis</strong> (<%= ch.classes.map((c) => c.name).join('/') %>)</div></div>
+              <div class="col-4"><div class="bg-light rounded p-2">Growth %<br><strong>input CBD</strong> (≥ min kelas)</div></div>
+            </div>
+            <% for (const f of program.fields.filter((f) => f.stage === 'registration' && (f.program_channel_id === null || f.program_channel_id === ch.id))) { %>
+              <%- include('../partials/field_input', { f, value: '', disabled: true }) %>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card sticky-summary">
+      <div class="card-header"><%= e.id ? 'Edit kolom' : 'Tambah kolom' %></div>
+      <div class="card-body">
+        <form method="post" action="/setup/<%= program.id %>/fields">
+          <input type="hidden" name="id" value="<%= e.id %>">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">Tahap</label>
+              <select name="stage" class="form-select">
+                <option value="registration" <%= e.stage === 'registration' ? 'selected' : '' %>>Pendaftaran (CBD)</option>
+                <option value="disbursement" <%= e.stage === 'disbursement' ? 'selected' : '' %>>Pencairan</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Berlaku untuk</label>
+              <select name="program_channel_id" class="form-select">
+                <option value="">Semua channel</option>
+                <% for (const ch of program.channels) { %><option value="<%= ch.id %>" <%= e.program_channel_id === ch.id ? 'selected' : '' %>><%= ch.channel_name %></option><% } %>
+              </select>
+            </div>
+            <div class="col-8"><label class="form-label">Label</label><input name="label" class="form-control" value="<%= e.label %>" required></div>
+            <div class="col-4"><label class="form-label">Urutan</label><input name="sort" type="number" class="form-control" value="<%= e.sort %>"></div>
+            <div class="col-6">
+              <label class="form-label">Key</label><input name="key" class="form-control" value="<%= e.key %>" placeholder="otomatis dari label">
+              <div class="form-text">Bisa dipakai di rumus pencairan.</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Tipe</label>
+              <select name="field_type" class="form-select" id="ftype">
+                <% for (const [k, v] of Object.entries(h.FIELD_TYPES)) { %><option value="<%= k %>" <%= e.field_type === k ? 'selected' : '' %>><%= v %></option><% } %>
+              </select>
+            </div>
+            <div class="col-12" id="optBox">
+              <label class="form-label">Pilihan (1 per baris)</label>
+              <textarea name="options" class="form-control" rows="3"><%= (e.options || []).join('\n') %></textarea>
+            </div>
+            <div class="col-12"><label class="form-label">Petunjuk</label><input name="help" class="form-control" value="<%= e.help || '' %>"></div>
+            <div class="col-12">
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="required" id="req" <%= e.required ? 'checked' : '' %>><label class="form-check-label" for="req">Wajib diisi</label></div>
+            </div>
+          </div>
+          <button class="btn btn-primary mt-3"><i class="bi bi-save"></i> Simpan kolom</button>
+          <% if (e.id) { %><a href="/setup/<%= program.id %>/fields" class="btn btn-link mt-3">Batal</a><% } %>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const ft = document.getElementById('ftype');
+  const ob = document.getElementById('optBox');
+  const syncOpt = () => { ob.style.display = ft.value === 'select' ? '' : 'none'; };
+  ft.addEventListener('change', syncOpt); syncOpt();
+  const pv = document.getElementById('pvChannel');
+  const syncPv = () => document.querySelectorAll('.pv').forEach((d) => { d.style.display = d.dataset.ch === pv.value ? '' : 'none'; });
+  if (pv) { pv.addEventListener('change', syncPv); syncPv(); }
+</script>
+<%- include('../partials/foot') %>

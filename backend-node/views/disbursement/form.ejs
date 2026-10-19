@@ -1,0 +1,122 @@
+<%- include('../partials/head') %>
+<% const valOf = (k) => (typeof rawValues !== 'undefined' && rawValues) ? values['f_' + k] : values[k];
+   const readonly = !canSubmit || !isOpen; %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/disbursement">Pencairan</a> / <a href="/disbursement/program/<%= program.id %>/<%= period.id %>"><%= program.name %> · <%= period.name %></a></div>
+    <h1>Pencairan <%= pa.store_name %></h1>
+    <div class="sub"><%= pa.customer_id %> · <%= pc.channel_name %> · DC <%= pa.dc_code %> · kelas <span class="class-pill"><%= pa.class_name %></span></div>
+  </div>
+</div>
+<% if (disb && disb.status === 'returned') { %><div class="alert alert-info">Pengajuan sebelumnya dikembalikan untuk revisi. Perbaiki lalu kirim ulang.</div><% } %>
+<% if (errors.length) { %><div class="alert alert-danger"><ul class="mb-0"><% for (const e of errors) { %><li><%= e %></li><% } %></ul></div><% } %>
+<% if (!canSubmit) { %><div class="alert alert-secondary">Pengajuan dilakukan oleh <%= h.ROLE_LABEL[program.disbursement_submitter_role] %>. Halaman ini hanya simulasi.</div><% } %>
+<% if (!isOpen) { %><div class="alert alert-secondary">Periode klaim <%= period.name %> belum dibuka / sudah ditutup.</div><% } %>
+
+<form method="post" id="dForm" action="/disbursement/program/<%= program.id %>/<%= period.id %>/participant/<%= pa.id %>">
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card mb-3">
+      <div class="card-header">Pencapaian <%= period.name %> <span class="text-muted fw-normal small">(<%= program.basis === 'sellin' ? 'sell in' : 'sell out' %>, otomatis)</span></div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Target periode</div><div class="value"><%= h.rpShort(calc.target) %></div></div></div>
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Aktual</div><div class="value"><%= h.rpShort(calc.actual) %></div></div></div>
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Pencapaian</div><div class="value <%= calc.achievement >= 100 ? 'text-success' : calc.achievement >= 90 ? 'text-warning' : 'text-danger' %>"><%= h.pct(calc.achievement) %></div></div></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm small mb-0">
+            <thead><tr><th></th><% for (const m of months) { %><th class="num"><%= h.month(m.m) %></th><% } %></tr></thead>
+            <tbody>
+              <tr><td>Target</td><% for (const m of months) { %><td class="num text-muted"><%= h.rpShort(m.target) %></td><% } %></tr>
+              <tr><td>Aktual</td><% for (const m of months) { %><td class="num <%= m.actual >= m.target ? 'text-success' : '' %>"><%= h.rpShort(m.actual) %></td><% } %></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Realisasi Vision Compass / JTBD — kelas <%= pa.class_name %></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Pilar · JTBD</th><th>Lead measure</th><th>Target</th><th style="width: 170px">Realisasi</th><th class="text-center">Tercapai</th></tr></thead>
+          <tbody>
+            <% for (const it of calc.lmItems) { const lm = it.lm; const v = lmValues[lm.id] || ''; %>
+              <tr>
+                <td class="small text-muted"><%= lm.pillar_name %><br><%= lm.jtbd_name %></td>
+                <td><%= lm.name %></td>
+                <td><%= it.param.target_value %> <span class="small text-muted"><%= lm.unit || '' %></span>
+                  <div class="small text-muted"><%= it.param.reward_pct ? 'reward ' + h.pct(it.param.reward_pct, 2) : '' %><%= it.param.reward_nominal ? ' + ' + h.rp(it.param.reward_nominal) : '' %></div></td>
+                <td>
+                  <% if (lm.input_type === 'yesno') { %>
+                    <select name="lm_<%= lm.id %>" class="form-select form-select-sm calc-in" <%= readonly ? 'disabled' : '' %>><option value=""></option><option <%= v === 'Ya' ? 'selected' : '' %>>Ya</option><option <%= v === 'Tidak' ? 'selected' : '' %>>Tidak</option></select>
+                  <% } else { %>
+                    <input name="lm_<%= lm.id %>" type="<%= lm.input_type === 'number' ? 'number' : 'text' %>" step="any" class="form-control form-control-sm calc-in" value="<%= v %>" <%= readonly ? 'disabled' : '' %>>
+                  <% } %>
+                </td>
+                <td class="text-center"><i class="bi bi-check-circle-fill lm-ok" data-lm="<%= lm.id %>" style="<%= it.achieved ? '' : 'display:none' %>"></i><i class="bi bi-dash-circle lm-no" data-lm-no="<%= lm.id %>" style="<%= it.achieved ? 'display:none' : '' %>"></i></td>
+              </tr>
+            <% } %>
+            <% if (!calc.lmItems.length) { %><tr><td colspan="5" class="text-muted p-3">Tidak ada lead measure untuk kelas ini.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Data pencairan</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">No. NPWP</label><input name="npwp_no" class="form-control calc-in" value="<%= payee.npwp_no %>" placeholder="kosong = tarif non-NPWP" <%= readonly ? 'disabled' : '' %>></div>
+          <div class="col-md-6"><label class="form-label">Nama NPWP</label><input name="npwp_name" class="form-control" value="<%= payee.npwp_name %>" <%= readonly ? 'disabled' : '' %>></div>
+          <div class="col-md-4"><label class="form-label">Bank <span class="text-danger">*</span></label><input name="bank_name" class="form-control" value="<%= payee.bank_name %>" <%= readonly ? 'disabled' : '' %>></div>
+          <div class="col-md-4"><label class="form-label">No. rekening <span class="text-danger">*</span></label><input name="bank_account_no" class="form-control" value="<%= payee.bank_account_no %>" <%= readonly ? 'disabled' : '' %>></div>
+          <div class="col-md-4"><label class="form-label">Nama rekening <span class="text-danger">*</span></label><input name="bank_account_name" class="form-control" value="<%= payee.bank_account_name %>" <%= readonly ? 'disabled' : '' %>></div>
+        </div>
+        <hr>
+        <% for (const f of fields) { %><%- include('../partials/field_input', { f, value: valOf(f.key), disabled: readonly }) %><% } %>
+        <% if (disb && disb.status === 'returned') { %><div class="mb-3"><label class="form-label">Catatan revisi</label><textarea name="note" class="form-control" rows="2"></textarea></div><% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card sticky-summary">
+      <div class="card-header">Hitungan <span class="small text-muted fw-normal">(otomatis dari setup)</span></div>
+      <div class="card-body">
+        <table class="table table-sm small" id="calcTbl">
+          <tbody>
+            <% for (const l of calc.lines) { %><tr><td><%= l.name %><div class="text-muted"><%= l.detail %></div></td><td class="num"><%= h.rp(l.amount) %></td></tr><% } %>
+          </tbody>
+          <tfoot>
+            <tr class="fw-semibold"><td>Bruto</td><td class="num" id="cGross"><%= h.rp(calc.gross) %></td></tr>
+            <tr><td>Pajak (<span id="cRate"><%= calc.taxRate %></span>%)</td><td class="num" id="cTax">-<%= h.rp(calc.tax) %></td></tr>
+            <tr class="fw-bold fs-6 text-brand"><td>Netto</td><td class="num" id="cNet"><%= h.rp(calc.net) %></td></tr>
+          </tfoot>
+        </table>
+        <% if (canSubmit && isOpen) { %>
+          <button class="btn btn-primary w-100"><i class="bi bi-send"></i> <%= disb ? 'Kirim ulang' : 'Ajukan pencairan' %></button>
+          <div class="form-text">Selanjutnya: <%= program.steps.filter((s) => s.phase === 'disbursement').map((s) => s.name).join(' → ') || 'langsung cair' %></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+<script>
+  const form = document.getElementById('dForm');
+  let timer;
+  async function preview() {
+    const body = new URLSearchParams(new FormData(form));
+    const r = await fetch(form.action + '/preview', { method: 'POST', body }).then((x) => x.json());
+    document.querySelector('#calcTbl tbody').innerHTML = r.lines.map((l) => `<tr><td>${l.name}<div class="text-muted">${l.detail}</div></td><td class="num">${fmtRp(l.amount)}</td></tr>`).join('');
+    cGross.textContent = fmtRp(r.gross); cRate.textContent = r.taxRate; cTax.textContent = '-' + fmtRp(r.tax); cNet.textContent = fmtRp(r.net);
+    for (const i of r.lm) {
+      const ok = document.querySelector(`[data-lm="${i.id}"]`), no = document.querySelector(`[data-lm-no="${i.id}"]`);
+      if (ok) { ok.style.display = i.achieved ? '' : 'none'; no.style.display = i.achieved ? 'none' : ''; }
+    }
+  }
+  form.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(preview, 300); });
+</script>
+<%- include('../partials/foot') %>

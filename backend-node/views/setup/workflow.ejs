@@ -1,0 +1,41 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<div class="row g-3">
+  <% for (const [phase, title, start, end, emptyNote] of [
+    ['registration', 'Alur pendaftaran toko', 'CBD mendaftarkan toko', 'Peserta aktif', 'Tanpa tahapan: toko langsung aktif begitu CBD submit.'],
+    ['disbursement', 'Alur pencairan', h.ROLE_LABEL[program.disbursement_submitter_role] + ' mengajukan pencairan', 'Cair', 'Tanpa tahapan: pencairan langsung berstatus cair.'],
+  ]) { const steps = program.steps.filter((s) => s.phase === phase).sort((a, b) => a.sort - b.sort || a.id - b.id); %>
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header"><%= title %></div>
+        <div class="card-body">
+          <div class="d-flex flex-column gap-2">
+            <div class="p-2 rounded bg-light small"><i class="bi bi-send"></i> <%= start %></div>
+            <% steps.forEach((s, i) => { %>
+              <div class="text-center text-muted"><i class="bi bi-arrow-down"></i></div>
+              <div class="p-2 rounded border d-flex align-items-center gap-2">
+                <span class="badge text-bg-primary"><%= i + 1 %></span>
+                <div class="flex-grow-1"><strong><%= s.name %></strong><div class="small text-muted">oleh <%= h.ROLE_LABEL[s.role] %></div></div>
+                <form method="post" action="/setup/<%= program.id %>/steps/<%= s.id %>/up"><button class="btn btn-sm btn-link px-1" <%= i === 0 ? 'disabled' : '' %>><i class="bi bi-arrow-up"></i></button></form>
+                <form method="post" action="/setup/<%= program.id %>/steps/<%= s.id %>/down"><button class="btn btn-sm btn-link px-1" <%= i === steps.length - 1 ? 'disabled' : '' %>><i class="bi bi-arrow-down"></i></button></form>
+                <form method="post" action="/setup/<%= program.id %>/steps/<%= s.id %>/delete"><button class="btn btn-sm btn-link text-danger px-1" data-confirm="Hapus tahap <%= s.name %>?"><i class="bi bi-trash"></i></button></form>
+              </div>
+            <% }) %>
+            <div class="text-center text-muted"><i class="bi bi-arrow-down"></i></div>
+            <div class="p-2 rounded small bg-success-subtle"><i class="bi bi-check-circle"></i> <%= end %></div>
+          </div>
+          <% if (!steps.length) { %><div class="small text-muted mt-2"><%= emptyNote %></div><% } %>
+          <form method="post" action="/setup/<%= program.id %>/steps" class="row g-2 mt-3">
+            <input type="hidden" name="phase" value="<%= phase %>">
+            <div class="col-6"><input name="name" class="form-control form-control-sm" placeholder="Nama tahap, mis. Approval RSM" required></div>
+            <div class="col-4"><select name="role" class="form-select form-select-sm">
+              <% for (const [k, v] of Object.entries(h.ROLE_LABEL)) { %><option value="<%= k %>"><%= v %></option><% } %></select></div>
+            <div class="col-2"><button class="btn btn-sm btn-primary w-100">Tambah</button></div>
+          </form>
+          <div class="form-text">Di setiap tahap, approver bisa <strong>setuju</strong>, <strong>kembalikan</strong> (pengaju revisi & kirim ulang dari tahap pertama), atau <strong>tolak</strong>.</div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/foot') %>

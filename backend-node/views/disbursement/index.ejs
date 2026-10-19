@@ -1,0 +1,34 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Pencairan <%= year %></h1><div class="sub">Periode, komponen hitungan, dan alur approval mengikuti setup tiap program.</div></div>
+</div>
+<% for (const p of programs) { %>
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between">
+      <span><%= p.name %> <span class="text-muted fw-normal">· <%= p.code %></span></span>
+      <span class="small fw-normal text-muted">Pengaju: <%= h.ROLE_LABEL[p.disbursement_submitter_role] %> → <%= p.steps.filter((s) => s.phase === 'disbursement').map((s) => s.name).join(' → ') || 'langsung cair' %></span>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead><tr><th>Periode</th><th>Pencapaian dihitung</th><th>Klaim</th><th class="num">Diproses</th><th class="num">Dikembalikan</th><th class="num">Cair</th><th class="num">Total cair</th><th></th></tr></thead>
+        <tbody>
+          <% for (const per of p.periods) { %>
+            <tr>
+              <td class="fw-semibold"><%= per.name %></td>
+              <td><%= h.date(per.achieve_start) %> – <%= h.date(per.achieve_end) %></td>
+              <td><%= h.date(per.claim_start) %> – <%= h.date(per.claim_end) %> <%- per.isOpen ? '<span class="badge text-bg-success">dibuka</span>' : '<span class="badge text-bg-secondary">ditutup</span>' %></td>
+              <td class="num"><%= per.stats.review %></td>
+              <td class="num"><%= per.stats.returned %></td>
+              <td class="num"><%= per.stats.paid %></td>
+              <td class="num"><%= h.rp(per.stats.paid_amount) %></td>
+              <td class="text-end"><a href="/disbursement/program/<%= p.id %>/<%= per.id %>" class="btn btn-sm btn-primary">Buka</a></td>
+            </tr>
+          <% } %>
+          <% if (!p.periods.length) { %><tr><td colspan="8" class="text-muted">Belum ada periode pencairan di setup.</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+<% if (!programs.length) { %><div class="card"><div class="card-body text-muted">Belum ada program aktif.</div></div><% } %>
+<%- include('../partials/foot') %>

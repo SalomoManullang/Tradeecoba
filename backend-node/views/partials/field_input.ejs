@@ -1,0 +1,33 @@
+<%#
+  Render satu kolom dinamis (program_field).
+  locals: f (field), value, prefix (default 'f_'), disabled
+%>
+<% const name = (typeof prefix !== 'undefined' ? prefix : 'f_') + f.key;
+   const v = value === undefined || value === null ? '' : value;
+   const dis = typeof disabled !== 'undefined' && disabled ? 'disabled' : ''; %>
+<div class="mb-3">
+  <label class="form-label" for="<%= name %>"><%= f.label %><% if (f.required) { %> <span class="text-danger">*</span><% } %></label>
+  <% if (f.field_type === 'textarea') { %>
+    <textarea class="form-control" id="<%= name %>" name="<%= name %>" rows="2" <%= f.required ? 'required' : '' %> <%= dis %>><%= v %></textarea>
+  <% } else if (f.field_type === 'select') { %>
+    <select class="form-select" id="<%= name %>" name="<%= name %>" <%= f.required ? 'required' : '' %> <%= dis %>>
+      <option value="">- pilih -</option>
+      <% for (const o of (f.options || [])) { %><option <%= String(v) === o ? 'selected' : '' %>><%= o %></option><% } %>
+    </select>
+  <% } else if (f.field_type === 'yesno') { %>
+    <select class="form-select" id="<%= name %>" name="<%= name %>" <%= f.required ? 'required' : '' %> <%= dis %>>
+      <option value="">- pilih -</option>
+      <option <%= v === 'Ya' ? 'selected' : '' %>>Ya</option>
+      <option <%= v === 'Tidak' ? 'selected' : '' %>>Tidak</option>
+    </select>
+  <% } else if (['number', 'currency', 'percent'].includes(f.field_type)) { %>
+    <div class="input-group">
+      <% if (f.field_type === 'currency') { %><span class="input-group-text">Rp</span><% } %>
+      <input type="number" step="any" class="form-control" id="<%= name %>" name="<%= name %>" value="<%= v %>" <%= f.required ? 'required' : '' %> <%= dis %>>
+      <% if (f.field_type === 'percent') { %><span class="input-group-text">%</span><% } %>
+    </div>
+  <% } else { %>
+    <input type="<%= f.field_type === 'date' ? 'date' : 'text' %>" class="form-control" id="<%= name %>" name="<%= name %>" value="<%= v %>" <%= f.required ? 'required' : '' %> <%= dis %>>
+  <% } %>
+  <% if (f.help) { %><div class="form-text"><%= f.help %></div><% } %>
+</div>

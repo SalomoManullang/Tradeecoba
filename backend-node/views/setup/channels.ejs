@@ -1,0 +1,60 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <% for (const ch of program.channels) { %>
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-diagram-3"></i> <%= ch.channel_name %></span>
+          <span><%- h.badge(ch.status) %></span>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm mb-2">
+              <thead><tr><th>Kelas</th><th class="num">Baseline / bulan</th><th class="num">Min growth</th><th class="num">Rebate</th></tr></thead>
+              <tbody>
+                <% for (const c of ch.classes) { %>
+                  <tr>
+                    <td><span class="class-pill"><%= c.name %></span></td>
+                    <td class="num"><%= h.rpShort(c.baseline_min) %> – <%= c.baseline_max === null ? '∞' : h.rpShort(c.baseline_max) %></td>
+                    <td class="num"><%= h.pct(c.min_growth, 0) %></td>
+                    <td class="num"><%= h.pct(c.rebate_pct, 2) %></td>
+                  </tr>
+                <% } %>
+                <% if (!ch.classes.length) { %><tr><td colspan="4" class="text-muted">Belum ada kelas.</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="small text-muted">Brand: <%= ch.brand_codes.join(', ') || '-' %></span>
+            <div>
+              <form method="post" action="/setup/<%= program.id %>/channels/<%= ch.id %>/delete" class="d-inline">
+                <button class="btn btn-sm btn-link text-danger" data-confirm="Hapus channel <%= ch.channel_name %> dari program?">Hapus</button>
+              </form>
+              <a href="/setup/<%= program.id %>/channels/<%= ch.id %>" class="btn btn-sm btn-primary">Atur channel</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+    <% if (!program.channels.length) { %><div class="card"><div class="card-body text-muted">Belum ada channel. Tambahkan channel di samping.</div></div><% } %>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">Tambah channel</div>
+      <div class="card-body">
+        <p class="small text-muted">Admin bisa menyelesaikan satu channel dulu (kelas, eligibility, matriks JTBD), lalu pindah ke channel berikutnya.</p>
+        <form method="post" action="/setup/<%= program.id %>/channels" class="d-flex gap-2">
+          <select name="channel_code" class="form-select">
+            <% for (const c of channels.filter((c) => !program.channels.find((x) => x.channel_code === c.code))) { %>
+              <option value="<%= c.code %>"><%= c.name %></option>
+            <% } %>
+          </select>
+          <button class="btn btn-primary">Tambah</button>
+        </form>
+        <div class="form-text">Channel baru bisa dibuat di Master Data → Channel & Brand.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/foot') %>

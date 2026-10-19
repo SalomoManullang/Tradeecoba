@@ -1,0 +1,29 @@
+{
+  "name": "tradee-2027",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype Tradee 2027 - Setup Program dinamis oleh Admin HO (terpisah dari aplikasi sales_program)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "db:init": "node db/init.js",
+    "db:seed": "node db/seed.js",
+    "db:reset": "node db/init.js && node db/seed.js",
+    "test": "node --test test/engine.test.js",
+    "test:e2e": "node test/smoke.e2e.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.0",
+    "pg": "^8.13.1"
+  }
+}

@@ -1,0 +1,48 @@
+<%- include('partials/head') %>
+<div class="page-head">
+  <div>
+    <h1>Dashboard <%= year %></h1>
+    <div class="sub">Ringkasan program loyalty tahun <%= year %></div>
+  </div>
+  <% if (user.role === 'ADMIN_HO') { %><a href="/setup/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Program baru</a><% } %>
+</div>
+
+<% if (!programs.length) { %>
+  <div class="card"><div class="card-body text-center py-5">
+    <i class="bi bi-inboxes fs-1 text-muted"></i>
+    <p class="mt-2 mb-3">Belum ada program di tahun <%= year %>.</p>
+    <% if (user.role === 'ADMIN_HO') { %>
+      <a href="/setup/new" class="btn btn-primary">Buat program</a>
+      <a href="/setup" class="btn btn-outline-primary">Duplikat dari tahun lain</a>
+    <% } else { %><p class="text-muted small">Program dibuat oleh Admin HO lewat menu Setup Program.</p><% } %>
+  </div></div>
+<% } %>
+
+<% for (const p of programs) { const chs = channels.filter((c) => c.program_id === p.id); %>
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><%= p.name %> <span class="text-muted fw-normal">· <%= p.code %></span></span>
+      <%- h.badge(p.status) %>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-6 col-lg-3"><div class="stat bg-light rounded"><div class="label">Peserta aktif</div><div class="value"><%= h.num(p.active_count) %></div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat bg-light rounded"><div class="label">Menunggu approval</div><div class="value"><%= h.num(p.review_count) %></div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat bg-light rounded"><div class="label">Sudah cair (netto)</div><div class="value"><%= h.rpShort(p.paid_amount) %></div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat bg-light rounded"><div class="label">Pencairan diproses</div><div class="value"><%= h.rpShort(p.pending_amount) %></div></div></div>
+      </div>
+      <div class="d-flex gap-3 flex-wrap mt-3 small text-muted">
+        <span><i class="bi bi-calendar3"></i> Program <%= h.date(p.program_start) %> – <%= h.date(p.program_end) %></span>
+        <span><i class="bi bi-pencil-square"></i> Pendaftaran <%= h.date(p.registration_start) %> – <%= h.date(p.registration_end) %></span>
+        <span><i class="bi bi-diagram-3"></i> Channel: <% for (const c of chs) { %><span class="me-2"><%= c.name %> (<%= c.n %>) <%- c.status === 'complete' ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-pencil text-warning"></i>' %></span><% } %></span>
+      </div>
+      <div class="mt-3 d-flex gap-2 flex-wrap">
+        <% if (user.role === 'ADMIN_HO') { %><a class="btn btn-sm btn-outline-primary" href="/setup/<%= p.id %>/general"><i class="bi bi-sliders"></i> Setup</a><% } %>
+        <% if (['CBD','ADMIN_HO'].includes(user.role) && p.status === 'active') { %><a class="btn btn-sm btn-outline-primary" href="/registration"><i class="bi bi-shop"></i> Daftarkan toko</a><% } %>
+        <a class="btn btn-sm btn-outline-primary" href="/registration/participants?program=<%= p.id %>"><i class="bi bi-people"></i> Peserta</a>
+        <a class="btn btn-sm btn-outline-primary" href="/disbursement"><i class="bi bi-cash-coin"></i> Pencairan</a>
+      </div>
+    </div>
+  </div>
+<% } %>
+<%- include('partials/foot') %>

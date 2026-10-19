@@ -1,0 +1,160 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<div class="mb-2 small"><a href="/setup/<%= program.id %>/channels"><i class="bi bi-arrow-left"></i> Semua channel</a></div>
+
+<form method="post" action="/setup/<%= program.id %>/channels/<%= pc.id %>">
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between">
+        <span>Kelas <%= pc.channel_name %></span>
+        <span class="small text-muted fw-normal">Kelas otomatis dari baseline rata-rata per bulan</span>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm" id="classTable">
+            <thead>
+              <tr>
+                <th style="width:90px">Nama</th>
+                <th>Baseline min (Rp)</th>
+                <th>Baseline maks (Rp)<br><span class="text-lowercase fw-normal">kosong = tak terbatas</span></th>
+                <th>Min growth %</th>
+                <th>Maks growth %</th>
+                <th>Rebate %</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% const rows = pc.classes.length ? pc.classes : [{ id: '', name: 'A', baseline_min: '', baseline_max: null, min_growth: '', max_growth: null, rebate_pct: '' }]; %>
+              <% for (const c of rows) { %>
+                <tr>
+                  <td><input type="hidden" name="class_id" value="<%= c.id %>"><input name="class_name" class="form-control form-control-sm" value="<%= c.name %>" required></td>
+                  <td><input name="baseline_min" type="number" step="any" class="form-control form-control-sm" value="<%= c.baseline_min %>" required></td>
+                  <td><input name="baseline_max" type="number" step="any" class="form-control form-control-sm" value="<%= c.baseline_max === null ? '' : c.baseline_max %>"></td>
+                  <td><input name="min_growth" type="number" step="any" class="form-control form-control-sm" value="<%= c.min_growth %>" required></td>
+                  <td><input name="max_growth" type="number" step="any" class="form-control form-control-sm" value="<%= c.max_growth === null ? '' : c.max_growth %>"></td>
+                  <td><input name="rebate_pct" type="number" step="any" class="form-control form-control-sm" value="<%= c.rebate_pct %>"></td>
+                  <td><button type="button" class="btn btn-sm btn-link text-danger del-row" title="Hapus"><i class="bi bi-trash"></i></button></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="addClass"><i class="bi bi-plus"></i> Tambah kelas</button>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Eligibility & brand</div>
+      <div class="card-body row g-3">
+        <div class="col-12">
+          <label class="form-label">Brand yang dihitung (baseline & aktual)</label>
+          <div class="d-flex flex-wrap gap-3">
+            <% for (const b of brands) { %>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="brand_codes" value="<%= b.code %>" id="b_<%= b.code %>" <%= pc.brand_codes.includes(b.code) ? 'checked' : '' %>>
+                <label class="form-check-label" for="b_<%= b.code %>"><%= b.name %></label>
+              </div>
+            <% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Baseline minimal (Rp)</label>
+          <input name="min_baseline" type="number" step="any" class="form-control" value="<%= pc.min_baseline === null ? '' : pc.min_baseline %>" placeholder="ikut kelas terendah">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Rasio SO : SI minimal (%)</label>
+          <input name="min_sellout_ratio" type="number" step="any" class="form-control" value="<%= pc.min_sellout_ratio === null ? '' : pc.min_sellout_ratio %>" placeholder="kosong = hanya ditampilkan">
+          <div class="form-text">Mis. 96. Kosongkan bila belum dipakai sebagai syarat.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Min. bulan aktif di baseline</label>
+          <input name="min_active_months" type="number" class="form-control" value="<%= pc.min_active_months === null ? '' : pc.min_active_months %>" placeholder="opsional">
+        </div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="growth_editable" id="ge" <%= pc.growth_editable ? 'checked' : '' %>>
+            <label class="form-check-label" for="ge">CBD boleh menaikkan growth di atas minimal kelas</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Catatan</label>
+          <textarea name="notes" class="form-control" rows="2"><%= pc.notes || '' %></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="sticky-summary">
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-calculator"></i> Cek kelas dari baseline</div>
+        <div class="card-body">
+          <div class="input-group mb-2"><span class="input-group-text">Rp</span><input type="number" id="simBase" class="form-control" placeholder="70000000"></div>
+          <div id="simOut" class="small text-muted">Ketik baseline rata-rata per bulan.</div>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-funnel"></i> Preview eligibility (tersimpan)</div>
+        <div class="card-body small">
+          <div><strong><%= preview.eligible %></strong> toko eligible dari <%= preview.withData %> toko yang punya data (total <%= preview.total %> toko di channel).</div>
+          <% if (Object.keys(preview.dist).length) { %>
+            <div class="mt-2 d-flex flex-wrap gap-2">
+              <% for (const [k, v] of Object.entries(preview.dist)) { %><span><span class="class-pill"><%= k %></span> <%= v %></span><% } %>
+            </div>
+          <% } %>
+          <div class="text-muted mt-2">Periode baseline <%= h.date(program.baseline_start) %> – <%= h.date(program.baseline_end) %>. Simpan untuk memperbarui.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="status" value="complete" id="st" <%= pc.status === 'complete' ? 'checked' : '' %>>
+            <label class="form-check-label" for="st">Tandai channel ini <strong>selesai</strong></label>
+          </div>
+          <button class="btn btn-primary w-100"><i class="bi bi-save"></i> Simpan channel</button>
+          <a href="/setup/<%= program.id %>/jtbd?channel=<%= pc.id %>" class="btn btn-outline-primary w-100 mt-2">Lanjut: matriks JTBD <%= pc.channel_name %> <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<script>
+  const tbody = document.querySelector('#classTable tbody');
+  document.getElementById('addClass').addEventListener('click', () => {
+    const tr = tbody.rows[tbody.rows.length - 1].cloneNode(true);
+    tr.querySelectorAll('input').forEach((i) => { i.value = ''; });
+    const last = tbody.rows[tbody.rows.length - 1].querySelector('[name=class_name]').value;
+    tr.querySelector('[name=class_name]').value = last.length === 1 ? String.fromCharCode(last.charCodeAt(0) + 1) : '';
+    tbody.appendChild(tr);
+  });
+  tbody.addEventListener('click', (e) => {
+    const b = e.target.closest('.del-row');
+    if (!b) return;
+    if (tbody.rows.length === 1) return alert('Minimal 1 kelas');
+    b.closest('tr').remove();
+  });
+  function classes() {
+    return [...tbody.rows].map((r) => ({
+      name: r.querySelector('[name=class_name]').value,
+      min: parseFloat(r.querySelector('[name=baseline_min]').value),
+      max: r.querySelector('[name=baseline_max]').value === '' ? null : parseFloat(r.querySelector('[name=baseline_max]').value),
+      g: r.querySelector('[name=min_growth]').value,
+      reb: r.querySelector('[name=rebate_pct]').value,
+    })).sort((a, b) => b.min - a.min);
+  }
+  function sim() {
+    const v = parseFloat(document.getElementById('simBase').value);
+    const out = document.getElementById('simOut');
+    if (isNaN(v)) { out.textContent = 'Ketik baseline rata-rata per bulan.'; return; }
+    const c = classes().find((c) => v >= c.min && (c.max === null || v < c.max));
+    out.innerHTML = c
+      ? `Masuk <span class="class-pill">${c.name}</span> · min growth <strong>${c.g}%</strong> · rebate ${c.reb}%<br>Target min/bulan: <strong>${fmtRp(v * (1 + c.g / 100))}</strong>`
+      : '<span class="text-danger">Tidak masuk kelas manapun (tidak eligible).</span>';
+  }
+  document.getElementById('simBase').addEventListener('input', sim);
+  tbody.addEventListener('input', sim);
+</script>
+<%- include('../partials/foot') %>

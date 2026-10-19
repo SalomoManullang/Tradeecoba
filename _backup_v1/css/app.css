@@ -1,0 +1,117 @@
+/* =====================================================================
+   Tradee 2027 prototype — di atas tema Metronic (sama dengan aplikasi Tradee).
+   File ini hanya menambah utilitas kecil & komponen baru (Setup Program).
+   ===================================================================== */
+
+/* ---------- utilitas yang tidak ada di Bootstrap 4 ---------- */
+.fw-normal { font-weight: 400 !important; }
+.fw-semibold { font-weight: 500 !important; }
+.fw-bold { font-weight: 600 !important; }
+.fs-1 { font-size: 2.5rem !important; }
+.fs-3 { font-size: 1.75rem !important; }
+.fs-5 { font-size: 1.15rem !important; }
+.fs-6 { font-size: 1rem !important; }
+.gap-2 { gap: .5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.row.g-2 > [class*="col"] { margin-bottom: .5rem; }
+.row.g-3 > [class*="col"] { margin-bottom: 1rem; }
+.row.g-0 { margin: 0; }
+.row.g-0 > [class*="col"] { padding: 0; }
+.opacity-50 { opacity: .5; }
+.bg-warning-subtle { background: #fff8e6 !important; }
+.bg-success-subtle { background: #e8f8f4 !important; }
+.form-label { display: inline-block; margin-bottom: .4rem; }
+.input-group > .input-group-text { display: flex; align-items: center; border-radius: 0; }
+.input-group > .input-group-text:first-child { border-radius: 4px 0 0 4px; }
+.input-group > .input-group-text:last-child { border-radius: 0 4px 4px 0; }
+.input-group > .form-control + .input-group-text,
+.input-group > .input-group-text + .form-control,
+.input-group > .form-control + .form-control { margin-left: -1px; }
+.input-group > .btn { border-radius: 0; }
+.input-group > .btn:last-child { border-radius: 0 4px 4px 0; }
+.text-brand { color: #22b9ff !important; }
+.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { vertical-align: middle !important; text-align: center; }
+.table td { vertical-align: middle; }
+
+/* ---------- .card dibuat identik dengan .kt-portlet ---------- */
+.kt-container .card {
+  border: 0; border-radius: 4px; background: #fff;
+  box-shadow: 0px 0px 13px 0px rgba(82, 63, 105, 0.1);
+  margin-bottom: 20px;
+}
+.kt-container .card-header {
+  background: #fff; border-bottom: 1px solid #ebedf2; padding: 0 25px; min-height: 60px;
+  display: flex; align-items: center; font-size: 1.2rem; font-weight: 500; color: #48465b;
+}
+.kt-container .card-header:first-child { border-radius: 4px 4px 0 0; }
+.kt-container .card-body { padding: 25px; }
+.kt-container .card-body.p-0 { padding: 0; }
+.kt-container .card.stat { padding: 1.2rem 1.5rem; }
+.kt-container .card .table { margin-bottom: 0; }
+
+/* ---------- judul halaman (meniru subheader Tradee) ---------- */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin: 10px 0 20px; flex-wrap: wrap; }
+.page-head h1 { font-size: 1.5rem; font-weight: 700; color: #48465b; margin: 0; }
+.page-head .sub { color: grey; font-size: 1rem; font-weight: 500; }
+.page-head .small a { color: #74788d; }
+
+/* ---------- angka ringkasan ---------- */
+.stat .label { color: #74788d; font-size: .85rem; }
+.stat .value { font-size: 1.5rem; font-weight: 600; color: #48465b; }
+
+/* ---------- komponen tambahan ---------- */
+.class-pill { display: inline-block; min-width: 1.8rem; text-align: center; font-weight: 600; padding: .15rem .5rem;
+  border-radius: 2rem; background: rgba(34, 185, 255, .12); color: #22b9ff; }
+.sticky-summary { position: sticky; top: 90px; }
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
+.spark span { width: 6px; background: #22b9ff; opacity: .6; border-radius: 1px; }
+.spark span.zero { background: #fd397a; height: 2px !important; }
+.timeline { list-style: none; padding: 0; margin: 0; }
+.timeline li { display: flex; gap: .7rem; padding: .5rem 0; border-bottom: 1px dashed #ebedf2; }
+.timeline li:last-child { border-bottom: 0; }
+.timeline i { font-size: 1.1rem; }
+.tree-pillar { border-left: 4px solid #22b9ff; }
+.tree-jtbd { border-left: 3px solid #a3dcff; margin-left: 1rem; }
+.tree-lm { margin-left: 2rem; }
+.lm-ok { color: #0abb87; }
+.lm-no { color: #c4c5d6; }
+.formula-vars code { cursor: pointer; }
+.table-matrix td, .table-matrix th { padding: .3rem; }
+.table-matrix input, .table-matrix select { min-width: 70px; }
+.table-wide td:first-child, .table-wide th:first-child { min-width: 230px; }
+.table-wide.has-check td:nth-child(2), .table-wide.has-check th:nth-child(2) { min-width: 230px; }
+.table-wide.has-check td:first-child, .table-wide.has-check th:first-child { min-width: 0; }
+.list-group-item-action { cursor: pointer; }
+
+/* tab langkah Setup Program */
+.setup-tabs { margin-bottom: 20px; }
+.setup-tabs .nav-link .n { display: inline-flex; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: #ebedf2;
+  font-size: .75rem; align-items: center; justify-content: center; margin-right: .35rem; color: #74788d; }
+.setup-tabs .nav-link.active .n { background: #22b9ff; color: #fff; }
+
+/* badge "Baru" untuk menu Setup Program */
+.menu-new { font-size: .65rem; padding: .1rem .4rem; border-radius: 2rem; background: #fd397a; color: #fff; margin-left: .4rem; font-weight: 600; }
+
+/* header: menu dropdown dikendalikan app (tanpa KTMenu) */
+.kt-header-menu .kt-menu__nav > .kt-menu__item--submenu > .kt-menu__link { cursor: pointer; }
+
+/* catatan prototype di footer */
+.proto-note { color: #a2a5b9; font-size: .8rem; }
+.proto-note a { color: #22b9ff; }
+
+/* ---------- halaman login / lobby ---------- */
+.login-bg { position: fixed; inset: 0; background: #f2f3f8 url("../assets/paragon/login6.png") top center / 100% auto no-repeat; }
+.login-wrap { position: relative; min-height: 100vh; padding: 6vh 0; }
+.kt-login__title { font-size: 1.5rem; font-weight: 500; color: #67666e; margin-bottom: 1rem; }
+.demo-users .list-group-item { background: rgba(255, 255, 255, .85); }
+
+@media (max-width: 1024px) {
+  .sticky-summary { position: static; }
+}
+
+/* #app membungkus layout Metronic: teruskan tinggi penuh supaya footer di bawah */
+html, body { height: 100%; }
+#app { min-height: 100%; display: flex; flex-direction: column; }
+#app > .kt-grid--root { flex: 1 0 auto; }
+.kt-badge.kt-badge--inline { white-space: nowrap; }

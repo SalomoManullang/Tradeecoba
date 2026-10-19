@@ -1,0 +1,60 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/disbursement">Pencairan</a> / <%= program.name %></div>
+    <h1><%= period.name %></h1>
+    <div class="sub">Pencapaian <%= h.date(period.achieve_start) %> – <%= h.date(period.achieve_end) %> · klaim <%= h.date(period.claim_start) %> – <%= h.date(period.claim_end) %>
+      <%- isOpen ? '<span class="badge text-bg-success">dibuka</span>' : '<span class="badge text-bg-secondary">ditutup</span>' %></div>
+  </div>
+  <a href="/disbursement/program/<%= program.id %>/<%= period.id %>/export" class="btn btn-outline-primary"><i class="bi bi-download"></i> Export CSV</a>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3"><div class="card stat"><div class="label">Peserta aktif</div><div class="value"><%= totals.count %></div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat"><div class="label">Sudah diajukan</div><div class="value"><%= totals.submitted %></div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat"><div class="label">Estimasi bruto*</div><div class="value"><%= h.rpShort(totals.estimate) %></div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat"><div class="label">Sudah cair (netto)</div><div class="value"><%= h.rpShort(totals.paid) %></div></div></div>
+</div>
+<form class="mb-2 d-flex gap-2">
+  <select name="channel" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+    <option value="">Semua channel</option>
+    <% for (const c of program.channels) { %><option value="<%= c.channel_code %>" <%= query.channel === c.channel_code ? 'selected' : '' %>><%= c.channel_name %></option><% } %>
+  </select>
+</form>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Toko</th><th>Kelas</th><th class="num">Target periode</th><th class="num">Aktual</th><th class="num">Pencapaian</th>
+        <% for (const c of program.components.filter((c) => c.is_active)) { %><th class="num"><%= c.name %></th><% } %>
+        <th class="num">Bruto</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% for (const r of rows) { const c = r.calc; const lines = r.disb_id ? r.breakdown : c.lines;
+          const tg = r.disb_id ? r.disb_target : c.target, ac = r.disb_id ? r.disb_actual : c.actual, ach = r.disb_id ? r.disb_achievement : c.achievement; %>
+          <tr>
+            <td><span class="fw-semibold"><%= r.store_name %></span><div class="small text-muted"><%= r.customer_id %> · <%= r.channel_name %> · <%= r.dc_code %></div></td>
+            <td><span class="class-pill"><%= r.class_name %></span></td>
+            <td class="num"><%= h.rpShort(tg) %></td>
+            <td class="num"><%= h.rpShort(ac) %></td>
+            <td class="num fw-semibold <%= ach >= 100 ? 'text-success' : ach >= 90 ? 'text-warning' : 'text-danger' %>"><%= h.pct(ach) %></td>
+            <% for (const comp of program.components.filter((c) => c.is_active)) { const l = lines.find((x) => x.component_id === comp.id); %>
+              <td class="num small" title="<%= l ? l.detail : 'tidak berlaku' %>"><%= l ? h.rpShort(l.amount) : '–' %></td>
+            <% } %>
+            <td class="num"><%= r.disb_id ? h.rp(r.gross_amount) : h.rp(c.gross) %></td>
+            <td><% if (r.disb_id) { %><%- h.badge(r.disb_status) %><% if (r.step_name) { %><div class="small text-muted"><%= r.step_name %></div><% } %><% } else { %><span class="badge text-bg-light">Belum diajukan</span><% } %></td>
+            <td class="text-end text-nowrap">
+              <% if (r.disb_id && r.disb_status !== 'returned') { %>
+                <a href="/disbursement/item/<%= r.disb_id %>" class="btn btn-sm btn-outline-primary">Detail</a>
+              <% } else if (canSubmit) { %>
+                <a href="/disbursement/program/<%= program.id %>/<%= period.id %>/participant/<%= r.id %>" class="btn btn-sm btn-primary <%= isOpen ? '' : 'disabled' %>"><%= r.disb_status === 'returned' ? 'Revisi' : 'Ajukan' %></a>
+              <% } else { %>
+                <a href="/disbursement/program/<%= program.id %>/<%= period.id %>/participant/<%= r.id %>" class="btn btn-sm btn-outline-secondary">Lihat</a>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+        <% if (!rows.length) { %><tr><td colspan="20" class="text-center text-muted py-4">Belum ada peserta aktif dalam scope Anda.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="form-text">* Estimasi untuk yang belum diajukan dihitung tanpa realisasi JTBD (reward JTBD = 0 sampai diisi saat pengajuan).</div>
+<%- include('../partials/foot') %>

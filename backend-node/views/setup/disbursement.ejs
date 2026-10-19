@@ -1,0 +1,209 @@
+<%- include('../partials/head') %>
+<%- include('_nav') %>
+<% const e = edit || { id: '', name: '', comp_type: 'growth_rebate', program_channel_id: null, period_ids: null, is_active: true, sort: program.components.length + 1,
+     config: { base: 'actual', rebate_source: 'class', tiers: [{ min_achievement: 90, payout_pct: 50 }, { min_achievement: 100, payout_pct: 100 }] } };
+   const cfg = e.config || {};
+   const allClassNames = [...new Set(program.channels.flatMap((c) => c.classes.map((x) => x.name)))];
+   const chName = (id) => id ? (program.channels.find((c) => c.id === id) || {}).channel_name : 'Semua channel';
+   const perName = (ids) => !ids || !ids.length ? 'Semua periode' : ids.map((i) => (program.periods.find((p) => p.id === i) || {}).name).join(', '); %>
+
+<div class="card mb-3">
+  <div class="card-header">Periode pencairan</div>
+  <div class="card-body">
+    <form method="post" action="/setup/<%= program.id %>/periods">
+      <table class="table table-sm" id="perTable">
+        <thead><tr><th>Nama</th><th>Pencapaian dihitung dari</th><th>s/d</th><th>Klaim dibuka</th><th>Klaim ditutup</th><th></th></tr></thead>
+        <tbody>
+          <% const pers = program.periods.length ? program.periods : [{ id: '', name: '', achieve_start: '', achieve_end: '', claim_start: '', claim_end: '' }]; %>
+          <% for (const p of pers) { %>
+            <tr>
+              <td><input type="hidden" name="period_id" value="<%= p.id %>"><input name="period_name" class="form-control form-control-sm" value="<%= p.name %>" placeholder="Semester 1"></td>
+              <td><input type="date" name="achieve_start" class="form-control form-control-sm" value="<%= p.achieve_start %>"></td>
+              <td><input type="date" name="achieve_end" class="form-control form-control-sm" value="<%= p.achieve_end %>"></td>
+              <td><input type="date" name="claim_start" class="form-control form-control-sm" value="<%= p.claim_start || '' %>"></td>
+              <td><input type="date" name="claim_end" class="form-control form-control-sm" value="<%= p.claim_end || '' %>"></td>
+              <td><button type="button" class="btn btn-sm btn-link text-danger del-row"><i class="bi bi-trash"></i></button></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="addPer"><i class="bi bi-plus"></i> Periode</button>
+      <button class="btn btn-sm btn-primary"><i class="bi bi-save"></i> Simpan periode</button>
+      <span class="form-text ms-2">Bisa semester, kuartal, atau bulanan. Target periode = target bulanan × jumlah bulan.</span>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    <div class="card mb-3">
+      <div class="card-header">Komponen hitungan pencairan</div>
+      <div class="card-body">
+        <p class="small text-muted">Total pencairan = jumlah semua komponen aktif yang berlaku untuk channel & periode peserta, lalu dipotong pajak (<%= program.tax_rate_npwp %>% NPWP / <%= program.tax_rate_non_npwp %>% non-NPWP).</p>
+        <% for (const c of program.components) { const k = c.config || {}; %>
+          <div class="border rounded p-2 mb-2 <%= c.is_active ? '' : 'opacity-50' %>">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong><%= c.sort %>. <%= c.name %></strong> <span class="badge text-bg-light"><%= h.COMP_TYPES[c.comp_type] %></span>
+                <% if (!c.is_active) { %><span class="badge text-bg-secondary">nonaktif</span><% } %>
+                <div class="small text-muted"><%= chName(c.program_channel_id) %> · <%= perName(c.period_ids) %></div>
+              </div>
+              <div class="text-nowrap">
+                <a href="?edit=<%= c.id %>" class="btn btn-sm btn-link">Edit</a>
+                <form method="post" action="/setup/<%= program.id %>/components/<%= c.id %>/delete" class="d-inline"><button class="btn btn-sm btn-link text-danger" data-confirm="Hapus komponen <%= c.name %>?">Hapus</button></form>
+              </div>
+            </div>
+            <div class="small mt-1">
+              <% if (c.comp_type === 'growth_rebate') { %>
+                Rebate <%= k.rebate_source === 'custom' ? h.pct(k.rebate_pct, 2) : '% sesuai kelas' %> × <%= k.base === 'target' ? 'target' : 'aktual' %> periode.
+                Tier: <% for (const t of (k.tiers || [])) { %><span class="badge text-bg-info-subtle text-dark me-1">≥<%= t.min_achievement %>% → bayar <%= t.payout_pct %>%</span><% } %>
+              <% } else if (c.comp_type === 'jtbd') { %>
+                Σ reward lead measure yang tercapai (reward % × <%= k.base === 'target' ? 'target' : 'aktual' %> + reward Rp)<%= k.min_achievement !== undefined ? ', syarat pencapaian ≥ ' + k.min_achievement + '%' : '' %>.
+              <% } else if (c.comp_type === 'fixed') { %>
+                <% for (const [cl, v] of Object.entries(k.amounts || {})) { %><span class="me-2">Kelas <%= cl %>: <%= h.rp(v) %></span><% } %><%= k.min_achievement !== undefined ? ' · syarat ≥ ' + k.min_achievement + '%' : '' %>
+              <% } else { %>
+                <code><%= k.expression %></code><%= k.min_achievement !== undefined ? ' · syarat ≥ ' + k.min_achievement + '%' : '' %>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+        <% if (!program.components.length) { %><div class="text-muted">Belum ada komponen.</div><% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-calculator"></i> Simulasi hitungan</div>
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3"><label class="form-label small">Channel</label>
+            <select id="sChannel" class="form-select form-select-sm"><% for (const ch of program.channels) { %><option value="<%= ch.id %>"><%= ch.channel_name %></option><% } %></select></div>
+          <div class="col-md-3"><label class="form-label small">Periode</label>
+            <select id="sPeriod" class="form-select form-select-sm"><% for (const p of program.periods) { %><option value="<%= p.id %>"><%= p.name %></option><% } %></select></div>
+          <div class="col-md-3"><label class="form-label small">Baseline / bulan</label><input id="sBase" type="number" class="form-control form-control-sm" value="70000000"></div>
+          <div class="col-md-3"><label class="form-label small">Growth % (kosong = min)</label><input id="sGrowth" type="number" class="form-control form-control-sm"></div>
+          <div class="col-md-4"><label class="form-label small">Pencapaian %</label><input id="sAch" type="range" min="50" max="150" value="105" class="form-range"><span id="sAchV">105%</span></div>
+          <div class="col-md-5"><div class="form-check"><input type="checkbox" id="sLm" class="form-check-input" checked><label for="sLm" class="form-check-label small">Semua lead measure tercapai</label></div></div>
+          <div class="col-md-3"><button type="button" id="sRun" class="btn btn-sm btn-outline-primary w-100">Hitung</button></div>
+        </div>
+        <div id="sOut" class="mt-3 small"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card sticky-summary">
+      <div class="card-header"><%= e.id ? 'Edit komponen' : 'Tambah komponen' %></div>
+      <div class="card-body">
+        <form method="post" action="/setup/<%= program.id %>/components">
+          <input type="hidden" name="id" value="<%= e.id %>">
+          <div class="row g-2">
+            <div class="col-8"><label class="form-label">Nama</label><input name="name" class="form-control" value="<%= e.name %>" required></div>
+            <div class="col-4"><label class="form-label">Urutan</label><input name="sort" type="number" class="form-control" value="<%= e.sort %>"></div>
+            <div class="col-12"><label class="form-label">Tipe</label>
+              <select name="comp_type" id="ctype" class="form-select">
+                <% for (const [k, v] of Object.entries(h.COMP_TYPES)) { %><option value="<%= k %>" <%= e.comp_type === k ? 'selected' : '' %>><%= v %></option><% } %>
+              </select></div>
+            <div class="col-6"><label class="form-label">Channel</label>
+              <select name="program_channel_id" class="form-select"><option value="">Semua channel</option>
+                <% for (const ch of program.channels) { %><option value="<%= ch.id %>" <%= e.program_channel_id === ch.id ? 'selected' : '' %>><%= ch.channel_name %></option><% } %></select></div>
+            <div class="col-6"><label class="form-label">Dasar %</label>
+              <select name="base" class="form-select"><option value="actual" <%= cfg.base !== 'target' ? 'selected' : '' %>>Aktual periode</option><option value="target" <%= cfg.base === 'target' ? 'selected' : '' %>>Target periode</option></select></div>
+            <div class="col-12"><label class="form-label">Periode berlaku</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <% for (const p of program.periods) { %>
+                  <div class="form-check"><input class="form-check-input" type="checkbox" name="period_ids" value="<%= p.id %>" id="pp<%= p.id %>" <%= e.period_ids && e.period_ids.includes(p.id) ? 'checked' : '' %>><label class="form-check-label" for="pp<%= p.id %>"><%= p.name %></label></div>
+                <% } %>
+              </div>
+              <div class="form-text">Tidak dicentang = semua periode.</div></div>
+
+            <div class="col-12 cfg cfg-growth_rebate">
+              <hr class="my-2">
+              <label class="form-label">Persentase rebate</label>
+              <div class="input-group mb-2">
+                <select name="rebate_source" class="form-select"><option value="class" <%= cfg.rebate_source !== 'custom' ? 'selected' : '' %>>Ikut rebate % kelas</option><option value="custom" <%= cfg.rebate_source === 'custom' ? 'selected' : '' %>>Angka khusus</option></select>
+                <input name="rebate_pct" type="number" step="any" class="form-control" value="<%= cfg.rebate_pct || '' %>" placeholder="%">
+              </div>
+              <label class="form-label">Tier pencapaian → % dibayar</label>
+              <div id="tiers">
+                <% for (const t of (cfg.tiers && cfg.tiers.length ? cfg.tiers : [{ min_achievement: 100, payout_pct: 100 }])) { %>
+                  <div class="input-group input-group-sm mb-1 tier">
+                    <span class="input-group-text">Pencapaian ≥</span><input name="tier_min" type="number" step="any" class="form-control" value="<%= t.min_achievement %>"><span class="input-group-text">% bayar</span>
+                    <input name="tier_payout" type="number" step="any" class="form-control" value="<%= t.payout_pct %>"><span class="input-group-text">%</span>
+                    <button type="button" class="btn btn-outline-danger del-tier"><i class="bi bi-x"></i></button>
+                  </div>
+                <% } %>
+              </div>
+              <button type="button" id="addTier" class="btn btn-sm btn-link px-0">+ tier</button>
+            </div>
+
+            <div class="col-12 cfg cfg-jtbd cfg-fixed cfg-formula">
+              <hr class="my-2">
+              <label class="form-label">Syarat pencapaian minimal (%)</label>
+              <input name="min_achievement" type="number" step="any" class="form-control" value="<%= cfg.min_achievement === undefined ? '' : cfg.min_achievement %>" placeholder="kosong = tanpa syarat">
+            </div>
+
+            <div class="col-12 cfg cfg-fixed">
+              <label class="form-label mt-2">Nominal per kelas (Rp)</label>
+              <% for (const cl of allClassNames) { %>
+                <div class="input-group input-group-sm mb-1"><span class="input-group-text" style="width:90px">Kelas <%= cl %></span><input name="amount_<%= cl %>" type="number" step="any" class="form-control" value="<%= (cfg.amounts || {})[cl] || '' %>"></div>
+              <% } %>
+            </div>
+
+            <div class="col-12 cfg cfg-formula">
+              <label class="form-label mt-2">Rumus</label>
+              <textarea name="expression" class="form-control font-monospace" rows="3" placeholder="achievement >= 110 ? (actual - target) * 0.01 : 0"><%= cfg.expression || '' %></textarea>
+              <div class="form-text formula-vars">Variabel (klik untuk sisip):
+                <% for (const v of formulaVars.concat(program.fields.filter((f) => ['number','currency','percent'].includes(f.field_type)).map((f) => f.key))) { %><code class="me-1"><%= v %></code><% } %>
+                <br>Fungsi: <code>min max round floor ceil abs if(k,a,b)</code>, operator <code>+ - * / ? : &gt;= &amp;&amp; ||</code>. Contoh komponen promosi tahun depan: <code>promo_budget * 0.5</code> (dengan kolom key <code>promo_budget</code>).
+              </div>
+            </div>
+
+            <div class="col-12"><div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" name="is_active" id="act" <%= e.is_active ? 'checked' : '' %>><label class="form-check-label" for="act">Aktif</label></div></div>
+          </div>
+          <button class="btn btn-primary mt-3"><i class="bi bi-save"></i> Simpan komponen</button>
+          <% if (e.id) { %><a href="/setup/<%= program.id %>/disbursement" class="btn btn-link mt-3">Batal</a><% } %>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // periode
+  const ptb = document.querySelector('#perTable tbody');
+  document.getElementById('addPer').addEventListener('click', () => {
+    const tr = ptb.rows[ptb.rows.length - 1].cloneNode(true);
+    tr.querySelectorAll('input').forEach((i) => { i.value = ''; });
+    ptb.appendChild(tr);
+  });
+  ptb.addEventListener('click', (e) => { const b = e.target.closest('.del-row'); if (b && ptb.rows.length > 1) b.closest('tr').remove(); });
+  // tipe komponen
+  const ct = document.getElementById('ctype');
+  const syncCfg = () => document.querySelectorAll('.cfg').forEach((d) => { d.style.display = d.classList.contains('cfg-' + ct.value) ? '' : 'none'; });
+  ct.addEventListener('change', syncCfg); syncCfg();
+  // tier
+  const tiers = document.getElementById('tiers');
+  document.getElementById('addTier').addEventListener('click', () => {
+    const t = tiers.querySelector('.tier').cloneNode(true); t.querySelectorAll('input').forEach((i) => { i.value = ''; }); tiers.appendChild(t);
+  });
+  tiers.addEventListener('click', (e) => { const b = e.target.closest('.del-tier'); if (b && tiers.children.length > 1) b.closest('.tier').remove(); });
+  // sisip variabel rumus
+  document.querySelectorAll('.formula-vars code').forEach((c) => c.addEventListener('click', () => {
+    const ta = document.querySelector('[name=expression]'); ta.value += (ta.value && !ta.value.endsWith(' ') ? ' ' : '') + c.textContent; ta.focus();
+  }));
+  // simulasi
+  const ach = document.getElementById('sAch');
+  ach.addEventListener('input', () => { document.getElementById('sAchV').textContent = ach.value + '%'; });
+  document.getElementById('sRun').addEventListener('click', async () => {
+    const body = new URLSearchParams({ pc_id: sChannel.value, period_id: sPeriod.value, baseline: sBase.value, growth: sGrowth.value, achievement: ach.value, lm_all: sLm.checked });
+    const r = await fetch('/setup/<%= program.id %>/simulate', { method: 'POST', body }).then((x) => x.json());
+    const out = document.getElementById('sOut');
+    if (r.error) { out.innerHTML = `<span class="text-danger">${r.error}</span>`; return; }
+    out.innerHTML = `<div class="mb-2">Kelas <span class="class-pill">${r.cls}</span> · growth ${r.growth}% · target periode <strong>${fmtRp(r.target)}</strong> · aktual ${fmtRp(r.actual)} (${fmtNum(r.achievement, 1)}%)</div>
+      <table class="table table-sm mb-0">${r.lines.map((l) => `<tr><td>${l.name}<div class="text-muted">${l.detail}</div></td><td class="num">${fmtRp(l.amount)}</td></tr>`).join('')}
+      <tr class="fw-semibold"><td>Bruto</td><td class="num">${fmtRp(r.gross)}</td></tr>
+      <tr><td>Pajak (${r.taxRate}%)</td><td class="num">-${fmtRp(r.tax)}</td></tr>
+      <tr class="fw-bold text-brand"><td>Netto</td><td class="num">${fmtRp(r.net)}</td></tr></table>`;
+  });
+</script>
+<%- include('../partials/foot') %>

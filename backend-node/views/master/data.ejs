@@ -1,0 +1,35 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Channel & Brand</h1><div class="sub">Channel/brand baru bisa ditambahkan tanpa ubah kode.</div></div>
+</div>
+<div class="row g-3">
+  <% for (const [kind, title, list] of [['channel', 'Channel', channels], ['brand', 'Brand', brands]]) { %>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header"><%= title %></div>
+        <div class="card-body">
+          <table class="table table-sm">
+            <thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <% for (const x of list) { %>
+                <tr class="<%= x.is_active ? '' : 'text-muted' %>"><td><code><%= x.code %></code></td><td><%= x.name %></td><td><%= x.is_active ? 'Aktif' : 'Nonaktif' %></td>
+                  <td class="text-end"><form method="post" action="/master/data/<%= kind %>/<%= x.code %>/toggle"><button class="btn btn-sm btn-link"><%= x.is_active ? 'Nonaktifkan' : 'Aktifkan' %></button></form></td></tr>
+              <% } %>
+            </tbody>
+          </table>
+          <form method="post" action="/master/data/<%= kind %>" class="row g-2">
+            <div class="col-4"><input name="code" class="form-control form-control-sm text-uppercase" placeholder="Kode" required></div>
+            <div class="col-5"><input name="name" class="form-control form-control-sm" placeholder="Nama" required></div>
+            <div class="col-3"><button class="btn btn-sm btn-primary w-100">Tambah</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
+  <div class="col-12">
+    <div class="card"><div class="card-header">DC</div><div class="card-body small">
+      <% for (const d of dcs) { %><span class="badge text-bg-light me-1"><%= d.code %> · <%= d.name %> (<%= d.region %>)</span><% } %>
+    </div></div>
+  </div>
+</div>
+<%- include('../partials/foot') %>

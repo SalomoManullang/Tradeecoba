@@ -1,0 +1,71 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Inbox Approval</h1><div class="sub">Data yang sedang menunggu di tahap milik role <strong><%= h.ROLE_LABEL[user.role] %></strong> (tahapan diatur Admin HO per program)</div></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">Pendaftaran toko <span class="badge text-bg-secondary"><%= participants.length %></span></div>
+  <% if (participants.length) { %>
+  <form method="post" action="/inbox/bulk">
+    <input type="hidden" name="entity" value="participant">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr><th><input type="checkbox" class="form-check-input" data-check-all="ids"></th><th>Toko</th><th>Program · channel</th><th>Kelas</th><th class="num">Baseline</th><th class="num">Growth</th><th class="num">Target / bln</th><th>Tahap</th><th></th></tr></thead>
+        <tbody>
+          <% for (const r of participants) { %>
+            <tr>
+              <td><input type="checkbox" class="form-check-input" name="ids" value="<%= r.id %>"></td>
+              <td><span class="fw-semibold"><%= r.store_name %></span><div class="small text-muted"><%= r.customer_id %> · <%= r.dc_code %></div></td>
+              <td class="small"><%= r.program_name %><br><%= r.channel_name %></td>
+              <td><span class="class-pill"><%= r.class_name %></span></td>
+              <td class="num"><%= h.rpShort(r.baseline) %></td>
+              <td class="num"><%= h.pct(r.growth_pct, 0) %></td>
+              <td class="num"><%= h.rpShort(r.target_monthly) %></td>
+              <td class="small"><%= r.step_name %></td>
+              <td class="text-end"><a href="/registration/participant/<%= r.id %>" class="btn btn-sm btn-outline-primary">Review</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-body border-top d-flex gap-2">
+      <input name="note" class="form-control form-control-sm" style="max-width: 360px" placeholder="Catatan (opsional)">
+      <button class="btn btn-sm btn-success" data-confirm="Setujui semua toko yang dicentang?"><i class="bi bi-check2-all"></i> Setujui yang dicentang</button>
+    </div>
+  </form>
+  <% } else { %><div class="card-body text-muted">Tidak ada pendaftaran yang menunggu Anda.</div><% } %>
+</div>
+
+<div class="card">
+  <div class="card-header">Pencairan <span class="badge text-bg-secondary"><%= disbursements.length %></span></div>
+  <% if (disbursements.length) { %>
+  <form method="post" action="/inbox/bulk">
+    <input type="hidden" name="entity" value="disbursement">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr><th><input type="checkbox" class="form-check-input" data-check-all="ids"></th><th>Toko</th><th>Program · periode</th><th>Kelas</th><th class="num">Pencapaian</th><th class="num">Bruto</th><th class="num">Netto</th><th>Tahap</th><th></th></tr></thead>
+        <tbody>
+          <% for (const d of disbursements) { %>
+            <tr>
+              <td><input type="checkbox" class="form-check-input" name="ids" value="<%= d.id %>"></td>
+              <td><span class="fw-semibold"><%= d.store_name %></span><div class="small text-muted"><%= d.customer_id %> · <%= d.channel_name %></div></td>
+              <td class="small"><%= d.program_name %><br><%= d.period_name %></td>
+              <td><span class="class-pill"><%= d.class_name %></span></td>
+              <td class="num"><%= h.pct(d.achievement_pct) %></td>
+              <td class="num"><%= h.rp(d.gross_amount) %></td>
+              <td class="num fw-semibold"><%= h.rp(d.net_amount) %></td>
+              <td class="small"><%= d.step_name %></td>
+              <td class="text-end"><a href="/disbursement/item/<%= d.id %>" class="btn btn-sm btn-outline-primary">Review</a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-body border-top d-flex gap-2">
+      <input name="note" class="form-control form-control-sm" style="max-width: 360px" placeholder="Catatan (opsional)">
+      <button class="btn btn-sm btn-success" data-confirm="Setujui semua pencairan yang dicentang?"><i class="bi bi-check2-all"></i> Setujui yang dicentang</button>
+    </div>
+  </form>
+  <% } else { %><div class="card-body text-muted">Tidak ada pencairan yang menunggu Anda.</div><% } %>
+</div>
+<%- include('../partials/foot') %>

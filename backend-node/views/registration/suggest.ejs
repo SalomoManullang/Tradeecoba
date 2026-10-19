@@ -1,0 +1,59 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/registration">Pendaftaran</a> / <%= program.name %></div>
+    <h1>Saran Toko · <%= pc.channel_name %></h1>
+    <div class="sub">Baseline = <%= program.baseline_method === 'avg_monthly' ? 'rata-rata' : 'rata-rata bulan aktif' %> <%= program.basis === 'sellin' ? 'sell in' : 'sell out' %>
+      <%= h.date(program.baseline_start) %> – <%= h.date(program.baseline_end) %> · brand <%= pc.brand_codes.join(', ') %></div>
+  </div>
+  <div class="text-end">
+    <div class="fs-5"><strong><%= counts.eligible %></strong> <span class="text-muted fs-6">eligible dari <%= counts.total %> toko belum terdaftar</span></div>
+    <a href="?all=<%= showAll ? '0' : '1' %>" class="small"><%= showAll ? 'Sembunyikan yang tidak eligible' : 'Tampilkan juga yang tidak eligible' %></a>
+  </div>
+</div>
+<% if (!isOpen) { %><div class="alert alert-secondary">Periode pendaftaran sedang ditutup. Data hanya bisa dilihat.</div><% } %>
+
+<div class="card mb-2">
+  <div class="card-body py-2 small d-flex flex-wrap gap-3">
+    <span class="text-muted">Aturan eligibility:</span>
+    <% for (const c of pc.classes) { %><span><span class="class-pill"><%= c.name %></span> <%= h.rpShort(c.baseline_min) %>–<%= c.baseline_max === null ? '∞' : h.rpShort(c.baseline_max) %>, growth ≥<%= c.min_growth %>%</span><% } %>
+    <% if (pc.min_sellout_ratio !== null) { %><span>· Rasio SO:SI ≥ <%= pc.min_sellout_ratio %>%</span><% } else { %><span class="text-muted">· Rasio SO:SI hanya informasi</span><% } %>
+    <% if (pc.min_active_months !== null) { %><span>· Min <%= pc.min_active_months %> bulan aktif</span><% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Toko</th><th>DC</th><th>Sell out <%= h.month(baselineMonths[0]) %> – <%= h.month(baselineMonths[baselineMonths.length - 1]) %></th>
+          <th class="num">Baseline / bln</th><th class="num">SO:SI</th><th class="num">Bln aktif</th><th>Kelas</th><th class="num">Target min / bln</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% for (const r of rows) { const max = Math.max(...r.monthly, 1); %>
+          <tr class="<%= r.eligible ? '' : 'table-light text-muted' %>">
+            <td><div class="fw-semibold"><%= r.store.name %></div><div class="small text-muted"><%= r.store.customer_id %> · <%= r.store.city %></div></td>
+            <td><%= r.store.dc_code %></td>
+            <td><div class="spark" title="<%= r.monthly.map((v, i) => h.month(baselineMonths[i]) + ': ' + h.rp(v)).join('\n') %>">
+              <% for (const v of r.monthly) { %><span class="<%= v ? '' : 'zero' %>" style="height: <%= Math.max(2, Math.round(v / max * 26)) %>px"></span><% } %>
+            </div></td>
+            <td class="num fw-semibold"><%= h.rp(Math.round(r.baseline)) %></td>
+            <td class="num <%= pc.min_sellout_ratio !== null && r.ratio !== null && r.ratio < pc.min_sellout_ratio ? 'text-danger' : '' %>"><%= h.pct(r.ratio) %></td>
+            <td class="num"><%= r.activeMonths %></td>
+            <td><% if (r.cls) { %><span class="class-pill"><%= r.cls.name %></span><% } else { %>-<% } %></td>
+            <td class="num"><%= r.cls ? h.rp(Math.round(r.baseline * (1 + r.cls.min_growth / 100))) : '-' %></td>
+            <td class="text-end">
+              <% if (r.eligible) { %>
+                <a href="/registration/program/<%= program.id %>/<%= pc.id %>/store/<%= r.store.customer_id %>" class="btn btn-sm btn-primary <%= isOpen ? '' : 'disabled' %>">Daftarkan</a>
+              <% } else { %>
+                <span class="small text-danger"><%= r.reasons.join('; ') %></span>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+        <% if (!rows.length) { %><tr><td colspan="9" class="text-center text-muted py-4">Tidak ada toko <%= showAll ? '' : 'eligible ' %>yang belum terdaftar.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/foot') %>

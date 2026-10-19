@@ -1,0 +1,63 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <div class="small text-muted"><a href="/disbursement">Pencairan</a> / <a href="/disbursement/program/<%= program.id %>/<%= period.id %>"><%= program.name %> · <%= period.name %></a></div>
+    <h1><%= d.store_name %> <%- h.badge(d.status) %></h1>
+    <div class="sub"><%= d.customer_id %> · <%= pc.channel_name %> · DC <%= d.dc_code %> · kelas <span class="class-pill"><%= d.class_name %></span> · diajukan <%= d.submitted_by_name %> <%= h.datetime(d.created_at) %></div>
+  </div>
+  <% if (canEdit) { %><a href="/disbursement/program/<%= program.id %>/<%= period.id %>/participant/<%= d.participant_id %>" class="btn btn-primary"><i class="bi bi-pencil"></i> Revisi & kirim ulang</a><% } %>
+</div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <% if (canAct) { %><%- include('../partials/approval_box', { entity: 'disbursement', id: d.id, step, back: '/disbursement/item/' + d.id }) %><% } %>
+    <div class="card mb-3">
+      <div class="card-header">Rincian hitungan</div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Target</div><div class="value"><%= h.rpShort(d.target) %></div></div></div>
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Aktual</div><div class="value"><%= h.rpShort(d.actual) %></div></div></div>
+          <div class="col-4"><div class="stat bg-light rounded"><div class="label">Pencapaian</div><div class="value"><%= h.pct(d.achievement_pct) %></div></div></div>
+        </div>
+        <table class="table table-sm">
+          <% for (const l of d.breakdown) { %><tr><td><%= l.name %><div class="small text-muted"><%= l.detail %></div></td><td class="num"><%= h.rp(l.amount) %></td></tr><% } %>
+          <tr class="fw-semibold"><td>Bruto</td><td class="num"><%= h.rp(d.gross_amount) %></td></tr>
+          <tr><td>Pajak <%= d.tax_rate %>% (<%= d.payee.npwp_no ? 'NPWP' : 'non-NPWP' %>)</td><td class="num">-<%= h.rp(d.tax_amount) %></td></tr>
+          <tr class="fw-bold fs-5 text-brand"><td>Netto dibayarkan</td><td class="num"><%= h.rp(d.net_amount) %></td></tr>
+        </table>
+        <div class="small text-muted">Angka dibekukan saat pengajuan, sesuai setup program & data sell out saat itu.</div>
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header">Realisasi JTBD</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Pilar · JTBD</th><th>Lead measure</th><th>Target</th><th>Realisasi</th><th></th></tr></thead>
+          <tbody>
+            <% for (const r of lmRows) { %>
+              <tr><td class="small text-muted"><%= r.lm.pillar_name %> · <%= r.lm.jtbd_name %></td><td><%= r.lm.name %></td><td><%= r.param.target_value %> <span class="small text-muted"><%= r.lm.unit || '' %></span></td>
+                <td><%= r.value || '-' %></td><td><%- r.achieved ? '<i class="bi bi-check-circle-fill lm-ok"></i>' : '<i class="bi bi-dash-circle lm-no"></i>' %></td></tr>
+            <% } %>
+            <% if (!lmRows.length) { %><tr><td colspan="5" class="text-muted p-3">Tidak ada lead measure.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Data pencairan</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">NPWP</dt><dd class="col-sm-8"><%= d.payee.npwp_no || '-' %> <%= d.payee.npwp_name ? '· ' + d.payee.npwp_name : '' %></dd>
+          <dt class="col-sm-4">Rekening</dt><dd class="col-sm-8"><%= d.payee.bank_name %> <%= d.payee.bank_account_no %> a.n. <%= d.payee.bank_account_name %></dd>
+          <% for (const f of fields) { %><dt class="col-sm-4"><%= f.label %></dt><dd class="col-sm-8"><%= d.data[f.key] !== undefined ? d.data[f.key] : '-' %></dd><% } %>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">Riwayat</div>
+      <div class="card-body"><%- include('../partials/log', { logs }) %></div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/foot') %>

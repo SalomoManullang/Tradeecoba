@@ -50,18 +50,20 @@
     return {
       title: `Saran toko · ${ch.channel_name}`, html: `
       <div class="page-head"><div><div class="small text-muted"><a href="#/registration">Registration</a> / ${esc(program.name)}</div>
-        <h1>Saran toko · ${esc(ch.channel_name)}</h1><div class="sub">Saran baseline = rata-rata sell in ${ref} per brand. Baseline final diisi CBD/CDT di form.</div></div>
+        <h1>Saran toko · ${esc(ch.channel_name)}</h1><div class="sub">Saran baseline = total sell in ${ref} ÷ bulan aktif sejak first DO, per brand. Baseline final diisi CBD/CDT di form.</div></div>
         <div class="text-right"><div class="fs-5"><strong>${nElig}</strong> <span class="text-muted fs-6">eligible dari ${stores.length} toko belum terdaftar</span></div>
           <a href="#/registration/program/${program.id}/${ch.id}?all=${showAll ? '0' : '1'}" class="small">${showAll ? 'Sembunyikan yang tidak eligible' : 'Tampilkan juga yang tidak eligible'}</a></div></div>
       <div class="card mb-2"><div class="card-body py-2 small d-flex flex-wrap gap-3"><span class="text-muted">Aturan eligibility:</span>
         ${ch.elig_min_sell_out_months ? `<span>Min ${ch.elig_min_sell_out_months} bulan sell out</span>` : ''}
-        ${ch.elig_ratio_min !== null ? `<span>· SO:SI ${ch.elig_ratio_min}–${ch.elig_ratio_max === null ? '∞' : ch.elig_ratio_max}%</span>` : ''}
+        ${ch.elig_ratio_at_registration && ch.elig_ratio_min !== null ? `<span>· SO:SI ${ch.elig_ratio_min}–${ch.elig_ratio_max === null ? '∞' : ch.elig_ratio_max}%</span>` : ''}
+        ${(ch.elig_exclusive_program_ids || []).length ? `<span>· Tidak boleh bersamaan: ${(ch.elig_exclusive_program_ids || []).map((x) => esc((DB.byId('programs', x) || {}).name || x)).join(', ')}</span>` : ''}
         <span>· Baseline min per brand: ${ch.brands.map((b) => `${esc(b.brand_name)} ${h.rpShort(E.minBaseline(ch, b))}`).join(', ')}</span>
         ${ch.elig_prior_payout_required ? '<span>· Wajib pernah menerima payout</span>' : ''}</div></div>
       <div class="card"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
         <thead><tr><th>Toko</th><th>DC</th><th class="num">Bln SO</th><th class="num">SO:SI</th>${ch.brands.map((b) => `<th class="num">${esc(b.brand_name)}</th>`).join('')}<th></th></tr></thead>
         <tbody>${rows.map(({ s, el }) => `<tr class="${el.eligible ? '' : 'text-muted'}">
-          <td><div class="fw-semibold">${esc(s.name)}</div><div class="small text-muted">${s.customer_id} · ${esc(s.city)}</div></td><td>${s.dc_code}</td>
+          <td><div class="fw-semibold">${esc(s.name)}</div><div class="small text-muted">${s.customer_id} · ${esc(s.city)}</div>
+            ${el.exception ? `<span class="badge badge-warning" title="${esc(el.reasons.join('; '))}">Exception: ${esc(el.exception.reason)}</span>` : ''}</td><td>${s.dc_code}</td>
           <td class="num">${el.soMonths}</td><td class="num">${h.pct(el.ratio)}</td>
           ${el.brands.map((b) => `<td class="num small ${b.eligible ? '' : 'text-muted'}">${b.suggested ? h.rpShort(b.suggested) : '-'}${b.cls ? `<br>${h.cls(b.cls.code)}` : ''}</td>`).join('')}
           <td class="text-right">${el.eligible ? `<a href="#/registration/program/${program.id}/${ch.id}/store/${s.customer_id}" class="btn btn-sm btn-brand">Daftarkan</a>`

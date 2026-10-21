@@ -63,14 +63,31 @@
 
   // Vision Compass 2026: 3 pilar → 5 JTBD → 11 lead measure
   const PILLARS = [
-    ['Being Relevant With Trend', 40, [
-      ['Driving High-Impact Livestream Commerce', [['Live Stream Duration Dedicated', '2–4 jam per sesi', 'DURATION_HOURS', 'jam'], ['Live Stream Frequency', 'Min 3 sesi per minggu', 'COUNT', 'sesi/minggu']]],
-      ['Creating Trend-Led Content', [['Short Video Content', 'Min 8 video per bulan', 'COUNT', 'video/bulan'], ['Trend Campaign Participation', 'Ikut campaign tren bulanan', 'BOOLEAN', '']]]]],
-    ['Instore Experience', 30, [
-      ['Optimizing Brand Store Visibility', [['Brand Store Banner Active', 'Banner brand aktif di toko', 'BOOLEAN', ''], ['Etalase Brand', 'Min 5 etalase', 'COUNT', 'etalase'], ['SKU Listing Completeness', 'Listing sesuai planogram', 'COUNT', 'SKU']]],
-      ['Assortment Excellence', [['Hero SKU Always Available', 'Hero SKU tersedia tiap bulan', 'MONTH_COUNT', 'bulan']]]]],
-    ['Shopper Experience', 30, [
-      ['Building Loyal Shoppers', [['Follower Growth', 'Follower baru per bulan', 'COUNT', 'orang/bulan'], ['Chat Response Time', 'Balas chat < 1 jam', 'DURATION_HOURS', 'jam'], ['Voucher Program Active', 'Voucher toko aktif', 'MONTH_COUNT', 'bulan']]]]],
+    ['Being Relevant With Trend', [
+      ['Driving High-Impact Livestream Commerce', [['Live Stream Duration Dedicated', 'NUMBER', 'jam'], ['Live Stream Frequency', 'NUMBER', 'sesi/minggu']]],
+      ['Creating Trend-Led Content', [['Short Video Content', 'NUMBER', 'video/bulan'], ['Trend Campaign Participation', 'TEXT', '']]]]],
+    ['Instore Experience', [
+      ['Optimizing Brand Store Visibility', [['Brand Store Banner Active', 'TEXT', ''], ['Etalase Brand', 'NUMBER', 'etalase'], ['SKU Listing Completeness', 'PERCENT', '']]],
+      ['Assortment Excellence', [['Hero SKU Always Available', 'NUMBER', 'bulan']]]]],
+    ['Shopper Experience', [
+      ['Building Loyal Shoppers', [['Follower Growth', 'NUMBER', 'orang/bulan'], ['Chat Response Time', 'NUMBER', 'jam'], ['Voucher Program Active', 'NUMBER', 'bulan']]]]],
+  ];
+
+  // Target per lead measure (urutan sama dengan PILLARS): fn(indeks kelas, section) → { op, value, text }
+  const at = (xs, k) => xs[Math.min(k, xs.length - 1)];
+  const gte = (value) => ({ op: 'GTE', value, text: null });
+  const LM_TARGETS = [
+    (k, s) => gte(s === 'Makeup' ? at([2, 2, 3, 4, 4], k) : at([1, 1, 1.5, 2, 2], k)), // live stream duration (2026 tier E: 2 jam face care, 4 jam makeup)
+    (k) => gte(at([2, 2, 3, 3, 4], k)),
+    (k, s) => gte(s === 'Makeup' ? at([6, 8, 10, 12, 16], k) : at([4, 6, 8, 10, 12], k)),
+    () => ({ op: 'TEXT', value: null, text: 'Ikut campaign tren setiap bulan' }),
+    () => ({ op: 'TEXT', value: null, text: 'Banner brand aktif di toko' }),
+    (k) => gte(at([3, 5, 5, 10, 10], k)),
+    (k) => gte(at([80, 85, 90, 95, 100], k)), // listing SKU (%)
+    () => gte(3),
+    (k) => gte(at([50, 100, 200, 300, 500], k)),
+    () => ({ op: 'LTE', value: 1, text: null }),
+    () => gte(3),
   ];
 
   function build() {
@@ -132,17 +149,29 @@
             tiers: tiers.map(([g, total, cond], k) => ({ tier_no: k + 1, target_growth_pct: g, total_rebate_pct: total, conditional_rebate_pct: cond !== undefined ? cond : +(total - fix).toFixed(4) })) });
         });
       });
-      PILLARS.forEach(([pName, w, jtbds], pi) => {
-        const pl = DB.insert('programPillars', { program_channel_id: pc.id, name: pName, sort_order: pi + 1, weight_pct: w });
+      const lmIds = [];
+      PILLARS.forEach(([pName, jtbds], pi) => {
+        const pl = DB.insert('programPillars', { program_channel_id: pc.id, name: pName, sort_order: pi + 1, weight_pct: null });
         jtbds.forEach(([jName, lms], ji) => {
           const j = DB.insert('programJtbds', { program_pillar_id: pl.id, name: jName, sort_order: ji + 1 });
-          lms.forEach(([lName, desc, type, unit], li) => DB.insert('programLeadMeasures', { program_jtbd_id: j.id, name: lName, description: desc, value_type: type, unit, weight_pct: null, sort_order: li + 1 }));
+          lms.forEach(([lName, type, unit], li) => lmIds.push(DB.insert('programLeadMeasures', { program_jtbd_id: j.id, name: lName, description: null, value_type: type, unit, weight_pct: null, sort_order: li + 1 }).id));
         });
       });
+      // Target lead measure per kelas; Wardah dibagi section Face Care / Makeup, brand lain tanpa section
+      for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) {
+        const sections = b.brand_code === 'WRD' ? ['Face Care', 'Makeup'] : [];
+        const classes = DB.where('programClasses', (c) => c.program_channel_brand_id === b.id);
+        b.lm_targets = Object.fromEntries(classes.map((c, k) => [c.code, { sections, rows: Object.fromEntries(LM_TARGETS.map((fn, i) => {
+          const cells = sections.length ? sections.map((s) => fn(k, s)) : [fn(k, null)];
+          const same = sections.length > 1 && cells.every((x) => JSON.stringify(x) === JSON.stringify(cells[0]));
+          return [lmIds[i], { off: false, same, cells: same ? [cells[0]] : cells }];
+        })) }]));
+      }
     }
     function channel(program, code, scale) {
       const pc = DB.insert('programChannels', { program_id: program.id, channel_code: code, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
-        elig_min_sell_out_months: 3, elig_ratio_min: 96, elig_ratio_max: 100, elig_min_baseline: {}, elig_prior_payout_required: false });
+        elig_min_sell_out_months: 3, elig_ratio_min: 96, elig_ratio_max: 100, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
+        elig_exclusive_program_ids: [], elig_exceptions: [] });
       scheme(pc, scale);
       E.createChannelDefaults(pc, u['admin.ho'].id);
       // ABL auto-approve bila growth per brand ≥ 70% (contoh PRD FR8)
@@ -227,7 +256,7 @@
       const pay = DB.insert('payouts', { registration_id: r.id, component, period_key: per.key, period_label: per.label, start: per.start, end: per.end,
         amount: calc.amount, lines: calc.lines.map((l) => ({ brand_code: l.brand_code, brand_name: l.brand_name, class_code: l.class_code, achievement_pct: l.achievement_pct, tier_growth_pct: l.tier_growth_pct,
           conditional_pct: l.conditional_pct, fix_max_pct: l.fix_max_pct, pillar_score: l.pillar_score, net_sell_in: l.net_sell_in, amount: l.amount, trace: l.trace, error: l.error })),
-        compliance: calc.compliance, data: { payout_schedule: per.key.startsWith('Q') ? 'Quarterly' : 'Semester', transfer_evidence: stop ? '' : `transfer_${r.customer_id}_${per.key}.pdf` },
+        compliance: calc.compliance, monitoring: calc.monitoring, data: { payout_schedule: per.key.startsWith('Q') ? 'Quarterly' : 'Semester', transfer_evidence: stop ? '' : `transfer_${r.customer_id}_${per.key}.pdf` },
         status: 'in_review', current_layer_id: null, approval_objects: E.payoutObjects(ch, r, calc, per), submitted_by: u['admin.dc'].id, created_at: ago(8), updated_at: ago(8) });
       E.submit('payout', pay, u['admin.dc'].id);
       approveUntil(pay, 'payout', stop);

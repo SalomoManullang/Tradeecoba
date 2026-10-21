@@ -1,4 +1,4 @@
-// Payout dua jalur (PRD FR14): CONDITIONAL (growth → tier) dan FIX (kepatuhan pilar), masing-masing dengan
+// Payout dua jalur (PRD FR14): CONDITIONAL (growth → tier) dan FIX (Monitoring termin disetujui), masing-masing dengan
 // jadwal sendiri (quarterly / semester), form Payout, dan approval layer Payout sampai final approval.
 (function () {
   const { h, route, actions, clicks, done, fail, inScope, store } = UI;
@@ -62,7 +62,7 @@
         ${pers.map((x) => `<a class="btn btn-sm ${x.key === per.key ? 'btn-info' : 'btn-outline-info'}" href="${link({ per: x.key })}">${esc(x.label)}</a>`).join('')}</div>
       ${ready ? '' : '<div class="alert alert-secondary py-2 small">Data penjualan periode ini belum lengkap. Pengajuan dibuka setelah data semua bulan masuk.</div>'}
       <div class="alert alert-light py-2 small">${comp === 'CONDITIONAL' ? 'Conditional = conditional % tier tercapai (dari achievement periode) × dasar rebate. Growth di bawah tier 1 → 0.'
-        : `Fix = fix maks kelas × skor pilar (${esc(ch.pillar_framework_name || '')}, dari evidence Monitoring yang disetujui) × dasar rebate. Tidak bergantung pada growth.`}</div>
+        : `Fix = fix maks kelas × skor ${esc(ch.pillar_framework_name || 'Vision Compass')} (porsi periode Monitoring yang disetujui) × dasar rebate. Tidak bergantung pada growth.`} Syarat semua termin: rasio SO:SI ${ch.elig_ratio_min ?? 0}–${ch.elig_ratio_max ?? '∞'}%; di luar rentang → tidak dibayar.</div>
       <div class="card"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
         <thead><tr><th>Toko</th><th>Brand: ${comp === 'CONDITIONAL' ? 'achievement → tier' : 'skor pilar'}</th><th class="num">Nominal</th><th>Status</th><th></th></tr></thead>
         <tbody>${rows.map(({ r, pay, calc }) => { const s = store(r.customer_id); const lines = pay ? pay.lines : calc.lines; const l = pay && E.currentLayer(pay);
@@ -127,10 +127,13 @@
       <div class="page-head"><div><div class="small text-muted"><a href="#/payout/program/${program.id}?ch=${ch.id}&c=${comp}&per=${per.key}">Payout ${esc(program.name)}</a></div>
         <h1>${COMP[comp]} ${esc(per.label)} · ${esc(s.name)}</h1><div class="sub">${reg.customer_id} · ${esc(ch.channel_name)} · ${h.date(per.start)} – ${h.date(per.end)}</div></div></div>
       ${UI.errorsHtml(pend && pend.errors)}${calc.errors.length ? `<div class="alert alert-danger">${calc.errors.map(esc).join('<br>')}</div>` : ''}
+      ${calc.blocked ? `<div class="alert alert-warning">${esc(calc.blocked)}</div>` : `<div class="alert alert-light py-2 small">Syarat payout SO:SI termin ini: ${calc.ratio.value === null ? '-' : h.pct(calc.ratio.value)} (rentang ${esc(calc.ratio.rule)}) <span class="text-success">memenuhi</span>.</div>`}
       <form data-action="payout.submit" data-reg="${reg.id}" data-comp="${comp}" data-per="${per.key}"><div class="row g-3"><div class="col-xl-8">
         <div class="card mb-3"><div class="card-header">Hitungan otomatis (dari setup)</div><div class="table-responsive">${linesHtml(calc.lines, comp)}</div></div>
-        ${comp === 'FIX' ? `<div class="card mb-3"><div class="card-header">Kepatuhan pilar</div><div class="card-body small">${ch.pillars.map((pl, i) => `<div class="d-flex justify-content-between"><span>${esc(pl.name)} <span class="text-muted">bobot ${pl.weight_pct || 0}%</span></span><strong>${h.pct(calc.compliance[i] * 100, 0)}</strong></div>`).join('')}
-          <div class="text-muted mt-1">Dari monitoring yang disetujui dengan akhir periode di ${h.date(per.start)} – ${h.date(per.end)}.</div></div></div>` : ''}
+        ${comp === 'FIX' ? `<div class="card mb-3"><div class="card-header">Monitoring termin ini</div><div class="card-body small">
+          <div class="d-flex justify-content-between"><span>Periode Monitoring disetujui</span><strong>${calc.monitoring.approved} / ${calc.monitoring.due} → skor ${h.num(calc.monitoring.ratio, 2)}</strong></div>
+          <div class="text-muted mt-1">Periode Monitoring yang berakhir di ${h.date(per.start)} – ${h.date(per.end)}. Kelengkapan evidence per pilar (informasi):</div>
+          ${ch.pillars.map((pl, i) => `<div class="d-flex justify-content-between"><span>${esc(pl.name)}</span><span>${h.pct(calc.compliance[i] * 100, 0)}</span></div>`).join('')}</div></div>` : ''}
         <details class="card mb-3"><summary class="card-header">Trace rumus</summary><div class="card-body">${traceHtml(calc.lines)}</div></details>
       </div>
       <div class="col-xl-4"><div class="card sticky-summary"><div class="card-header">Form Payout</div><div class="card-body">
@@ -159,7 +162,7 @@
     if (errors.length) { UI.retry(errors, f); return; }
     values.payout_amount = calc.amount;
     const now = new Date().toISOString();
-    const row = { amount: calc.amount, compliance: calc.compliance, data: values, approval_objects: E.payoutObjects(ch, reg, calc, per), updated_at: now,
+    const row = { amount: calc.amount, compliance: calc.compliance, monitoring: calc.monitoring, data: values, approval_objects: E.payoutObjects(ch, reg, calc, per), updated_at: now,
       lines: calc.lines.map((l) => ({ brand_code: l.brand_code, brand_name: l.brand_name, class_code: l.class_code, achievement_pct: l.achievement_pct, tier_growth_pct: l.tier_growth_pct,
         conditional_pct: l.conditional_pct, fix_max_pct: l.fix_max_pct, pillar_score: l.pillar_score, net_sell_in: l.net_sell_in, amount: l.amount, trace: l.trace, error: l.error })) };
     const pay = ex ? Object.assign(ex, row) : DB.insert('payouts', Object.assign({ registration_id: reg.id, component: comp, period_key: per.key, period_label: per.label, start: per.start, end: per.end,

@@ -177,3 +177,65 @@ details > summary { cursor: pointer; }
   .flow-steps li + li::before { display: none; }
   .loop-lane { padding: 26px 8px 10px; }
 }
+
+/* Contoh isian (placeholder) lebih pudar supaya tidak terlihat seperti nilai yang sudah diisi */
+.form-control::-webkit-input-placeholder { color: #a7abc3; opacity: .7; }
+.form-control::placeholder { color: #a7abc3; opacity: .7; }
+
+/* 3c · label kolom baris lead measure di struktur pilar */
+.tree-lm.lm-head { display: flex; gap: 0; font-size: .75rem; font-weight: 600; color: #74788d; padding: 0 0 2px 2px; }
+.tree-lm.lm-head .lm-head-x { width: 38px; }
+
+/* 3c · target per kelas: tabel seperti Excel, Pilar · JTBD · Lead measure dibekukan di kiri, lebar kolom bisa ditarik */
+.lmt-sheet-wrap { overflow: auto; max-height: 75vh; border: 2px solid #000; background: #fff; }
+.lmt-sheet { --w1: 150px; --w2: 210px; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: .85rem; color: #2f3348; }
+.lmt-sheet th, .lmt-sheet td { border-right: 2px solid #000; border-bottom: 2px solid #000; padding: 6px 8px; background: #fff; vertical-align: middle; overflow-wrap: anywhere; }
+.lmt-sheet thead th { position: sticky; z-index: 2; background: #0b7cc1; color: #fff; text-align: center; font-weight: 600; font-size: .82rem; vertical-align: middle; }
+.lmt-sheet thead tr.lmt-hr1 th { top: 0; height: 64px; }
+.lmt-sheet thead tr.lmt-hr2 th { top: 64px; background: #d7f0ff; color: #0b4f7c; font-weight: 600; }
+.lmt-sheet .lmt-class { font-size: 1rem; color: #fff; }
+.lmt-class-sub { font-size: .72rem; font-weight: 400; color: #d7f0ff; }
+.lmt-class-act .btn { font-size: .74rem; margin: 0 4px; color: #fff; text-decoration: underline; }
+.lmt-class-act .btn:hover { color: #d7f0ff; }
+.lmt-sheet .fz { position: sticky; z-index: 1; }
+.lmt-sheet thead .fz { z-index: 3; }
+.lmt-sheet .fz1 { left: 0; }
+.lmt-sheet .fz2 { left: var(--w1); }
+.lmt-sheet .fz3 { left: calc(var(--w1) + var(--w2)); }
+.lmt-sheet thead .fz { background: #075f96; }
+.lmt-sheet tbody .fz1 { background: #e3f4ff; color: #073f63; font-weight: 700; text-transform: uppercase; font-size: .76rem; letter-spacing: .02em; }
+.lmt-sheet tbody .fz2 { background: #f0f9ff; color: #0b4f7c; }
+.lmt-sheet tbody .fz3 { background: #fff; color: #1b2433; font-weight: 600; }
+.lmt-sheet tbody tr:hover td:not(.fz1):not(.fz2) { background: #f5fbff; }
+.lmt-sec-in { width: 100%; min-width: 0; background: #fff; border: 1px solid #7fb7dc; color: #0b4f7c; font-weight: 600; border-radius: 4px; padding: 2px 6px; font-size: .8rem; text-align: center; }
+.lmt-sec-in:focus { border-color: #22b9ff; outline: 0; }
+/* garis tarik lebar kolom */
+.lmt-rs { position: absolute; top: 0; right: -5px; width: 10px; height: 100%; cursor: col-resize; z-index: 4; }
+.lmt-rs::after { content: ''; position: absolute; top: 22%; bottom: 22%; left: 3px; width: 3px; border-radius: 2px; background: rgba(255, 255, 255, .55); }
+.lmt-hr2 .lmt-rs::after { background: rgba(11, 79, 124, .35); }
+.lmt-rs:hover::after { background: #fff; }
+.lmt-hr2 .lmt-rs:hover::after { background: #0b7cc1; }
+.lmt-rs:hover, .lmt-resizing .lmt-rs { background: rgba(255, 255, 255, .6); }
+.lmt-resizing, .lmt-resizing * { cursor: col-resize !important; user-select: none; }
+/* sel input: kotak yang jelas */
+.lmt-cell { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.lmt-lm { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.lmt-op { flex: 0 0 92px; width: 92px; height: 30px; border: 1px solid #9fbad0; border-radius: 4px; background: #f0f9ff; color: #0b4f7c; padding: 0 2px; font-size: .82rem; }
+.lmt-in { flex: 1; min-width: 0; height: 30px; border: 1px solid #9fbad0; border-radius: 4px; padding: 3px 7px; background: #fff; color: #1b2433; }
+.lmt-in.num { flex: 0 0 84px; text-align: center; }
+.lmt-in.txt { height: auto; min-height: 32px; resize: none; overflow: hidden; line-height: 1.4; padding: 5px 8px; white-space: pre-wrap; text-align: center; box-sizing: border-box; }
+.lmt-in:hover, .lmt-op:hover { border-color: #22b9ff; }
+.lmt-in:focus, .lmt-op:focus { border-color: #22b9ff; box-shadow: 0 0 0 2px rgba(34, 185, 255, .18); outline: 0; }
+.lmt-unit { flex: 0 0 84px; width: 84px; color: #3d5a73; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .8rem; text-align: left; }
+.lmt-sheet tbody td:not(.fz) { position: relative; }
+.lmt-cell.is-empty .lmt-op, .lmt-cell.is-empty .lmt-unit { opacity: .45; }
+.lmt-cell.is-empty .lmt-in { background: #fbfcfe; border-style: dashed; }
+.lmt-sheet td.lmt-merged, .lmt-sheet tbody tr:hover td.lmt-merged { background: #e8f6ff; }
+.lmt-merge { border: 0; background: transparent; color: #8a94ad; padding: 0 2px; line-height: 1; }
+.lmt-cell > .lmt-merge { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
+.lmt-cell.is-text { padding-right: 18px; }
+.lmt-merge:hover { color: #1f8ce6; }
+
+
+/* 3a · judul bagian di halaman eligibility & jadwal */
+.elig-sec { font-weight: 600; color: #0b4f7c; border-bottom: 1px solid #d7e6f2; padding-bottom: 4px; margin-top: 4px; }

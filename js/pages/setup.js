@@ -1,5 +1,5 @@
 // Program Setup (Admin HO / Superadmin) bagian 1, mengikuti "Program Setup Flow":
-// 0 daftar · 1A clone · 1B header · 2 channel · 3a brand · 3b kelas & tier per brand · 3c pilar · 3d rumus
+// 0 daftar · 1A clone · 1B header · 2 channel · 3a eligibility & jadwal (setup2.js) · 3b brand · 3c kelas & tier per brand · 3d pilar · 3e rumus
 (function () {
   const { h, route, actions, clicks, done, fail } = UI;
   const { esc, toNum, sel, chk } = h;
@@ -34,8 +34,8 @@
   const editable = (p) => p.status === 'DRAFT';
   const fs = (p) => (editable(p) ? '' : 'disabled'); // <fieldset ${fs(p)}> → read-only setelah publish
 
-  const CH_TABS = [['brands', '3a', 'Brand'], ['classes', '3b', 'Kelas & tier'], ['pillars', '3c', 'Pilar'], ['formulas', '3d', 'Rumus'],
-    ['phases', '3e–f', 'Fase: form & approval'], ['eligibility', '3g', 'Eligibility & jadwal'], ['documents', '3h', 'Dokumen']];
+  const CH_TABS = [['eligibility', '3a', 'Eligibility & jadwal'], ['brands', '3b', 'Brand'], ['classes', '3c', 'Kelas & tier'], ['pillars', '3d', 'Pilar'], ['formulas', '3e', 'Rumus'],
+    ['phases', '3f–g', 'Fase: form & approval'], ['documents', '3h', 'Dokumen']];
 
   // Header program + stepper alur setup (step 1–8) + sub-tab per channel (step 3, diulang per channel)
   function nav(p, step, ch, sub) {
@@ -44,7 +44,7 @@
     const steps = [
       ['header', '1', 'Header', `#/setup/${p.id}/header`],
       ['channels', '2', 'Channel', `#/setup/${p.id}/channels`],
-      ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/brands` : `#/setup/${p.id}/channels`],
+      ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/eligibility` : `#/setup/${p.id}/channels`],
       ['simulate', '4', 'Simulasi', `#/setup/${p.id}/simulate`],
       ['validate', '5–6', st === 'DRAFT' ? 'Validasi & publish' : 'Validasi', `#/setup/${p.id}/validate`],
       ...(st !== 'DRAFT' ? [['docs', '7', 'Edit MOU / SKN', first ? `#/setup/${p.id}/ch/${first.id}/documents` : '#'], ['close', '8', 'Close', `#/setup/${p.id}/validate?focus=close`]] : []),
@@ -228,7 +228,7 @@
         <table class="table mb-0"><thead><tr><th>Channel</th><th class="num">Brand</th><th class="num">Pilar / LM</th><th>Approval Registration</th><th></th></tr></thead><tbody>
         ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td><td class="num">${ch.brands.length}</td>
           <td class="num">${ch.pillars.length} / ${ch.leadMeasures.length}</td><td>${UI.layerPath(ch.phases.REGISTRATION.layers)}</td>
-          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/brands" class="btn btn-sm btn-brand">Konfigurasi</a>
+          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/eligibility" class="btn btn-sm btn-brand">Konfigurasi</a>
             ${editable(p) ? `<a href="#" class="btn btn-sm btn-link text-danger" data-click="setup.deleteChannel" data-id="${p.id}" data-pc="${ch.id}" data-confirm="Hapus channel ${esc(ch.channel_name)} beserta konfigurasinya?">Hapus</a>` : ''}</td></tr>`).join('')
           || '<tr><td colspan="5" class="text-muted p-4">Belum ada channel.</td></tr>'}</tbody></table></div></div></div>
       <div class="col-lg-4"><div class="card"><div class="card-header">Tambah channel</div><div class="card-body">
@@ -247,11 +247,12 @@
     const code = f.get('channel_code');
     if (DB.t('programChannels').some((c) => c.program_id === pid && c.channel_code === code)) throw new Error('Channel sudah ada di program ini.');
     const pc = DB.insert('programChannels', { program_id: pid, channel_code: code, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
-      elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_min_baseline: {}, elig_prior_payout_required: false });
+      elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
+      elig_exclusive_program_ids: [], elig_exceptions: [] });
     E.createChannelDefaults(pc, UI.currentUser().id);
     E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code });
     touch(pid);
-    done('success', 'Channel ditambahkan. Lanjut pilih brand peserta.', `/setup/${pid}/ch/${pc.id}/brands`);
+    done('success', 'Channel ditambahkan. Lanjut atur eligibility & jadwal.', `/setup/${pid}/ch/${pc.id}/eligibility`);
   };
   clicks['setup.deleteChannel'] = (d) => {
     assertDraft(Number(d.id));
@@ -260,7 +261,7 @@
     done('success', 'Channel dihapus.', `/setup/${d.id}/channels`);
   };
 
-  // ---------------------------------------------------------------- 3a · brand
+  // ---------------------------------------------------------------- 3b · brand
   route('/setup/:id/ch/:pc/brands', ({ id, pc }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
@@ -270,18 +271,21 @@
     return {
       title: `Brand · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'brands')}
       <form data-action="setup.saveBrands" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
-      <div class="card"><div class="card-header"><span class="step-chip">3a</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
+      <div class="card"><div class="card-header"><span class="step-chip">3b</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
         <p class="small text-muted mb-3">Baseline <strong>tidak</strong> diatur di sini: CBD/CDT mengisi baseline tiap toko di form Registration. EST & IR growth hanya informasi (<span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span> definisi dikonfirmasi).</p>
         <div class="table-responsive"><table class="table table-sm table-bordered">
-          <thead><tr><th style="width:60px">Ikut</th><th>Brand (skema)</th><th>Sub-brand yang memakai skema ini</th><th style="width:120px">EST growth %</th><th style="width:120px">IR growth %</th><th class="num">Kelas</th><th></th></tr></thead>
+          <thead><tr><th style="width:60px">Ikut</th><th>Brand (skema)</th><th>Sub-brand yang memakai skema ini</th><th style="width:120px">EST growth %</th><th style="width:120px">IR growth %</th><th style="width:170px">Baseline minimal / bln</th><th class="num">Kelas</th><th></th></tr></thead>
           <tbody>${master.filter((b) => !usedAsMember.has(b.code) || inCh[b.code]).map((b) => { const x = inCh[b.code];
             return `<tr><td class="text-center"><input type="checkbox" class="form-check-input position-static" name="brand_codes" value="${b.code}" ${chk(!!x)}></td>
               <td class="fw-semibold">${esc(b.name)} <code class="small">${b.code}</code></td>
               <td><div class="d-flex flex-wrap gap-2">${master.filter((m) => m.code !== b.code && !inCh[m.code]).map((m) => `<label class="small mb-0"><input type="checkbox" name="members_${b.code}" value="${m.code}" ${chk(x && (x.member_codes || []).includes(m.code))}> ${esc(m.name)}</label>`).join('') || '<span class="small text-muted">-</span>'}</div></td>
               <td><div class="input-group input-group-sm"><input name="est_${b.code}" type="number" step="any" class="form-control" value="${x && x.est_growth_pct !== null ? x.est_growth_pct : ''}"><span class="input-group-text">%</span></div></td>
               <td><div class="input-group input-group-sm"><input name="ir_${b.code}" type="number" step="any" class="form-control" value="${x && x.ir_growth_pct !== null ? x.ir_growth_pct : ''}"><span class="input-group-text">%</span></div></td>
+              <td><div class="input-group input-group-sm"><span class="input-group-text">Rp</span><input name="minb_${b.code}" type="number" class="form-control" value="${(ch.elig_min_baseline || {})[b.code] === undefined || (ch.elig_min_baseline || {})[b.code] === null ? '' : ch.elig_min_baseline[b.code]}"
+                placeholder="${x && x.classes[0] ? h.rpShort(x.classes[0].baseline_min) : 'kelas terendah'}"></div></td>
               <td class="num">${x ? x.classes.length : '-'}</td>
               <td class="text-right">${x ? `<a href="#/setup/${p.id}/ch/${ch.id}/brands/${x.id}" class="btn btn-sm btn-outline-brand">Kelas & tier</a>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+        <div class="form-text mb-2">Baseline minimal = syarat pendaftaran per brand (saran baseline toko harus ≥ angka ini). Kosong = batas bawah kelas terendah brand tsb (3c).</div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan brand</button>
         <span class="form-text d-inline ml-2">Contoh: Light+ memakai skema & target Wardah.</span>
       </div></div></fieldset></form>`,
@@ -307,12 +311,14 @@
       const ex = existing.find((b) => b.brand_code === code);
       if (ex) Object.assign(ex, v); else DB.insert('programChannelBrands', Object.assign({ program_channel_id: pcId, brand_code: code }, v));
     });
-    E.audit(pid, 'programChannelBrand', pcId, 'update', before, codes);
+    const pc = DB.byId('programChannels', pcId);
+    pc.elig_min_baseline = Object.fromEntries(codes.map((c) => [c, toNum(f.get('minb_' + c))]).filter(([, n]) => n !== null));
+    E.audit(pid, 'programChannelBrand', pcId, 'update', before, { brands: codes, min_baseline: pc.elig_min_baseline });
     touch(pid);
     done('success', 'Brand peserta disimpan. Isi kelas & tier tiap brand.', `/setup/${pid}/ch/${pcId}/brands`);
   };
 
-  // ---------------------------------------------------------------- 3b · kelas & tier per brand
+  // ---------------------------------------------------------------- 3c · kelas & tier per brand
   route('/setup/:id/ch/:pc/brands/:b', ({ id, pc, b }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
@@ -326,7 +332,7 @@
         <div class="d-flex flex-wrap gap-2">${ch.brands.map((x) => `<a class="btn btn-sm ${x.id === brand.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/brands/${x.id}">${esc(x.brand_name)} <span class="badge badge-light">${x.classes.length}</span></a>`).join('')}</div></div>
       <div class="row g-3"><div class="col-xl-8">
         <form data-action="setup.saveClasses" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p)}><input type="hidden" name="classes" id="clsJson">
-        <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3b</span>&nbsp;Kelas & tier — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</span>
+        <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3c</span>&nbsp;Kelas & tier — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</span>
           <button type="button" class="btn btn-sm btn-outline-brand" id="addClass"><i class="bi bi-plus"></i> Kelas</button></div>
           <div class="card-body">
             <p class="small text-muted">Batas kelas khusus brand ini (brand lain di channel yang sama punya batas sendiri). Urutan 1 = kelas terendah. Baseline min <strong>inklusif</strong>, maks <strong>eksklusif</strong>, maks kosong = tak terbatas.
@@ -464,34 +470,51 @@
   };
 
   // ---------------------------------------------------------------- 3c · pillar framework
+  // 3c dua langkah: (1) struktur pilar → JTBD → lead measure per channel, (2) target tiap lead measure per brand × kelas (× section)
+  function pillarTabs(p, ch, active) {
+    const done = (b) => b.classes.filter((c) => (b.lm_targets || {})[c.code]).length;
+    return `<div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Struktur sekali per channel, lalu target per kelas untuk setiap brand</div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a class="btn btn-sm ${active === 'tree' ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars"><i class="bi bi-diagram-3"></i> 1. Struktur pilar</a>
+        <span class="small text-muted ml-2">2. Target per kelas:</span>
+        ${ch.brands.map((b) => `<a class="btn btn-sm ${active === b.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars/${b.id}">${esc(b.brand_name)}
+          <span class="badge ${b.classes.length && done(b) === b.classes.length ? 'badge-success' : 'badge-light'}">${done(b)}/${b.classes.length}</span></a>`).join('') || '<span class="small text-muted">Pilih brand dulu di 3b.</span>'}
+      </div></div>`;
+  }
+
   route('/setup/:id/ch/:pc/pillars', ({ id, pc }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
-    const tree = ch.pillars.map((pl) => ({ id: pl.id, name: pl.name, weight: pl.weight_pct, jtbds: pl.jtbds.map((j) => ({ id: j.id, name: j.name,
-      lms: j.lead_measures.map((l) => ({ id: l.id, name: l.name, description: l.description, unit: l.unit, value_type: l.value_type, weight: l.weight_pct })) })) }));
+    const tree = ch.pillars.map((pl) => ({ id: pl.id, name: pl.name, jtbds: pl.jtbds.map((j) => ({ id: j.id, name: j.name,
+      lms: j.lead_measures.map((l) => ({ id: l.id, name: l.name, description: l.description, unit: l.unit, value_type: l.value_type })) })) }));
     return {
       title: `Pilar · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'pillars')}
+      ${pillarTabs(p, ch, 'tree')}
       <form data-action="setup.savePillars" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}><input type="hidden" name="tree" id="treeJson">
-      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3c</span>&nbsp;Pillar framework — ${esc(ch.channel_name)}</span>
+      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pillar framework — ${esc(ch.channel_name)}</span>
         <button type="button" class="btn btn-sm btn-outline-brand" id="addPillar"><i class="bi bi-plus"></i> Pilar</button></div>
         <div class="card-body">
           <div class="row g-2 mb-3"><div class="col-md-5"><label class="form-label">Nama framework <span class="text-danger">*</span></label>
             <input name="framework" class="form-control" value="${esc(ch.pillar_framework_name)}" required placeholder="Vision Compass"><div class="form-text">Juga dipakai sebagai label Fix Rebate.</div></div>
-            <div class="col-md-7 small text-muted pt-md-4">Pilar → JTBD → Lead measure. Tidak ada target per kelas; kepatuhan berasal dari evidence yang disetujui di fase Monitoring.
-              Bobot pilar (<span class="warn-mark" title="Metode skor masih dikonfirmasi">⚠</span>) masuk ke rumus <code>pillar_score</code>. Referensi 2026: 3 pilar → 5 JTBD → 11 lead measure.</div></div>
+            <div class="col-md-7 small text-muted pt-md-4">Pilar → JTBD → Lead measure berlaku untuk semua brand di channel ini. Angka target (mis. 2 jam / 4 jam) diisi per brand × kelas di langkah 2; evidence diunggah di fase Monitoring.
+              Tanpa bobot (sama seperti 2026): Fix Rebate dibayar per termin bila Monitoring periodenya disetujui (rumus <code>pillar_score</code> di 3d). Referensi 2026: 3 pilar → 5 JTBD → 11 lead measure.</div></div>
           <div id="tree"></div><div id="wsum" class="small mt-2"></div>
+          <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pillar framework</button>
         </div></div></fieldset></form>`,
       after(root) {
         const el = root.querySelector('#tree');
         const t = tree;
         const ro = !editable(p);
-        const opt = (cur) => C.LM_VALUE_TYPES.map((x) => `<option ${sel(cur === x)}>${x}</option>`).join('');
+        const opt = (cur) => Object.entries(C.LM_VALUE_TYPES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
+        // Satuan: bebas untuk Angka (jam, etalase, bulan, …); otomatis % untuk Persentase; tidak dipakai untuk Teks
+        const unitInput = (l, a) => (l.value_type === 'PERCENT' ? '<input class="form-control bg-light" style="flex:1.3" value="%" disabled title="Persentase selalu %">'
+          : l.value_type === 'TEXT' ? '<input class="form-control bg-light" style="flex:1.3" value="" placeholder="(target berupa teks)" disabled>'
+          : `<input class="form-control" style="flex:1.3" ${a} data-f="unit" value="${h.esc(l.unit)}" list="lmUnits" placeholder="satuan, mis. jam / etalase">`);
         function draw() {
           el.innerHTML = t.map((pl, pi) => `<div class="tree-pillar pl-2 mb-3">
             <div class="input-group input-group-sm mb-1"><span class="input-group-text"><i class="bi bi-flag"></i>&nbsp;${pi + 1}</span>
               <input class="form-control fw-semibold" style="flex:4" data-p="${pi}" data-f="name" value="${h.esc(pl.name)}" placeholder="Nama pilar">
-              <input class="form-control" style="flex:1" type="number" step="any" data-p="${pi}" data-f="weight" value="${pl.weight === null || pl.weight === undefined ? '' : pl.weight}" placeholder="bobot"><span class="input-group-text">%</span>
               <button type="button" class="btn btn-outline-brand" data-act="addJ" data-p="${pi}">+ JTBD</button>
               <button type="button" class="btn btn-outline-danger" data-act="delP" data-p="${pi}"><i class="bi bi-trash"></i></button></div>
             ${pl.jtbds.map((j, ji) => `<div class="tree-jtbd pl-2 mb-2">
@@ -499,38 +522,37 @@
                 <input class="form-control" data-p="${pi}" data-j="${ji}" data-f="name" value="${h.esc(j.name)}" placeholder="Job to be done">
                 <button type="button" class="btn btn-outline-brand" data-act="addL" data-p="${pi}" data-j="${ji}">+ Lead measure</button>
                 <button type="button" class="btn btn-outline-danger" data-act="delJ" data-p="${pi}" data-j="${ji}"><i class="bi bi-trash"></i></button></div>
+              ${j.lms.length ? '<div class="tree-lm lm-head"><span style="flex:4">Lead measure</span><span style="flex:1.3">Satuan <span class="fw-normal">(bukan angka target)</span></span><span style="flex:1.2">Tipe</span><span class="lm-head-x"></span></div>' : ''}
               ${j.lms.map((l, li) => `<div class="tree-lm input-group input-group-sm mb-1">
-                <input class="form-control" style="flex:3" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="name" value="${h.esc(l.name)}" placeholder="Lead measure *">
-                <input class="form-control" style="flex:3" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="description" value="${h.esc(l.description)}" placeholder="Deskripsi, mis. Min 5 etalase">
-                <input class="form-control" style="flex:1.3" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="unit" value="${h.esc(l.unit)}" placeholder="satuan">
-                <select class="form-control" style="flex:1.6" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="value_type">${opt(l.value_type)}</select>
-                <input class="form-control" style="flex:1" type="number" step="any" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="weight" value="${l.weight === null || l.weight === undefined ? '' : l.weight}" placeholder="bobot %">
+                <input class="form-control" style="flex:4" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="name" value="${h.esc(l.name)}" placeholder="Lead measure *">
+                ${unitInput(l, `data-p="${pi}" data-j="${ji}" data-l="${li}"`)}
+                <select class="form-control" style="flex:1.2" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="value_type">${opt(l.value_type)}</select>
                 <button type="button" class="btn btn-outline-danger" data-act="delL" data-p="${pi}" data-j="${ji}" data-l="${li}"><i class="bi bi-x"></i></button></div>`).join('')}
             </div>`).join('')}</div>`).join('') || '<div class="text-muted small">Belum ada pilar.</div>';
           if (ro) el.querySelectorAll('input,select,button').forEach((x) => { x.disabled = true; });
           wsum();
         }
         function wsum() {
-          const s = t.reduce((a, pl) => a + (Number(pl.weight) || 0), 0);
           const nJ = t.reduce((a, pl) => a + pl.jtbds.length, 0); const nL = t.reduce((a, pl) => a + pl.jtbds.reduce((b, j) => b + j.lms.length, 0), 0);
-          root.querySelector('#wsum').innerHTML = `${t.length} pilar → ${nJ} JTBD → ${nL} lead measure · bobot pilar <strong class="${Math.abs(s - 100) < 0.001 ? 'text-success' : 'text-warning'}">${s}%</strong>${Math.abs(s - 100) < 0.001 ? '' : ' (peringatan: bukan 100%)'}`;
+          root.querySelector('#wsum').innerHTML = `${t.length} pilar → ${nJ} JTBD → ${nL} lead measure`;
         }
         el.addEventListener('input', (e) => {
           const d = e.target.dataset; if (!d.f) return;
           let o = t[d.p]; if (d.j !== undefined) o = o.jtbds[d.j]; if (d.l !== undefined) o = o.lms[d.l];
           o[d.f] = e.target.value; wsum();
+          if (d.f === 'value_type') draw(); // kolom satuan menyesuaikan tipe
         });
         el.addEventListener('click', (e) => {
           const b = e.target.closest('[data-act]'); if (!b) return;
           const d = b.dataset;
           if (d.act === 'addJ') t[d.p].jtbds.push({ name: '', lms: [] });
-          if (d.act === 'addL') t[d.p].jtbds[d.j].lms.push({ name: '', description: '', unit: '', value_type: 'COUNT', weight: '' });
+          if (d.act === 'addL') t[d.p].jtbds[d.j].lms.push({ name: '', description: null, unit: '', value_type: 'NUMBER' });
           if (d.act === 'delP' && confirm('Hapus pilar beserta JTBD & lead measure-nya?')) t.splice(d.p, 1);
           if (d.act === 'delJ' && confirm('Hapus JTBD beserta lead measure-nya?')) t[d.p].jtbds.splice(d.j, 1);
           if (d.act === 'delL') t[d.p].jtbds[d.j].lms.splice(d.l, 1);
           draw();
         });
-        root.querySelector('#addPillar').addEventListener('click', () => { t.push({ name: '', weight: '', jtbds: [{ name: '', lms: [] }] }); draw(); });
+        root.querySelector('#addPillar').addEventListener('click', () => { t.push({ name: '', jtbds: [{ name: '', lms: [] }] }); draw(); });
         if (ro) root.querySelector('#addPillar').disabled = true;
         root.querySelector('#treeJson').closest('form').addEventListener('submit', () => { root.querySelector('#treeJson').value = JSON.stringify(t); }, true);
         draw();
@@ -550,7 +572,13 @@
       pl.jtbds.forEach((j) => {
         if (!String(j.name || '').trim()) errs.push(`Pilar "${pl.name}": ada JTBD tanpa nama`);
         if (!j.lms.length) errs.push(`JTBD "${j.name}": minimal 1 lead measure`);
-        j.lms.forEach((l) => { if (!String(l.name || '').trim()) errs.push(`JTBD "${j.name}": ada lead measure tanpa nama`); if (!String(l.unit || '').trim() && l.value_type !== 'BOOLEAN' && l.value_type !== 'TEXT') errs.push(`Lead measure "${l.name}": satuan wajib`); });
+        j.lms.forEach((l) => {
+          if (!String(l.name || '').trim()) errs.push(`JTBD "${j.name}": ada lead measure tanpa nama`);
+          const unit = String(l.unit || '').trim();
+          if (C.lmType(l.value_type) !== 'NUMBER') return;
+          if (!unit) errs.push(`Lead measure "${l.name}": satuan wajib untuk tipe Angka`);
+          else if (/^[\d.,\s]+$/.test(unit)) errs.push(`Lead measure "${l.name}": satuan "${unit}" berupa angka. Isi satuannya (mis. jam, etalase); angka target diisi di Target per kelas`);
+        });
       });
       if (!pl.jtbds.length) errs.push(`Pilar "${pl.name}": minimal 1 JTBD`);
     });
@@ -563,9 +591,8 @@
     const oldJ = DB.where('programJtbds', (x) => oldP.includes(x.program_pillar_id)).map((x) => x.id);
     const oldL = DB.where('programLeadMeasures', (x) => oldJ.includes(x.program_jtbd_id)).map((x) => x.id);
     const kP = []; const kJ = []; const kL = [];
-    const num = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
     tree.forEach((pl, pi) => {
-      const pv = { program_channel_id: pcId, name: pl.name.trim(), sort_order: pi + 1, weight_pct: num(pl.weight) };
+      const pv = { program_channel_id: pcId, name: pl.name.trim(), sort_order: pi + 1, weight_pct: null };
       let pr = oldP.includes(pl.id) && DB.byId('programPillars', pl.id);
       if (pr) Object.assign(pr, pv); else pr = DB.insert('programPillars', pv);
       kP.push(pr.id);
@@ -575,8 +602,9 @@
         if (jr) Object.assign(jr, jv); else jr = DB.insert('programJtbds', jv);
         kJ.push(jr.id);
         j.lms.forEach((l, li) => {
-          const lv = { program_jtbd_id: jr.id, name: l.name.trim(), description: l.description || null, unit: l.unit || null,
-            value_type: C.LM_VALUE_TYPES.includes(l.value_type) ? l.value_type : 'COUNT', weight_pct: num(l.weight), sort_order: li + 1 };
+          const type = C.lmType(l.value_type);
+          const lv = { program_jtbd_id: jr.id, name: l.name.trim(), description: l.description || null, unit: type === 'NUMBER' ? String(l.unit || '').trim() || null : null,
+            value_type: type, weight_pct: null, sort_order: li + 1 };
           let lr = oldL.includes(l.id) && DB.byId('programLeadMeasures', l.id);
           if (lr) Object.assign(lr, lv); else lr = DB.insert('programLeadMeasures', lv);
           kL.push(lr.id);
@@ -588,7 +616,279 @@
     DB.remove('programPillars', (x) => oldP.includes(x.id) && !kP.includes(x.id));
     E.audit(pid, 'programPillar', pcId, 'replace', before, { framework, pillars: tree.length, lead_measures: kL.length });
     touch(pid);
-    done('success', `Pillar framework "${esc(framework)}" disimpan (${kP.length} pilar, ${kJ.length} JTBD, ${kL.length} lead measure).`, `/setup/${pid}/ch/${pcId}/pillars`);
+    done('success', `Pillar framework "${esc(framework)}" disimpan (${kP.length} pilar, ${kJ.length} JTBD, ${kL.length} lead measure). Lanjut isi target per kelas tiap brand.`, `/setup/${pid}/ch/${pcId}/pillars`);
+  };
+
+  // ---------------------------------------------------------------- 3c (2) · target lead measure per brand × kelas (× section)
+  // Tabel seperti Excel Vision Compass: Pilar · JTBD · Lead measure dibekukan di kiri, tiap kelas = kolom (section = sub-kolom).
+  // Sel kosong = lead measure tidak berlaku untuk kelas/section itu. Data tetap programChannelBrands.lm_targets.
+  route('/setup/:id/ch/:pc/pillars/:b', ({ id, pc, b }) => {
+    const p = getProgram(id);
+    const ch = getChannel(p, pc);
+    const brand = ch.brands.find((x) => x.id === Number(b));
+    if (!brand) fail('Brand tidak ditemukan');
+    const lms = ch.leadMeasures;
+    const saved = brand.lm_targets || {};
+    // state per kode kelas; cells sejajar dengan sections (tanpa section / "gabung" → cells[0]; null = kosong / tidak berlaku)
+    const state = Object.fromEntries(brand.classes.map((c) => {
+      const t = saved[c.code];
+      return [c.code, { configured: !!t, sections: ((t && t.sections) || []).slice(),
+        rows: Object.fromEntries(lms.map((l) => {
+          const r = t && (t.rows || {})[l.id];
+          return [l.id, r ? { off: !!r.off, same: !!r.same, cells: JSON.parse(JSON.stringify(r.cells || [])) } : { off: true, same: false, cells: [] }];
+        })) }];
+    }));
+    const empty = !brand.classes.length ? `Brand ini belum punya kelas. <a href="#/setup/${p.id}/ch/${ch.id}/brands/${brand.id}">Isi kelas di 3c</a>.`
+      : !lms.length ? `Channel belum punya lead measure. <a href="#/setup/${p.id}/ch/${ch.id}/pillars">Isi struktur pilar dulu</a>.` : '';
+    return {
+      title: `Target pilar ${brand.brand_name}`, html: `${nav(p, 'config', ch, 'pillars')}
+      ${pillarTabs(p, ch, brand.id)}
+      <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p)}><input type="hidden" name="targets" id="lmtJson">
+      <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;Target lead measure per kelas — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
+        <div class="card-body">${empty ? `<div class="text-muted">${empty}</div>` : `
+          <p class="small text-muted">Isi target tiap lead measure per kelas langsung di tabel. <strong>Sel kosong = tidak berlaku</strong> untuk kelas itu. Satuan mengikuti struktur pilar; operator (Minimal / Maksimal / = / Teks) dipilih sekali di kolom Lead measure dan berlaku untuk semua kelas.
+            Bila kelas dibagi lagi (mis. Wardah: <em>Face Care</em> &amp; <em>Makeup</em>), klik <i class="bi bi-plus"></i> Section di judul kelas; tombol <i class="bi bi-arrows-collapse-vertical"></i> menggabung section jadi satu target (mis. "Have a Store Community Affiliate").</p>
+          <div class="d-flex justify-content-between align-items-center mb-1 small text-muted"><span><i class="bi bi-arrows-expand-vertical"></i> Tarik garis di tepi kanan judul kolom untuk melebarkan / mengecilkan kolom: judul <em>Class</em> = seluruh kelas, judul section / Target = kolom itu saja.</span>
+            <button type="button" class="btn btn-sm btn-link p-0" id="lmtResetW">Reset lebar kolom</button></div>
+          <div class="lmt-sheet-wrap"><table class="lmt-sheet" id="lmtSheet"></table></div>
+          <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan target ${esc(brand.brand_name)}</button>`}
+        </div></div></fieldset></form>`,
+      after(root) {
+        if (empty) return;
+        const ro = !editable(p);
+        const box = root.querySelector('#lmtJson').closest('form');
+        const v = (x) => (x === null || x === undefined ? '' : x);
+        const lmOf = (idv) => lms.find((l) => l.id === Number(idv));
+        const multi = (s) => s.sections.length > 1;
+        const ncol = (s) => Math.max(1, s.sections.length);
+        const range = (n) => Array.from({ length: n }, (_, i) => i);
+        // operator satu per lead measure untuk brand ini (berlaku di semua kelas & section); diambil dari sel tersimpan pertama
+        const rowOps = Object.fromEntries(lms.map((l) => {
+          const ops = C.lmTargetOps(l.value_type);
+          const found = brand.classes.map((c) => state[c.code].rows[l.id]).flatMap((r) => (r.off ? [] : r.cells)).find((x) => x && ops.includes(x.op));
+          return [l.id, found ? found.op : ops[0]];
+        }));
+        const newCell = (l) => ({ op: rowOps[l.id], value: '', text: '' });
+        // sel yang ditampilkan di kolom i (null = kosong)
+        const cellAt = (s, r, i) => (r.off ? null : !multi(s) || r.same ? r.cells[0] || null : r.cells[i] || null);
+        // pastikan ada objek sel untuk diketik (sel kosong → baris jadi berlaku)
+        function ensureCell(code, l, i) {
+          const s = state[code]; const r = s.rows[l.id];
+          if (r.off) { r.off = false; r.same = false; r.cells = range(multi(s) ? ncol(s) : 1).map(() => null); }
+          const k = !multi(s) || r.same ? 0 : i;
+          if (!r.cells[k]) r.cells[k] = newCell(l);
+          r.cells[k].op = rowOps[l.id];
+          s.configured = true;
+          return r.cells[k];
+        }
+
+        // ---- lebar kolom: bisa ditarik, diingat per brand di browser ini (bukan data program)
+        const WKEY = `tradee-lmt-widths-${brand.id}`;
+        const DEF_W = { f1: 150, f2: 210, f3: 240 };
+        let W = {};
+        try { W = JSON.parse(localStorage.getItem(WKEY)) || {}; } catch (e) { W = {}; }
+        const colW = (k) => W[k] || DEF_W[k] || 240;
+        const saveW = () => { try { localStorage.setItem(WKEY, JSON.stringify(W)); } catch (e) { /* abaikan */ } };
+        const colKeys = () => ['f1', 'f2', 'f3', ...brand.classes.flatMap((c) => range(ncol(state[c.code])).map((i) => `${c.code}:${i}`))];
+        const fit = (el) => { el.style.height = 'auto'; el.style.height = `${el.scrollHeight + 2}px`; };
+        function applyWidths() {
+          const t = root.querySelector('#lmtSheet');
+          t.querySelectorAll('col[data-col]').forEach((col) => { col.style.width = `${colW(col.dataset.col)}px`; });
+          t.style.setProperty('--w1', `${colW('f1')}px`);
+          t.style.setProperty('--w2', `${colW('f2')}px`);
+          t.style.width = `${colKeys().reduce((sum, k) => sum + colW(k), 0)}px`;
+        }
+        const rs = (k) => (ro ? '' : `<span class="lmt-rs" data-rs="${h.esc(k)}" title="Tarik untuk ubah lebar kolom"></span>`);
+
+        function cellHtml(code, l, i, merged) {
+          const s = state[code]; const r = s.rows[l.id];
+          const c = cellAt(s, r, i);
+          const op = rowOps[l.id];
+          const a = `data-c="${h.esc(code)}" data-l="${l.id}" data-i="${i}"`;
+          const unit = C.lmUnit(l);
+          const mergeBtn = multi(s) && (merged || i === 0)
+            ? `<button type="button" class="lmt-merge" data-act="${merged ? 'split' : 'merge'}" ${a} title="${merged ? 'Pisahkan per section' : 'Gabung semua section jadi satu target'}"><i class="bi bi-${merged ? 'arrows-expand-vertical' : 'arrows-collapse-vertical'}"></i></button>` : '';
+          return `<div class="lmt-cell${c ? '' : ' is-empty'}${op === 'TEXT' ? ' is-text' : ''}">
+            ${op === 'TEXT' ? `<textarea class="lmt-in txt" rows="1" ${a} data-f="text" placeholder="${l.value_type === 'TEXT' ? 'teks target' : 'teks'}">${h.esc(c ? c.text : '')}</textarea>`
+              : `<input type="number" step="any" class="lmt-in num" ${a} data-f="value" value="${v(c ? c.value : '')}" placeholder="–"><span class="lmt-unit" title="${h.esc(unit)}">${h.esc(unit)}</span>`}
+            ${mergeBtn}</div>`;
+        }
+
+        function draw() {
+          const cls = brand.classes;
+          // rowspan pilar & JTBD (lead measure sudah terurut pilar → JTBD)
+          const span = (key) => lms.reduce((m, l) => { m[key(l)] = (m[key(l)] || 0) + 1; return m; }, {});
+          const pSpan = span((l) => l.pillar_id); const jSpan = span((l) => `${l.pillar_id}|${l.jtbd_name}`);
+          const head1 = cls.map((c) => { const s = state[c.code];
+            return `<th colspan="${ncol(s)}" class="lmt-class">${rs(`cls:${c.code}`)}Class ${h.esc(c.code)}<div class="lmt-class-sub">${h.rpShort(c.baseline_min)} – ${c.baseline_max === null || c.baseline_max === undefined ? '∞' : h.rpShort(c.baseline_max)}</div>
+              ${ro ? '' : `<div class="lmt-class-act"><button type="button" class="btn btn-link btn-sm p-0" data-act="addSec" data-c="${h.esc(c.code)}"><i class="bi bi-plus"></i> Section</button>
+                ${s.sections.length ? `<button type="button" class="btn btn-link btn-sm p-0" data-act="secAll" data-c="${h.esc(c.code)}" title="Pakai section kelas ini di semua kelas"><i class="bi bi-files"></i> ke semua kelas</button>` : ''}</div>`}</th>`; }).join('');
+          const head2 = cls.map((c) => { const s = state[c.code];
+            return s.sections.length ? s.sections.map((x, i) => `<th class="lmt-sec${i ? '' : ' lmt-gstart'}"><div class="d-flex align-items-center gap-1"><input class="lmt-sec-in" data-sec="${i}" data-c="${h.esc(c.code)}" value="${h.esc(x)}" placeholder="nama section">
+              ${ro ? '' : `<button type="button" class="lmt-merge text-danger" data-act="delSec" data-c="${h.esc(c.code)}" data-i="${i}" title="Hapus section"><i class="bi bi-x"></i></button>`}</div>${rs(`${c.code}:${i}`)}</th>`).join('')
+              : `<th class="lmt-sec lmt-gstart">Target${rs(`${c.code}:0`)}</th>`; }).join('');
+          let lastP = null; let lastJ = null;
+          const body = lms.map((l) => {
+            const jk = `${l.pillar_id}|${l.jtbd_name}`;
+            const pc1 = l.pillar_id !== lastP ? `<td class="fz fz1" rowspan="${pSpan[l.pillar_id]}">${h.esc(l.pillar_name)}</td>` : '';
+            const pc2 = jk !== lastJ ? `<td class="fz fz2" rowspan="${jSpan[jk]}">${h.esc(l.jtbd_name)}</td>` : '';
+            lastP = l.pillar_id; lastJ = jk;
+            const cells = cls.map((c) => { const s = state[c.code]; const r = s.rows[l.id];
+              if (multi(s) && !r.off && r.same) return `<td colspan="${ncol(s)}" class="lmt-merged lmt-gstart">${cellHtml(c.code, l, 0, true)}</td>`;
+              return range(ncol(s)).map((i) => `<td${i ? '' : ' class="lmt-gstart"'}>${cellHtml(c.code, l, i, false)}</td>`).join(''); }).join('');
+            const ops = C.lmTargetOps(l.value_type);
+            const opSel = ops.length > 1 ? `<select class="lmt-op" data-rowop="${l.id}" title="Operator untuk semua kelas">${ops.map((o) => `<option value="${o}" ${sel(rowOps[l.id] === o)}>${C.LM_TARGET_OPS[o]}</option>`).join('')}</select>` : '';
+            return `<tr>${pc1}${pc2}<td class="fz fz3"><div class="lmt-lm"><span>${h.esc(l.name)}</span>${opSel}</div></td>${cells}</tr>`;
+          }).join('');
+          root.querySelector('#lmtSheet').innerHTML = `<colgroup>${colKeys().map((k) => `<col data-col="${h.esc(k)}">`).join('')}</colgroup>
+            <thead><tr class="lmt-hr1"><th rowspan="2" class="fz fz1">Pilar${rs('f1')}</th><th rowspan="2" class="fz fz2">JTBD${rs('f2')}</th><th rowspan="2" class="fz fz3">Lead measure${rs('f3')}</th>${head1}</tr>
+            <tr class="lmt-hr2">${head2}</tr></thead><tbody>${body}</tbody>`;
+          applyWidths();
+          root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit);
+          if (ro) root.querySelectorAll('#lmtSheet input,#lmtSheet select,#lmtSheet button,#lmtSheet textarea').forEach((x) => { x.disabled = true; });
+        }
+
+        // tarik tepi judul kolom → ubah lebar. Listener dokumen dipasang sekali dan menunjuk ke halaman yang sedang tampil.
+        let drag = null;
+        box.addEventListener('mousedown', (e) => {
+          const hd = e.target.closest('.lmt-rs'); if (!hd) return;
+          e.preventDefault();
+          const key = hd.dataset.rs;
+          // judul kelas → semua kolom section kelas itu ikut melebar/menyempit sebanding
+          const parts = key.startsWith('cls:') ? range(ncol(state[key.slice(4)])).map((i) => `${key.slice(4)}:${i}`) : [key];
+          drag = { x: e.clientX, parts: parts.map((k) => ({ k, w: colW(k) })) };
+          document.body.classList.add('lmt-resizing');
+        });
+        window.lmtResize = {
+          move(e) {
+            if (!drag) return;
+            const sum = drag.parts.reduce((t, x) => t + x.w, 0);
+            const dx = e.clientX - drag.x;
+            drag.parts.forEach((x) => { W[x.k] = Math.round(Math.max(110, Math.min(900, x.w + dx * (x.w / sum)))); });
+            applyWidths();
+          },
+          up() { if (!drag) return; drag = null; document.body.classList.remove('lmt-resizing'); saveW(); root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit); },
+        };
+        if (!window.lmtResizeBound) {
+          window.lmtResizeBound = true;
+          document.addEventListener('mousemove', (e) => window.lmtResize && window.lmtResize.move(e));
+          document.addEventListener('mouseup', () => window.lmtResize && window.lmtResize.up());
+        }
+        const fitAll = () => root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit);
+        let lastW = 0; // hanya saat lebar berubah (perubahan tinggi akibat fit tidak memicu ulang)
+        if (window.ResizeObserver) new ResizeObserver(([en]) => { const w = Math.round(en.contentRect.width); if (w !== lastW) { lastW = w; fitAll(); } }).observe(root.querySelector('#lmtSheet'));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+        root.querySelector('#lmtResetW').addEventListener('click', () => { W = {}; saveW(); applyWidths(); root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit); });
+
+        box.addEventListener('input', (e) => {
+          const d = e.target.dataset;
+          if (d.sec !== undefined) { state[d.c].sections[Number(d.sec)] = e.target.value; state[d.c].configured = true; return; }
+          if (!d.l || !['value', 'text'].includes(d.f)) return;
+          ensureCell(d.c, lmOf(d.l), Number(d.i))[d.f] = e.target.value;
+          e.target.closest('.lmt-cell').classList.toggle('is-empty', e.target.value === '');
+          if (e.target.tagName === 'TEXTAREA') fit(e.target);
+        });
+        box.addEventListener('change', (e) => {
+          const id = e.target.dataset.rowop; if (!id) return;
+          rowOps[id] = e.target.value;
+          for (const c of brand.classes) {
+            const r = state[c.code].rows[id];
+            if (r.off) continue;
+            r.cells.forEach((x) => { if (x) x.op = rowOps[id]; });
+            state[c.code].configured = true;
+          }
+          draw();
+        });
+        box.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-act]'); if (!btn || !btn.dataset.c) return;
+          const code = btn.dataset.c; const s = state[code]; const act = btn.dataset.act;
+          if (act === 'merge' || act === 'split') {
+            const l = lmOf(btn.dataset.l); const r = s.rows[l.id];
+            if (act === 'merge') { const first = r.off ? null : r.cells.find((x) => x); r.off = false; r.same = true; r.cells = [first || newCell(l)]; }
+            else { const c0 = r.cells[0]; r.same = false; r.cells = range(ncol(s)).map(() => (c0 ? Object.assign({}, c0) : null)); }
+          } else if (act === 'addSec') {
+            s.sections.push('');
+            // section baru mulai dari target kolom pertama supaya tidak perlu isi ulang
+            if (s.sections.length > 1) Object.values(s.rows).forEach((r) => { if (!r.off && !r.same) r.cells[s.sections.length - 1] = r.cells[0] ? Object.assign({}, r.cells[0]) : null; });
+          } else if (act === 'delSec') {
+            const i = Number(btn.dataset.i); s.sections.splice(i, 1);
+            Object.values(s.rows).forEach((r) => {
+              if (r.off) return;
+              if (!r.same) r.cells.splice(i, 1);
+              if (s.sections.length <= 1) { r.same = false; r.cells = r.cells.slice(0, 1); }
+              if (!r.cells.length || r.cells.every((x) => !x)) { r.off = true; r.cells = []; }
+            });
+          } else if (act === 'secAll') {
+            if (!confirm(`Pakai section [${s.sections.join(', ')}] di semua kelas ${brand.brand_name}? Target kelas lain disesuaikan per kolom.`)) return;
+            for (const [k, o] of Object.entries(state)) {
+              if (k === code) continue;
+              while (o.sections.length < s.sections.length) {
+                const n = o.sections.length; o.sections.push('');
+                Object.values(o.rows).forEach((r) => { if (n && !r.off && !r.same) r.cells[n] = r.cells[0] ? Object.assign({}, r.cells[0]) : null; });
+              }
+              o.sections.length = s.sections.length;
+              Object.values(o.rows).forEach((r) => { r.cells.length = Math.min(r.cells.length, Math.max(1, s.sections.length)); });
+              s.sections.forEach((x, i) => { o.sections[i] = x; });
+              o.configured = true;
+            }
+          } else return;
+          s.configured = true;
+          draw();
+        });
+        box.addEventListener('submit', () => {
+          // samakan operator semua sel dengan operator lead measure-nya
+          for (const c of brand.classes) for (const l of lms) state[c.code].rows[l.id].cells.forEach((x) => { if (x) x.op = rowOps[l.id]; });
+          root.querySelector('#lmtJson').value = JSON.stringify(state);
+        }, true);
+        draw();
+      },
+    };
+  });
+
+  actions['setup.saveLmTargets'] = (f, form) => {
+    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const bId = Number(form.dataset.b);
+    assertDraft(pid);
+    const brandRow = DB.byId('programChannelBrands', bId);
+    const ch = E.loadProgram(pid).channels.find((c) => c.id === pcId);
+    const brand = ch.brands.find((x) => x.id === bId);
+    const raw = JSON.parse(f.get('targets') || '{}');
+    const errs = [];
+    const out = {};
+    for (const c of brand.classes) {
+      const s = raw[c.code];
+      if (!s || !s.configured) { if ((brandRow.lm_targets || {})[c.code]) out[c.code] = brandRow.lm_targets[c.code]; continue; }
+      const sections = (s.sections || []).map((x) => String(x || '').trim());
+      if (sections.some((x) => !x)) errs.push(`Kelas ${c.code}: nama section wajib diisi`);
+      if (new Set(sections).size !== sections.length) errs.push(`Kelas ${c.code}: nama section tidak boleh sama`);
+      const nCols = sections.length > 1 ? sections.length : 1;
+      const rows = {};
+      for (const l of ch.leadMeasures) {
+        const r = (s.rows || {})[l.id] || {};
+        if (r.off) { rows[l.id] = { off: true, same: false, cells: [] }; continue; }
+        const same = sections.length > 1 && !!r.same;
+        const n = same ? 1 : nCols;
+        // sel kosong / null = lead measure tidak berlaku di kelas / section itu
+        const cells = Array.from({ length: n }, (_, i) => (r.cells || [])[i]).map((cell) => {
+          if (!cell) return null;
+          const x = cell || {};
+          const op = C.lmTargetOps(l.value_type).includes(x.op) ? x.op : C.lmTargetOps(l.value_type)[0];
+          const value = op === 'TEXT' || x.value === '' || x.value === null || x.value === undefined ? null : Number(x.value);
+          if (value !== null && !Number.isFinite(value)) errs.push(`Kelas ${c.code} · ${l.name}: target harus angka`);
+          const text = op === 'TEXT' ? String(x.text || '').trim() : null;
+          if (op === 'TEXT' ? !text : value === null) return null; // sel kosong = tidak berlaku
+          return { op, value, text };
+        });
+        rows[l.id] = cells.every((x) => x === null) ? { off: true, same: false, cells: [] } : { off: false, same, cells };
+      }
+      out[c.code] = { sections, rows };
+    }
+    if (errs.length) throw new Error(errs.slice(0, 8).join(' · '));
+    const before = brandRow.lm_targets || null;
+    brandRow.lm_targets = out;
+    E.audit(pid, 'programLeadMeasureTarget', bId, 'replace', before, out);
+    touch(pid);
+    const n = Object.keys(out).length;
+    done('success', `Target lead measure ${esc(brand.brand_name)} disimpan (${n}/${brand.classes.length} kelas). Sel kosong = tidak berlaku.`, `/setup/${pid}/ch/${pcId}/pillars/${bId}`);
   };
 
   // ---------------------------------------------------------------- 3d · rumus
@@ -608,16 +908,16 @@
       title: `Rumus · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'formulas')}
       <div class="row g-3"><div class="col-xl-9">
       <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
-      <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)}</span>
+      <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3e</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)}</span>
         <a href="#/setup/${p.id}/simulate?ch=${ch.id}" class="btn btn-sm btn-outline-brand"><i class="bi bi-play"></i> Coba di simulasi</a></div><div class="card-body">
         <p class="small text-muted">Daftar slot tetap (developer). Isi rumus hanya dengan variabel katalog & fungsi ${window.Formula.FUNCTION_NAMES.join(', ')}. Sintaks dicek saat mengetik & saat simpan; hasil dicek di simulasi (step 4).</p>
-        <div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th style="width:190px">Slot</th><th>Rumus</th><th style="width:110px">Preset</th><th style="width:220px">Deskripsi (untuk Finance)</th></tr></thead><tbody>
+        <div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th style="width:190px">Kolom</th><th>Rumus</th><th style="width:110px">Preset</th><th style="width:220px">Deskripsi (untuk Finance)</th></tr></thead><tbody>
           ${C.FORMULA_SLOTS.map((s) => `<tr><td><code>${s.code}</code><div class="small text-muted">${esc(s.label)} · ${esc(s.produces)}</div></td>
             <td><input name="expr_${s.code}" class="form-control form-control-sm text-monospace fx" value="${esc(base[s.code].expression)}" required><div class="fx-out small"></div></td>
             <td><button type="button" class="btn btn-sm btn-outline-secondary preset" data-slot="${s.code}" data-expr="${esc(s.preset)}" title="${esc(s.preset)}">${C.PRESET_NAME}</button></td>
             <td><input name="desc_${s.code}" class="form-control form-control-sm" value="${esc(base[s.code].description)}"></td></tr>`).join('')}</tbody></table></div>
         <h6 class="mt-3">Override per brand <span class="small text-muted fw-normal">— rumus berbeda untuk satu brand</span></h6>
-        <table class="table table-sm table-bordered" id="ovTable"><thead><tr><th style="width:190px">Slot</th><th style="width:150px">Brand</th><th>Rumus</th><th style="width:220px">Deskripsi</th><th></th></tr></thead>
+        <table class="table table-sm table-bordered" id="ovTable"><thead><tr><th style="width:190px">Kolom</th><th style="width:150px">Brand</th><th>Rumus</th><th style="width:220px">Deskripsi</th><th></th></tr></thead>
           <tbody>${overrides.map(ovRow).join('')}</tbody></table>
         <template id="ovTpl">${ovRow({ slot: 'target', brand_code: ch.brands[0] ? ch.brands[0].brand_code : '', expression: '', description: '' })}</template>
         <button type="button" class="btn btn-sm btn-link px-0" id="addOv">+ override brand</button>

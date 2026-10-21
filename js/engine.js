@@ -88,7 +88,7 @@
       pil.jtbds = DB.where('programJtbds', (j) => j.program_pillar_id === pl.id).sort(bySort).map((j) => {
         const jt = clone(j);
         jt.lead_measures = DB.where('programLeadMeasures', (l) => l.program_jtbd_id === j.id).sort(bySort)
-          .map((l) => Object.assign(clone(l), { jtbd_name: j.name, pillar_id: pl.id, pillar_name: pl.name }));
+          .map((l) => Object.assign(clone(l), { value_type: C.lmType(l.value_type), jtbd_name: j.name, pillar_id: pl.id, pillar_name: pl.name }));
         return jt;
       });
       return pil;
@@ -179,20 +179,21 @@
     return ch.pillars.map((pl) => {
       const lms = pl.jtbds.flatMap((j) => j.lead_measures);
       if (!lms.length || !mons.length) return 0;
-      const useW = lms.some((l) => Number(l.weight_pct) > 0);
-      const wsum = useW ? lms.reduce((s, l) => s + (Number(l.weight_pct) || 0), 0) : lms.length;
-      const perMon = mons.map((m) => lms.reduce((s, l) => s + ((m.evidence || {})[l.id] ? (useW ? Number(l.weight_pct) || 0 : 1) : 0), 0) / wsum);
+      const perMon = mons.map((m) => lms.filter((l) => (m.evidence || {})[l.id]).length / lms.length);
       return perMon.reduce((s, x) => s + x, 0) / perMon.length;
     });
   }
-  function pillarWeights(ch) {
-    const ws = ch.pillars.map((pl) => Number(pl.weight_pct) || 0);
-    const sum = ws.reduce((s, x) => s + x, 0);
-    return sum > 0 ? ws.map((w) => w / 100) : ch.pillars.map(() => (ch.pillars.length ? 1 / ch.pillars.length : 0));
+  // Vision Compass 2026 (sales_program): tanpa bobot pilar / lead measure; dibayar per termin dan dihentikan bila toko
+  // tidak memenuhi kewajiban (MOU). Di sini: skor = periode Monitoring disetujui / periode Monitoring yang berakhir di termin payout.
+  function monitoringApproval(ch, reg, period) {
+    const program = DB.byId('programs', reg.program_id);
+    const due = periodsOf(program.period_start, program.period_end, ch.monitoring_frequency).filter((m) => m.end >= period.start && m.end <= period.end);
+    const approved = due.filter((m) => DB.t('monitorings').some((x) => x.registration_id === reg.id && x.period_key === m.key && x.status === 'approved')).length;
+    return { due: due.length, approved, ratio: due.length ? approved / due.length : 0 };
   }
 
   // Hitungan satu brand untuk satu periode payout (dua jalur, PRD FR14)
-  // input: { baseline, growth_pct, class_id, monthly: [{sellout, sellin}], compliance: [..] }
+  // input: { baseline, growth_pct, class_id, monthly: [{sellout, sellin}], monitoring_approved: 0–1, compliance: [..] }
   function periodCalc(ch, brandCode, input) {
     const brand = brandOf(ch, brandCode);
     const cls = brand && brand.classes.find((c) => c.id === input.class_id) || resolveClass(brand, input.baseline);
@@ -203,7 +204,7 @@
       monthly_sell_in: input.monthly.map((x) => x.sellin), monthly_sell_out: input.monthly.map((x) => x.sellout),
       period_net_sell_in: input.monthly.reduce((s, x) => s + x.sellin, 0), period_sell_out: input.monthly.reduce((s, x) => s + x.sellout, 0),
       period_baseline: input.baseline * months, fix_max_pct: cls ? cls.fix_rebate_max_pct / 100 : 0,
-      pillar_compliance: input.compliance, pillar_weight: pillarWeights(ch),
+      monitoring_approved: Number(input.monitoring_approved) || 0, pillar_compliance: input.compliance || [],
     };
     vars.period_actual = vars.period_net_sell_in;
     const out = { brand_code: brandCode, class_code: cls ? cls.code : null, trace, error: null };
@@ -232,15 +233,22 @@
   // Payout satu jalur (CONDITIONAL / FIX) untuk satu registrasi & satu periode payout
   function payoutCalc(ch, reg, component, period) {
     const compliance = pillarCompliance(ch, reg.id, period.start, period.end);
+    const monitoring = monitoringApproval(ch, reg, period);
+    // syarat payout (MOU 2026): rasio sell out : sell in termin ini harus dalam rentang; di luar → tidak dibayar
+    const regCodes = reg.brands.filter((b) => b.class_id).flatMap((b) => { const br = brandOf(ch, b.brand_code); return [b.brand_code, ...((br && br.member_codes) || [])]; });
+    const ratioValue = soSiRatio(reg.customer_id, regCodes, period.months);
+    const ratio = { value: ratioValue, rule: ratioRule(ch), ok: !ratioOutside(ch, ratioValue) };
     const lines = reg.brands.filter((b) => b.class_id).map((b) => {
       const brand = brandOf(ch, b.brand_code);
       const monthly = brandSales(reg.customer_id, [b.brand_code, ...((brand && brand.member_codes) || [])], period.months);
-      const r = periodCalc(ch, b.brand_code, { baseline: b.baseline, growth_pct: b.growth_pct, class_id: b.class_id, monthly, compliance });
+      const r = periodCalc(ch, b.brand_code, { baseline: b.baseline, growth_pct: b.growth_pct, class_id: b.class_id, monthly, monitoring_approved: monitoring.ratio, compliance });
       r.brand_name = brand ? brand.brand_name : b.brand_code;
       r.amount = component === 'CONDITIONAL' ? r.conditional_amount : r.fix_amount;
       return r;
     });
-    return { component, compliance, lines, amount: lines.reduce((s, l) => s + l.amount, 0), errors: lines.filter((l) => l.error).map((l) => `${l.brand_name}: ${l.error}`) };
+    const blocked = ratio.ok ? null : `Rasio SO:SI termin ini ${ratioValue === null ? '-' : ratioValue.toFixed(1) + '%'} di luar ${ratio.rule} → payout tidak dibayar (syarat MOU).`;
+    if (blocked) lines.forEach((l) => { l.amount = 0; });
+    return { component, compliance, monitoring, ratio, blocked, lines, amount: lines.reduce((s, l) => s + l.amount, 0), errors: lines.filter((l) => l.error).map((l) => `${l.brand_name}: ${l.error}`) };
   }
 
   // Nilai objek auto-approve per fase (formulaVariable service)
@@ -291,32 +299,56 @@
     if (v !== null && v !== undefined && v !== '') return Number(v);
     return brand.classes.length ? brand.classes[0].baseline_min : null;
   }
+  // First DO = bulan pertama toko menerima sell in brand tsb (dari seluruh data penjualan)
+  function firstDo(cid, brandCodes) {
+    const byMonth = (DB.state.sales || {})[cid] || {};
+    return Object.keys(byMonth).sort().find((m) => brandCodes.some((b) => byMonth[m][b] && byMonth[m][b][1] > 0)) || null;
+  }
+  // Rasio sell out : sell in (%) sekumpulan bulan; dipakai di pendaftaran (opsional) dan sebagai syarat payout
+  function soSiRatio(cid, brandCodes, months) {
+    const rows = brandSales(cid, brandCodes, months);
+    const so = rows.reduce((s, x) => s + x.sellout, 0); const si = rows.reduce((s, x) => s + x.sellin, 0);
+    return si ? so / si * 100 : null;
+  }
+  const ratioOutside = (ch, ratio) => (ch.elig_ratio_min !== null && ch.elig_ratio_min !== undefined && (ratio === null || ratio < ch.elig_ratio_min))
+    || (ch.elig_ratio_max !== null && ch.elig_ratio_max !== undefined && ratio !== null && ratio > ch.elig_ratio_max);
+  const ratioRule = (ch) => `${ch.elig_ratio_min === null || ch.elig_ratio_min === undefined ? '0' : ch.elig_ratio_min}–${ch.elig_ratio_max === null || ch.elig_ratio_max === undefined ? '∞' : ch.elig_ratio_max}%`;
+
   function eligibility(program, ch, cid) {
     const months = baselineMonths(program);
     const allCodes = ch.brands.flatMap((b) => [b.brand_code, ...(b.member_codes || [])]);
     const total = brandSales(cid, allCodes, months);
     const soMonths = total.filter((x) => x.sellout > 0).length;
-    const so = total.reduce((s, x) => s + x.sellout, 0); const si = total.reduce((s, x) => s + x.sellin, 0);
-    const ratio = si ? so / si * 100 : null;
+    const ratio = soSiRatio(cid, allCodes, months);
     const reasons = [];
     if (ch.elig_min_sell_out_months && soMonths < ch.elig_min_sell_out_months) reasons.push(`Sell out baru ${soMonths} bulan (min ${ch.elig_min_sell_out_months})`);
-    if (ch.elig_ratio_min !== null && ch.elig_ratio_min !== undefined && (ratio === null || ratio < ch.elig_ratio_min)) reasons.push(`Rasio SO:SI ${ratio === null ? '-' : ratio.toFixed(1) + '%'} < ${ch.elig_ratio_min}%`);
-    if (ch.elig_ratio_max !== null && ch.elig_ratio_max !== undefined && ratio !== null && ratio > ch.elig_ratio_max) reasons.push(`Rasio SO:SI ${ratio.toFixed(1)}% > ${ch.elig_ratio_max}%`);
+    // rasio SO:SI pada dasarnya syarat payout (MOU 2026); di pendaftaran hanya bila dicentang
+    if (ch.elig_ratio_at_registration && ratioOutside(ch, ratio)) reasons.push(`Rasio SO:SI ${ratio === null ? '-' : ratio.toFixed(1) + '%'} di luar ${ratioRule(ch)}`);
+    // program yang tidak boleh diikuti bersamaan (registrasi yang tidak ditolak)
+    for (const pid of ch.elig_exclusive_program_ids || []) {
+      const other = DB.byId('programs', pid);
+      if (other && DB.t('registrations').some((r) => r.program_id === pid && r.customer_id === cid && r.status !== 'rejected')) reasons.push(`Sudah terdaftar di ${other.name} (tidak boleh bersamaan)`);
+    }
     if (ch.elig_prior_payout_required) {
       const prev = DB.where('programs', (p) => p.year === program.year - 1).map((p) => p.id);
       const regs = DB.where('registrations', (r) => prev.includes(r.program_id) && r.customer_id === cid).map((r) => r.id);
       if (!DB.t('payouts').some((x) => regs.includes(x.registration_id) && x.status === 'paid')) reasons.push('Belum pernah menerima payout di program sebelumnya');
     }
+    // Saran baseline (sama dengan sales_program 2026): total sell in tahun baseline ÷ bulan aktif sejak first DO
     const brands = ch.brands.map((b) => {
-      const rows = brandSales(cid, [b.brand_code, ...(b.member_codes || [])], months);
-      const active = rows.filter((x) => x.sellin > 0);
-      const suggested = active.length ? active.reduce((s, x) => s + x.sellin, 0) / active.length : 0;
+      const codes = [b.brand_code, ...(b.member_codes || [])];
+      const total = brandSales(cid, codes, months).reduce((s, x) => s + x.sellin, 0);
+      const fd = firstDo(cid, codes);
+      const activeMonths = fd ? months.filter((m) => m >= fd).length : 0;
+      const suggested = activeMonths ? total / activeMonths : 0;
       const min = minBaseline(ch, b);
       const cls = resolveClass(b, suggested);
-      return { brand_code: b.brand_code, brand_name: b.brand_name, suggested, min, eligible: min === null ? !!cls : suggested >= min && !!cls, cls };
+      return { brand_code: b.brand_code, brand_name: b.brand_name, suggested, first_do: fd, active_months: activeMonths, min, eligible: min === null ? !!cls : suggested >= min && !!cls, cls };
     });
     if (!brands.some((b) => b.eligible)) reasons.push('Tidak ada brand dengan baseline ≥ minimal');
-    return { eligible: reasons.length === 0, reasons, ratio, soMonths, brands, months };
+    // exception oleh Admin HO: toko tetap boleh didaftarkan, alasan aturan tetap ditampilkan
+    const exception = (ch.elig_exceptions || []).find((x) => x.customer_id === cid) || null;
+    return { eligible: reasons.length === 0 || !!exception, exception, reasons, ratio, soMonths, brands, months };
   }
 
   // ---------------------------------------------------------------- auto-approve (FR8)
@@ -395,9 +427,43 @@
   }
   const currentLayer = (rec) => (rec.current_layer_id ? DB.byId('programApprovalLayers', rec.current_layer_id) : null);
 
+  // ---------------------------------------------------------------- target lead measure per brand × kelas (× section)
+  // programChannelBrands.lm_targets = { [kode kelas]: { sections: ['Face Care', 'Makeup'], rows: { [lead_measure_id]: { off, same, cells: [{ op, value, text }] } } } }
+  // Kunci kelas = kode (id kelas berganti tiap simpan 3b). cells sejajar dengan sections; tanpa section / "sama" → cells[0].
+  function fmtLmTarget(cell, lm) {
+    if (!cell || !cell.op) return '';
+    if (cell.op === 'TEXT') return String(cell.text || '').trim();
+    if (cell.op === 'REQ') return 'Wajib';
+    if (cell.value === null || cell.value === undefined || cell.value === '') return '';
+    const unit = C.lmUnit(lm);
+    return `${C.LM_TARGET_OPS[cell.op]} ${cell.value}${unit === '%' ? '%' : unit ? ` ${unit}` : ''}`;
+  }
+  // null = kelas belum diatur; { applies:false } = lead measure tidak berlaku untuk kelas ini
+  function lmTarget(brand, classCode, lm) {
+    const t = ((brand && brand.lm_targets) || {})[classCode];
+    if (!t) return null;
+    const row = (t.rows || {})[lm.id] || { cells: [] };
+    if (row.off) return { applies: false, items: [] };
+    const secs = t.sections || [];
+    const cells = row.cells || [];
+    // cells[i] === null → lead measure tidak dipakai di section itu (hasil drag & drop ke section tertentu saja)
+    const items = !secs.length || row.same ? [{ section: null, text: fmtLmTarget(cells[0], lm) }]
+      : secs.map((s, i) => (cells[i] === null ? null : { section: s, text: fmtLmTarget(cells[i], lm) })).filter(Boolean);
+    return items.length ? { applies: true, items } : { applies: false, items: [] };
+  }
+  const lmTargetText = (r) => (!r ? '' : !r.applies ? 'tidak berlaku' : r.items.map((x) => (x.section ? `${x.section}: ` : '') + (x.text || '-')).join(' · '));
+
   // ---------------------------------------------------------------- dokumen MOU / SKN
   function fillPlaceholders(text, map) {
     return String(text || '').replace(/\{\{\s*([\w.]+)\s*\}\}/g, (m, k) => (Object.hasOwn(map, k) ? map[k] : m));
+  }
+  function lmTargetTable(ch, b) {
+    const esc = UI.h.esc;
+    const brand = brandOf(ch, b.brand_code);
+    const rows = ch.leadMeasures.map((l) => [l, lmTarget(brand, b.class_code, l)]).filter(([, r]) => r && r.applies);
+    if (!rows.length) return '<em>Target lead measure belum diatur.</em>';
+    return `<table class="table table-sm table-bordered doc-table"><thead><tr><th>Pilar</th><th>Lead measure</th><th>Target kelas ${esc(b.class_code)}</th></tr></thead><tbody>${
+      rows.map(([l, r]) => `<tr><td>${esc(l.pillar_name)}</td><td>${esc(l.name)}</td><td>${esc(lmTargetText(r))}</td></tr>`).join('')}</tbody></table>`;
   }
   function renderDocument(content, ctx) {
     const esc = UI.h.esc;
@@ -417,6 +483,7 @@
         const map = Object.assign({}, base, b ? {
           'brand.name': esc(b.brand_name), 'brand.class': esc(b.class_code), 'brand.baseline': UI.h.rp(Math.round(b.baseline)), 'brand.growth': `${b.growth_pct}%`,
           'brand.target': UI.h.rp(Math.round(b.target_monthly || 0)), 'brand.conditionalRebatePct': `${b.conditional_pct}%`, 'brand.fixRebateMaxPct': `${b.fix_max_pct}%`, 'brand.totalRebatePct': `${b.total_pct}%`,
+          'brand.leadMeasureTargets': lmTargetTable(ctx.ch, b),
         } : {});
         return `<section class="doc-section"><h4>${fillPlaceholders(esc(s.heading), map)}</h4><div>${fillPlaceholders(esc(s.body).replace(/\n/g, '<br>'), map)}</div></section>`;
       }).join('');
@@ -488,11 +555,18 @@
         const nb = DB.insert('programChannelBrands', Object.assign(clone(b), { program_channel_id: npc.id }));
         for (const c of DB.where('programClasses', (x) => x.program_channel_brand_id === b.id)) DB.insert('programClasses', Object.assign(clone(c), { program_channel_brand_id: nb.id }));
       }
+      const lmMap = {};
       for (const pl of DB.where('programPillars', (x) => x.program_channel_id === pc.id)) {
         const npl = DB.insert('programPillars', Object.assign(clone(pl), { program_channel_id: npc.id }));
         for (const j of DB.where('programJtbds', (x) => x.program_pillar_id === pl.id)) {
           const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_pillar_id: npl.id }));
-          for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id }));
+          for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) lmMap[l.id] = DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id })).id;
+        }
+      }
+      // target lead measure merujuk id lead measure → arahkan ke id hasil clone
+      for (const nb of DB.where('programChannelBrands', (x) => x.program_channel_id === npc.id && x.lm_targets)) {
+        for (const t of Object.values(nb.lm_targets)) {
+          t.rows = Object.fromEntries(Object.entries(t.rows || {}).filter(([k]) => lmMap[k]).map(([k, v]) => [lmMap[k], v]));
         }
       }
       for (const t of ['programFormulas', 'programPhaseFields', 'programApprovalLayers', 'programPayoutSchedules']) {
@@ -595,8 +669,14 @@
         }
       }
       if (ch.pillars.length) {
-        const sum = ch.pillars.reduce((s, pl) => s + (Number(pl.weight_pct) || 0), 0);
-        if (Math.abs(sum - 100) > 0.0001) W(ch, `Bobot pilar berjumlah ${sum}% (bukan 100%).`);
+        for (const b of ch.brands) {
+          const missing = b.classes.filter((c) => !(b.lm_targets || {})[c.code]).map((c) => c.code);
+          if (missing.length) W(ch, `${b.brand_name}: target lead measure kelas ${missing.join(', ')} belum diatur.`);
+          for (const c of b.classes) {
+            const empty = ch.leadMeasures.filter((l) => { const r = lmTarget(b, c.code, l); return r && r.applies && r.items.some((x) => !x.text); }).length;
+            if (empty) W(ch, `${b.brand_name} kelas ${c.code}: ${empty} lead measure belum punya target.`);
+          }
+        }
       }
       for (const docType of Object.keys(C.DOC_TYPES)) {
         const d = ch.documents[docType];
@@ -611,9 +691,10 @@
 
   window.Engine = {
     monthsBetween, today, periodsOf, brandSales, baselineMonths,
-    loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, pillarWeights, payoutCalc,
+    loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, monitoringApproval, payoutCalc,
     registrationObjects, monitoringObjects, payoutObjects, generateDocuments,
-    eligibility, minBaseline, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
+    eligibility, minBaseline, firstDo, soSiRatio, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
+    fmtLmTarget, lmTarget, lmTargetText,
     renderDocument, unknownPlaceholders, defaultSections, audit, createChannelDefaults, cloneProgram,
     deleteChannel, deleteProgram, deletePillarTree, validateProgram,
   };

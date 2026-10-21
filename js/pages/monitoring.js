@@ -1,5 +1,5 @@
 // Monitoring: CBD/CDT mengisi form Monitoring (evidence per lead measure, catatan) per periode monitoring.
-// Evidence yang disetujui = kepatuhan pilar → dasar Fix Rebate.
+// Monitoring yang disetujui = syarat Fix Rebate termin tersebut (Engine.monitoringApproval).
 (function () {
   const { h, route, actions, done, fail, inScope, store } = UI;
   const { esc } = h;
@@ -9,6 +9,15 @@
   function ctxOf(reg) {
     const program = E.loadProgram(reg.program_id);
     return { program, ch: program.channels.find((c) => c.id === reg.program_channel_id) };
+  }
+  // Target lead measure peserta: satu baris per brand yang diikuti, sesuai kelasnya (dan section bila ada)
+  function targetHtml(ch, reg, l) {
+    return (reg.brands || []).filter((b) => b.class_code).map((b) => {
+      const brand = E.brandOf(ch, b.brand_code);
+      const r = E.lmTarget(brand, b.class_code, l);
+      if (!r) return '';
+      return `<div class="small"><span class="badge badge-light">${esc(brand.brand_name)} · ${esc(b.class_code)}</span> ${r.applies ? `<strong>${esc(E.lmTargetText(r))}</strong>` : '<span class="text-muted">tidak berlaku</span>'}</div>`;
+    }).join('');
   }
 
   route('/monitoring', ({}, q, { user, year }) => {
@@ -54,7 +63,7 @@
       <div class="card mb-3"><div class="card-header">${esc(ch.pillar_framework_name || 'Pilar')} — evidence per lead measure</div><div class="table-responsive"><table class="table table-sm mb-0">
         <thead><tr><th>Pilar · JTBD</th><th>Lead measure</th>${lmFields.map((f) => `<th>${esc(f.label)}${f.is_required ? ' <span class="text-danger">*</span>' : ''}</th>`).join('')}</tr></thead>
         <tbody>${ch.leadMeasures.map((l) => `<tr><td class="small text-muted">${esc(l.pillar_name)}<br>${esc(l.jtbd_name)}</td>
-          <td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}${l.unit ? ` · ${esc(l.unit)}` : ''}</div></td>
+          <td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}${C.lmUnit(l) ? ` · ${esc(C.lmUnit(l))}` : ''}</div>${targetHtml(ch, reg, l)}</td>
           ${lmFields.map((f) => `<td style="min-width:240px">${UI.fieldInput(f, f.field_key === 'evidence_upload' ? (ex ? (ex.evidence || {})[l.id] : '') : ex ? ((ex.data.lm || {})[l.id] || {})[f.field_key] : '', { prefix: `lm_${l.id}_`, bare: true })}</td>`).join('')}</tr>`).join('')
           || '<tr><td colspan="3" class="text-muted">Channel belum punya lead measure.</td></tr>'}</tbody></table></div></div>
       <div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body">
@@ -113,10 +122,11 @@
         ${canAct ? UI.approvalBox('monitoring', m.id, layer, `/monitoring/item/${m.id}`) : ''}
         <div class="card mb-3"><div class="card-header">Evidence</div><div class="table-responsive"><table class="table table-sm mb-0">
           <thead><tr><th>Pilar</th><th>Lead measure</th><th>Evidence</th></tr></thead>
-          <tbody>${ch.leadMeasures.map((l) => `<tr><td class="small text-muted">${esc(l.pillar_name)}</td><td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}</div></td>
+          <tbody>${ch.leadMeasures.map((l) => `<tr><td class="small text-muted">${esc(l.pillar_name)}</td><td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}</div>${targetHtml(ch, reg, l)}</td>
             <td>${(m.evidence || {})[l.id] ? `<i class="bi bi-paperclip lm-ok"></i> ${esc(m.evidence[l.id])}` : '<i class="bi bi-dash-circle lm-no"></i> <span class="small text-muted">tidak ada</span>'}</td></tr>`).join('')}</tbody></table></div></div>
-        <div class="card"><div class="card-header">Kepatuhan pilar periode ini <span class="small text-muted fw-normal">&nbsp;(hanya monitoring yang disetujui)</span></div><div class="card-body small">
-          ${ch.pillars.map((pl, i) => `<div class="d-flex justify-content-between"><span>${esc(pl.name)} <span class="text-muted">bobot ${pl.weight_pct || 0}%</span></span><strong>${h.pct(comp[i] * 100, 0)}</strong></div>`).join('')}</div></div>
+        <div class="card"><div class="card-header">Kelengkapan evidence per pilar <span class="small text-muted fw-normal">&nbsp;(hanya monitoring yang disetujui · informasi)</span></div><div class="card-body small">
+          ${ch.pillars.map((pl, i) => `<div class="d-flex justify-content-between"><span>${esc(pl.name)}</span><strong>${h.pct(comp[i] * 100, 0)}</strong></div>`).join('')}
+          <div class="text-muted mt-1">Fix Rebate termin ini dibayar bila Monitoring ini disetujui (bukan dari persentase di atas).</div></div></div>
       </div>
       <div class="col-lg-4"><div class="card mb-3"><div class="card-header">Jalur approval</div><div class="card-body">${UI.layerPath(ch.phases.MONITORING.layers, 'monitoring', m)}</div></div>
         <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('monitoring', m.id)}</div></div></div></div>`,

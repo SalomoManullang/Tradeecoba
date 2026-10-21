@@ -398,9 +398,24 @@
     } catch (err) {
       if (err instanceof Redirect) { go(err.to); return; }
       console.error(err);
-      flash('danger', esc(err.message));
-      render();
+      showFormError(form, esc(err.message));
     }
+  });
+
+  // Gagal simpan: error tampil di atas form tanpa menggambar ulang halaman, jadi isian yang belum tersimpan tidak hilang
+  function showFormError(form, message) {
+    document.querySelectorAll('.js-form-error').forEach((x) => x.remove());
+    form.insertAdjacentHTML('beforebegin', `<div class="js-form-error">${flashAlert('danger', message)}</div>`);
+    form.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Input angka: scroll mouse tidak mengubah nilai, dan klik langsung memilih seluruh isi (ketikan baru mengganti)
+  const isNumberInput = (t) => t instanceof HTMLInputElement && t.type === 'number';
+  document.addEventListener('wheel', (e) => { if (isNumberInput(e.target) && e.target === document.activeElement) e.target.blur(); }, { passive: true });
+  document.addEventListener('focusin', (e) => { if (isNumberInput(e.target) && !e.target.readOnly) { e.target.select(); e.target.dataset.justFocused = '1'; } });
+  document.addEventListener('focusout', (e) => { if (isNumberInput(e.target)) delete e.target.dataset.justFocused; });
+  document.addEventListener('mouseup', (e) => {
+    if (isNumberInput(e.target) && e.target.dataset.justFocused) { delete e.target.dataset.justFocused; e.preventDefault(); } // mouseup biasanya membatalkan seleksi
   });
 
   function download(filename, content, mime) {

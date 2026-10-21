@@ -13,7 +13,7 @@
     { code: 'achievement', label: 'Pencapaian (growth aktual)', produces: 'Pecahan (0,72 = 72%)', preset: '(period_actual / period_baseline) - 1' },
     { code: 'rebate_base_conditional', label: 'Dasar Conditional Rebate', produces: 'Rupiah', preset: 'period_net_sell_in' },
     { code: 'rebate_base_fix', label: 'Dasar Fix Rebate', produces: 'Rupiah', preset: 'period_net_sell_in' },
-    { code: 'pillar_score', label: 'Skor pilar (0–1)', produces: 'Pecahan 0–1', preset: 'SUM(pillar_compliance * pillar_weight)' },
+    { code: 'pillar_score', label: 'Skor Vision Compass (0–1)', produces: 'Pecahan 0–1', preset: 'monitoring_approved' },
     { code: 'conditional_rebate', label: 'Nominal Conditional Rebate', produces: 'Rupiah', preset: 'reached_tier_conditional_pct * rebate_base_conditional' },
     { code: 'fix_rebate', label: 'Nominal Fix Rebate', produces: 'Rupiah', preset: 'fix_max_pct * pillar_score * rebate_base_fix' },
   ];
@@ -33,11 +33,11 @@
     { code: 'fix_max_pct', label: 'Fix rebate maks kelas (pecahan)', sample: 0.01 },
     { code: 'reached_tier_conditional_pct', label: 'Conditional % tier tercapai (pecahan)', sample: 0.0175 },
     { code: 'reached_tier_total_pct', label: 'Total % tier tercapai (pecahan)', sample: 0.0275 },
-    { code: 'pillar_compliance', label: 'Kepatuhan per pilar dari evidence Monitoring (array 0–1)', sample: [1, 1, 0.5] },
-    { code: 'pillar_weight', label: 'Bobot per pilar (array pecahan)', sample: [0.4, 0.3, 0.3] },
+    { code: 'monitoring_approved', label: 'Periode Monitoring disetujui / periode Monitoring di termin payout (0–1)', sample: 1 },
+    { code: 'pillar_compliance', label: 'Kelengkapan evidence per pilar (array 0–1, lead measure sama rata)', sample: [1, 1, 0.5] },
   ];
   // Hasil slot juga bisa dipakai slot sesudahnya
-  const SLOT_SAMPLES = { target: 352e6, achievement: 0.82, rebate_base_conditional: 1.09e9, rebate_base_fix: 1.09e9, pillar_score: 0.85, conditional_rebate: 19e6, fix_rebate: 9e6 };
+  const SLOT_SAMPLES = { target: 352e6, achievement: 0.82, rebate_base_conditional: 1.09e9, rebate_base_fix: 1.09e9, pillar_score: 1, conditional_rebate: 19e6, fix_rebate: 9e6 };
 
   const sampleVars = () => Object.assign(Object.fromEntries(FORMULA_VARIABLES.map((v) => [v.code, v.sample])), SLOT_SAMPLES);
 
@@ -82,15 +82,23 @@
     ['channel.name', 'Channel'], ['brands', 'Tabel semua brand (kelas, target, rebate)'], ['pillars', 'Daftar pilar & lead measure'],
     ['brand.name', 'Brand (bagian per brand)'], ['brand.class', 'Kelas'], ['brand.baseline', 'Baseline / bulan'], ['brand.growth', 'Growth'],
     ['brand.target', 'Target / bulan'], ['brand.conditionalRebatePct', 'Conditional %'], ['brand.fixRebateMaxPct', 'Fix maks %'], ['brand.totalRebatePct', 'Total rebate %'],
+    ['brand.leadMeasureTargets', 'Target lead measure kelas brand (per section)'],
     ['date.today', 'Tanggal dokumen'],
   ];
 
   const FREQUENCIES = { MONTHLY: 'Bulanan', QUARTERLY: 'Quarterly', SEMESTER: 'Semester' };
-  const LM_VALUE_TYPES = ['COUNT', 'DURATION_HOURS', 'MONTH_COUNT', 'BOOLEAN', 'TEXT'];
+  const LM_VALUE_TYPES = { NUMBER: 'Angka', PERCENT: 'Persentase', TEXT: 'Teks' };
+  // Tipe lama (COUNT, DURATION_HOURS, MONTH_COUNT → angka; BOOLEAN → teks) tetap terbaca
+  const lmType = (valueType) => (LM_VALUE_TYPES[valueType] ? valueType : valueType === 'BOOLEAN' ? 'TEXT' : 'NUMBER');
+  const lmUnit = (lm) => (lm && lmType(lm.value_type) === 'PERCENT' ? '%' : (lm && lm.unit) || '');
   const DOC_TYPES = { MOU: 'MOU', SKN: 'SKN' };
+  // Target lead measure per kelas: operator yang boleh dipakai bergantung tipe nilai lead measure
+  const LM_TARGET_OPS = { GTE: 'Minimal', LTE: 'Maksimal', EQ: '=', REQ: 'Wajib', TEXT: 'Teks' };
+  const lmTargetOps = (valueType) => (lmType(valueType) === 'TEXT' ? ['TEXT'] : ['GTE', 'LTE', 'EQ', 'TEXT']);
 
   window.Catalog = {
     PHASES, FORMULA_SLOTS, PRESET_NAME, FORMULA_VARIABLES, sampleVars, FIELD_TYPES, REPEAT, MODES, CATALOG_FIELDS,
     APPROVAL_ROLES, AUTO_APPROVE_OBJECTS, OPERATORS, PLACEHOLDERS, FREQUENCIES, LM_VALUE_TYPES, DOC_TYPES,
+    LM_TARGET_OPS, lmTargetOps, lmType, lmUnit,
   };
 })();

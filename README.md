@@ -54,7 +54,7 @@ js/engine.js          programConfig, programCalculation, auto-approve, validasi 
 js/seed.js            data dummy
 js/ui.js              router hash, layout, helper, field fase, jalur approval
 js/pages/setup.js     Program Setup step 0–3d
-js/pages/setup2.js    Program Setup step 3e–8 + audit
+js/pages/setup2.js    Program Setup step 3a (eligibility & jadwal), 3f–8 + audit
 js/pages/registration.js · monitoring.js · payout.js · inbox.js · auth.js · master.js
 _backup_v1/           versi prototype sebelum revisi PRD v0.4
 backend-node/         versi lama (Node.js + PostgreSQL), tidak dipakai prototype ini
@@ -63,7 +63,9 @@ backend-node/         versi lama (Node.js + PostgreSQL), tidak dipakai prototype
 ## Catatan (⚠ masih dikonfirmasi di PRD)
 - Daftar role approval & objek auto-approve; kondisi AND vs OR; objek per brand harus lolos semua brand.
 - Menambah channel ke program yang sudah dipublish (UF9): di prototype dikunci.
-- Metode skor pilar untuk Fix Rebate: default `SUM(pillar_compliance * pillar_weight)`, kepatuhan = porsi
-  lead measure yang punya evidence di monitoring yang disetujui.
+- Skor Fix Rebate (Vision Compass): default `monitoring_approved` = periode Monitoring disetujui ÷ periode Monitoring
+  di termin payout. Tanpa bobot pilar / lead measure, mengikuti sales_program 2026 (dibayar per termin, dihentikan bila
+  toko tidak memenuhi kewajiban). Di 2026 persen Vision Compass diisi CDT per toko (≤ max rebate − conditional);
+  di prototype memakai fix maks kelas.
 - Definisi rasio sell out : sell in 96–100%: di prototype = total sell out ÷ total sell in tahun sebelumnya.
 - Upload file hanya menyimpan nama file. Dokumen MOU/SKN ditampilkan sebagai HTML (belum PDF).

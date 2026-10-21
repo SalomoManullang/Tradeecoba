@@ -1,0 +1,6 @@
+# Prototype di-deploy sebagai situs statis (index.html + js/ + css/ + assets/ + vendor/).
+# Backend lama dan cadangan tidak ikut di-upload.
+backend-node/
+_backup_v1/
+Tradeecoba/
+README.md

@@ -1,0 +1,194 @@
+Latest Update: 02-Jul-2026
+Build Compass – Sales Planning: Standard Stock Management
+1. General Information
+===TABLE START===
+| Field | Value |
+| Short Description | This URS covers enhancement of the Standard Stock Management capability in SFM Backoffice for both Account Item (customer group level) and Store Item (business partner level). Standard stock governs and limits product distribution to business partners and drives automatic order-quantity suggestions during Store Leader visits. The initiative focuses on making standard stock setting easier and safer to manage — especially when products are revamped (new packaging / SKU) — through bulk actions, improved Excel import/export with validation, copy setting between accounts/stores, and a change audit trail. |
+| Date of Submission | 02/07/2026 |
+| Requester | Muchamad Lutfi Maulana |
+| Directorate Requestor | Technology Solution |
+| Business Process | Master Data Management, Field Sales Operations, Order Management, Visit Execution |
+| Business Process Owner | Fajar Wibowo |
+| Adopt new users? | No |
+| Need changes in Master Data Management? (If Y, approval from GH of CBI is needed) | Yes |
+| Triggered Financial Transactions? (Invoice, Vendor Bill, Payment) (If Y, approval from GH of Finance Controller is needed) | Indirectly yes — standard stock drives order-quantity suggestions that flow into the Order process |
+| Entity | Paragon |
+| Impacted Applications | SFM Backoffice, SFM Mobile (order suggestion during visit), related integration services / ERP interfaces |
+| Need new dashboard in applications? | No |
+| Expected Go Live | 10/2026 |
+| Need UI/UX? | Yes |
+| Need Support from BAOD? | No |
+===TABLE END===
+2. Table of Content
+
+3. Modification History
+===TABLE START===
+| Version | Updated By | Change History | Date |
+| 00 | Muchamad Lutfi Maulana | Initial Document | 02/07/2026 |
+===TABLE END===
+4. Approval / Sign-Off
+===TABLE START===
+| Name | Title | Date |
+| Fajar Wibowo | Group Head of Commercial Excellence |  |
+| Moh. Arief Boediman | Head of Channel CSGT |  |
+===TABLE END===
+5. Project Deliverable
+Enhance Standard Stock setting for Account Item (customer group) and Store Item (business partner) in SFM Backoffice.
+Provide bulk actions to activate, deactivate, and edit standard stock across many items at once.
+Provide a bulk revamp flow to deactivate old (revamped-out) items and add their replacements in one guided action, without leaving the page.
+Improve Excel Import/Export with clear template, structure validation, and row-level validation result.
+Provide Copy Setting capability to reuse standard stock configuration from one account/store to another.
+Provide an audit trail for create, edit, activate, deactivate, bulk action, import, and copy of standard stock.
+6. Quantitative Benefit (Annual)
+===TABLE START===
+| Item | Y1 Target / Direction | Details Calculation |
+| Time to Maintain Standard Stock | Reduce manual effort by 60–70% | Measured against current per-item manual activate/deactivate effort during product revamp cycles. |
+| Revamp Handling Errors | Reduce mismatch / orphan standard stock by 80% | Measured against baseline of old-product standard stock left active after revamp. |
+| Order Suggestion Accuracy | Improve accuracy of suggested order qty by +10–15% | Measured against baseline of order adjustments caused by outdated standard stock. |
+===TABLE END===
+7. Qualitative Benefit
+===TABLE START===
+| Benefit | Description |
+| Easier Standard Stock Maintenance | Users can maintain thousands of items efficiently through bulk actions instead of one-by-one editing. |
+| Safer Product Revamp Transition | Guided bulk revamp reduces the risk of leaving old products active or missing replacement setup. |
+| Better Data Consistency | Improved import validation and copy setting reduce human error and keep standard stock consistent across accounts/stores. |
+| Stronger Operational Control & Transparency | Audit trail gives Business and IT clear visibility into who changed what, when, and why. |
+===TABLE END===
+8. Cost of Doing Nothing (Annual)
+===TABLE START===
+| Item | Potential Impact | Details Calculation |
+| Operational Inefficiency | High | Manual per-item maintenance across 19K+ account items and 500K+ store items remains slow and error-prone. |
+| Distribution Control Risk | High | Outdated standard stock on revamped products leads to wrong order suggestions and uncontrolled distribution. |
+| Data Quality Degradation | Medium | Without validation and audit trail, standard stock data drifts and becomes untrusted downstream. |
+===TABLE END===
+9. Risk & Assumptions
+9.1 Risk
+Outline the risks identified at the start of the project (anything that could delay reaching the ultimate goal or cause the project to fail), with a quick assessment of significance and how to address them.
+===TABLE START===
+| No | Risk Description | Potential Impact | Significance | Mitigation Plan |
+| 1 | Bulk actions applied to the wrong scope affect large volumes of items. | Mass incorrect standard stock impacting order suggestions in the field. | High | Mandatory scope preview, confirmation summary, and audit trail before any bulk commit. |
+| 2 | Large-volume import/bulk update degrades backoffice performance. | Slow response or timeout during save. | Medium | Batch/async processing for large operations and progress indicator with result summary. |
+| 3 | Revamp bulk flow leaves inconsistent state if partially failed. | Old item deactivated but new item not created (or vice versa). | High | Transactional handling with all-or-nothing commit and clear partial-failure reporting. |
+| 4 | Copy setting overwrites intended existing configuration. | Loss of previously correct standard stock values. | Medium | Copy preview with conflict handling (skip / overwrite) before commit. |
+===TABLE END===
+9.2 Assumption
+Specify all factors that are, for planning purposes, considered true (e.g. what do we need, who is involved, what must be completed first). These assumptions will be validated during planning.
+===TABLE START===
+| No | Assumption Description | Validation Plan |
+| 1 | Product master data (including revamp/replacement products) is already available and correct. | Confirm master product readiness with CBI before implementation. |
+| 2 | Account and Business Partner master data and data access scope are reliable. | Validate access-scope behavior during SIT/UAT. |
+| 3 | Standard stock is consumed by the mobile order-suggestion logic as (standard stock − input stock). | Confirm calculation contract with mobile/Order squad at kick-off. |
+| 4 | Existing Import/Add Item entry points can be extended rather than rebuilt. | Confirm current implementation during Phase 0. |
+===TABLE END===
+10. Current State (as-is)
+General
+Standard stock can be set at two levels: Account Item (customer group / Account ID) and Store Item (business partner / Partner Ref).
+Each item record carries at least: ID, Account ID or Partner Ref, Default Code (product), Category, Standard Stock, Active, and Write Date.
+Standard stock is used to govern and limit product distribution to business partners.
+Field Experience
+During a visit, the Store Leader inputs current stock at the business partner; the system compares it with standard stock.
+If there is a shortfall (standard stock − input stock), the difference becomes the suggested order quantity for the Store Leader.
+Pain Points
+Maintenance is mostly per-item; there are 19K+ account items and 500K+ store items, making mass changes slow.
+When a product is revamped (new packaging / new SKU replacing the old one), the user must manually deactivate the old item first, then add the new item and set it active — item by item.
+This manual process is error-prone: old products may be left active, or replacements may be missed, causing wrong order suggestions.
+Import/export and change history are limited, so mistakes are hard to detect and trace.
+11. Desired State (to-be)
+11.1 Website Functional Requirements
+Epic: Standard Stock Management (Account Item & Store Item)
+Description:
+Enhance the Standard Stock setting experience in SFM Backoffice for both Account Item (customer group level) and Store Item (business partner level). Standard stock defines the target quantity of a product that should be held at an account or store, and is used to limit distribution and to drive the suggested order quantity during Store Leader visits (standard stock − input stock).
+Both levels share the same core behavior — list, search, filter, add, edit, activate/deactivate, import/export — so requirements are defined once and applied to each level, with each level respecting its own key (Account ID for Account Item, Business Partner / Partner Ref for Store Item) and the user's data access scope.
+To reduce manual effort and revamp-related errors, the enhancement adds bulk actions (bulk edit, bulk activate/deactivate), a guided bulk revamp flow (deactivate old items and add their replacements in one action), improved Excel import/export with validation, copy setting between accounts/stores, and an audit trail for all changes.
+Objective:
+To provide an easy, safe, and auditable way to maintain standard stock at both Account Item and Store Item levels so that product distribution stays controlled and order suggestions in the field remain accurate — including during product revamp transitions.
+The objectives are:
+Let authorized users manage standard stock for Account Item and Store Item from a clear, filterable list.
+Provide bulk activate, deactivate, and edit so many items can be maintained at once within the user's data access scope.
+Provide a guided bulk revamp flow to deactivate old products and add their replacements as active in a single confirmed action.
+Improve Excel Import/Export with a clear template, structure validation, and row-level validation feedback.
+Provide Copy Setting to reuse standard stock configuration from one account/store to another.
+Ensure only active standard stock records are used by the mobile order-suggestion logic.
+Provide an audit trail for create, edit, activate/deactivate, bulk action, import, and copy.
+Flow:
+https://www.figma.com/board/cqYAooaqho8FDRib9DIjV3/TS-ACBS-MASTER-PLAN---ROADMAP?node-id=583-3819&t=mUdkUFRBzsq00H5T-0
+Link Mockup:
+(to be attached)
+Mockup Image:
+Reference: existing Account Item and Store Item pages (attached separately).
+Features:
+===TABLE START===
+| Task/Story | Short Description | User Story | Acceptance Criteria |
+| View & Manage Standard Stock List (Account Item & Store Item) | Provide a filterable list of standard stock records at each level with search, filter, pagination, export, and per-item actions. | As an authorized Backoffice user, I want to view and manage standard stock per Account Item and Store Item, so that I can maintain accurate distribution targets within my data access scope. | A. Access & Data Restriction / 1. System provides Account Item and Store Item pages under Master Product > Product Relation. / 2. Pages are accessible only for users with the corresponding permission. / 3. Unauthorized users cannot access the page via menu, direct URL, or manual request. / 4. System applies data access restriction based on user role and data access setting from Manage Users. / 5. User can only view records within assigned data access scope (e.g. Sales Organization, DC, Sales Area, Account, or Business Partner). / B. List Columns / 1. Account Item list displays at least ID, Account ID, Default Code, Category, Standard Stock, Active, and Write Date. / 2. Store Item list displays at least ID, Partner Ref, Default Code, Category, Standard Stock, Active, and Write Date. / 3. List provides row-level Action (view/edit) based on permission. / C. Search, Filter, Pagination & Export / 1. User can search by at least ID, Account ID / Partner Ref, and Default Code. / 2. User can filter by at least Category, Standard Stock, Active status, and Write Date. / 3. List supports pagination and shows the total item count. / 4. User can export the list based on selected filter and within data access scope. / D. Page States / 1. System shows empty state when no records exist within user access scope. / 2. System shows empty result state when search or filter returns no result. / 3. System shows loading state when retrieving data. / 4. System shows a clear error message if list or detail retrieval fails. |
+| Add & Edit Single Standard Stock Item | Allow authorized users to add a new standard stock record or edit an existing one, including standard stock value and active status. | As an authorized Backoffice user, I want to add or edit a standard stock item, so that individual distribution targets are correct. | A. Add Item / 1. System provides Add Item action for authorized users. / 2. For Account Item, user selects Account and Product (Default Code); for Store Item, user selects Business Partner and Product (Default Code). / 3. User sets Standard Stock value and Active status. / 4. System validates that Account/Business Partner and Product exist, are active, and are within the user's data access scope. / 5. System prevents duplicate records for the same Account/Business Partner + Product combination. / B. Edit Item / 1. User can edit Standard Stock value and Active status of an existing record. / 2. System revalidates the record on save. / 3. System records Updated By and Write Date on save. / C. Validation & Feedback / 1. Standard Stock must be a non-negative number. / 2. System shows a clear success message on save and a clear error message on failure. |
+| Bulk Edit / Bulk Activate-Deactivate | Allow authorized users to select many records and edit standard stock or change active status in one action, with preview and confirmation. | As an authorized Backoffice user, I want to update many standard stock records at once, so that I can maintain data efficiently instead of one by one. | A. Selection / 1. User can select multiple records via row checkbox and select-all for the current filtered result. / 2. System shows the count of selected records. / 3. Selection respects the user's data access scope. / B. Bulk Operations / 1. User can Bulk Activate, Bulk Deactivate, and Bulk Edit Standard Stock (set value / adjust) on selected records. / 2. System shows a preview summary of the intended change (affected count and target values) before commit. / 3. System requires explicit confirmation before applying a bulk change. / C. Result & Reliability / 1. System processes large bulk operations reliably (batch/async if needed) with a progress indicator. / 2. System displays a result summary including Total Selected, Success Count, and Failed Count. / 3. System allows the user to view or download failed rows with reasons if any. / 4. System records a bulk-action audit entry. |
+| Bulk Revamp: Deactivate Old & Add Replacement | Provide a guided bulk action to deactivate revamped-out products and add their replacement products as active standard stock in a single confirmed step. | As an authorized Backoffice user, I want to deactivate old products and add their new (revamped) products in one bulk action, so that revamp transitions are fast and error-free. | A. Entry & Selection / 1. System provides a Revamp / Replace bulk action for authorized users. / 2. User selects the old (revamped-out) records to deactivate, within the same scope (same Account for Account Item, same Business Partner for Store Item). / 3. User selects the replacement product(s) to add as new active records. / B. Configuration / 1. User can set the Standard Stock value for the new record(s); system may default it from the old record's value. / 2. User can choose to carry over the standard stock value from the deactivated item to its replacement. / 3. System validates that replacement products exist, are active, and are not already set as active for the same scope. / C. Confirmation & Commit / 1. System shows a preview listing items to deactivate and items to add with their standard stock values. / 2. System requires explicit confirmation before commit. / 3. System commits the deactivation and addition as a single all-or-nothing operation to avoid inconsistent state. / D. Result & Audit / 1. System displays a result summary with Deactivated Count, Added Count, and Failed Count. / 2. On partial failure, system reports affected rows and reasons and does not leave an inconsistent state. / 3. System records a revamp audit entry linking deactivated and added records. |
+| Import & Export Standard Stock (Excel) | Improve Excel import/export with a clear template, structure validation, and row-level validation result for both levels. | As an authorized Backoffice user, I want to import and export standard stock via Excel with clear validation, so that I can prepare and correct large data safely. | A. Download Template / 1. System provides Download Template for each level. / 2. Template is in supported spreadsheet format, preferably .xlsx. / 3. Account Item template contains mandatory fields: Account ID, Default Code, Standard Stock, and Active; Store Item template contains Business Partner Code, Default Code, Standard Stock, and Active. / B. Upload & Structure Validation / 1. User can upload the completed template. / 2. System only accepts supported file format and rejects unsupported, unreadable, corrupted, or empty files. / 3. System validates template structure before processing row-level data. / C. Row-Level Validation / 1. System validates each row for mandatory fields and correct format. / 2. System validates Account/Business Partner and Product existence, active status, and data access scope. / 3. System validates Standard Stock is a non-negative number. / 4. System detects duplicate rows within the file and against existing active records. / D. Validation Result / 1. System displays a validation summary including at least Total Rows, Valid Rows, and Invalid Rows. / 2. System displays row-level result including Row Number, Key Fields, Validation Status, Issue Type, and Message. / 3. User cannot commit the import if invalid rows exist, and can download the validation error result. / E. Export / 1. User can export current records based on selected filter and within data access scope. / 2. System records import and export audit entries. |
+| Copy Standard Stock Setting | Allow users to copy standard stock configuration from one account/store to another to reuse a known-good setup. | As an authorized Backoffice user, I want to copy standard stock setting from one account/store to another, so that I can reuse configuration instead of rebuilding it. | A. Source & Target / 1. User can select a source Account/Business Partner and one or more target Account/Business Partner within data access scope. / 2. System copies the source's standard stock records (product, value, active status) to the target(s). / B. Conflict Handling / 1. System shows a preview of records to be copied and detects conflicts where the target already has the product. / 2. User can choose conflict behavior: skip existing or overwrite existing. / 3. System requires explicit confirmation before commit. / C. Result & Audit / 1. System displays a result summary including Copied Count, Skipped Count, Overwritten Count, and Failed Count. / 2. System records a copy audit entry referencing source and target. |
+| Standard Stock Audit Trail | Record and expose a change history for standard stock records so changes are traceable. | As an authorized Backoffice user, I want to see the change history of standard stock, so that I can trace who changed what, when, and why. | A. Audit Recording / 1. System records an audit trail for create, edit, activate, deactivate, bulk action, revamp, import, and copy. / 2. Audit trail includes at least Action Type, Performed By, Performed DateTime, Field Changed, Old Value, New Value, and Change Summary where applicable. / B. Audit Visibility / 1. Audit trail visibility follows user permission and data access scope. / 2. System shows a clear error state if audit retrieval fails. |
+===TABLE END===
+Standard Stock Field Reference
+===TABLE START===
+| Field | Applies To | Purpose |
+| ID | Account Item, Store Item | Record identifier |
+| Account ID | Account Item | Customer group the standard stock applies to |
+| Partner Ref / Business Partner | Store Item | Specific business partner the standard stock applies to |
+| Default Code | Both | Product / SKU the standard stock is set for |
+| Category | Both | Product category / program context (e.g. npd/promo, event) |
+| Standard Stock | Both | Target quantity; basis for order suggestion (standard − input) |
+| Active | Both | Whether the record is used by mobile order suggestion |
+| Write Date | Both | Last update timestamp |
+===TABLE END===
+Bulk Action Result Status
+===TABLE START===
+| Status | Description |
+| Success | Record was updated/created as intended. |
+| Skipped | Record was intentionally not changed (e.g. copy conflict = skip). |
+| Failed | Record could not be processed; reason is provided. |
+| Rolled Back | Operation aborted to avoid inconsistent state (revamp all-or-nothing). |
+===TABLE END===
+UAT Scenarios / User Stories
+===TABLE START===
+| No | Scenario | Expected Result |
+| 1 | User with permission opens Account Item / Store Item within scope. | Only in-scope records are listed; search, filter, pagination, and export work. |
+| 2 | User adds a new standard stock item. | Record is created with valid Account/BP + Product; duplicates are rejected. |
+| 3 | User bulk-deactivates selected active items. | Preview and confirmation shown; selected items become inactive; result summary and audit recorded. |
+| 4 | User runs Bulk Revamp: deactivate old items and add replacements. | Old items deactivated and new items added active in one all-or-nothing commit; audit links them. |
+| 5 | User imports an Excel file containing invalid rows. | Structure and row-level validation shown; commit blocked; error result downloadable. |
+| 6 | User copies setting from one store to another with existing products. | Conflict handling (skip/overwrite) applied per choice; result summary and audit recorded. |
+| 7 | User opens audit trail of a record. | Change history shows action, performer, datetime, and old/new values within scope. |
+| 8 | Unauthorized user attempts direct URL access. | Access is denied. |
+===TABLE END===
+12. Risk & Impact Analysis Form
+Filled by IT Engineer
+Project Timeline
+===TABLE START===
+| Sprint | Activity | Estimation Man Hours (Week) | Start Week | End Week | Engineer | Note |
+|  | Review Request |  |  |  |  |  |
+|  | Development |  |  |  |  |  |
+|  | Unit Testing |  |  |  |  |  |
+|  | UAT |  |  |  |  |  |
+|  | Preparation Go Live |  |  |  |  |  |
+|  | Go Live (estimation) |  |  |  |  |  |
+===TABLE END===
+Simplicity
+The higher the score, the higher the priority / rank. (Scoring template as per Build Compass standard — filled by IT Engineer.)
+===TABLE START===
+| No | Category | Total Score | Notes |
+| 1 | High Effort | < 8 |  |
+| 2 | Medium Effort | 8 =< x < 15 |  |
+| 3 | Low Effort | >= 15 |  |
+===TABLE END===
+Risk
+===TABLE START===
+| Application/ Business Process | Point | Probability | Impact / Action |
+|  |  |  |  |
+|  |  |  |  |
+===TABLE END===
+Change Details
+
+Backup Plan
+
+Rollback to previous commit
+
+Summary

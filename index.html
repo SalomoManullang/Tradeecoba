@@ -12,7 +12,12 @@
   <link href="assets/metronic/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
   <link href="assets/metronic/css/style.bundle.css" rel="stylesheet" type="text/css" />
   <link href="vendor/icons/bootstrap-icons.min.css" rel="stylesheet" type="text/css" />
-  <link href="css/app.css" rel="stylesheet" type="text/css" />
+  <link href="css/app.css?v=2026102312" rel="stylesheet" type="text/css" />
+  <!-- COMPASS design language (reskin Program Setup + kerangka aplikasi). Lato = UI, Plus Jakarta Sans = judul halaman list, JetBrains Mono = rumus.
+       Poppins di atas tetap dipakai konten modul lain (Metronic). -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link href="css/compass-tokens.css?v=2026102312" rel="stylesheet" type="text/css" />
+  <link href="css/compass-skin.css?v=2026102312" rel="stylesheet" type="text/css" />
   <link rel="shortcut icon" href="assets/paragon/tradee_square_highrest.png" />
 </head>
 <body>
@@ -27,22 +32,23 @@
   <script src="assets/metronic/plugins/global/plugins.bundle.js"></script>
 
   <!-- Inti: evaluator rumus aman, katalog developer, "database" browser, engine (config + kalkulasi + approval), data dummy, kerangka UI -->
-  <script src="js/formula.js"></script>
-  <script src="js/catalog.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/engine.js"></script>
-  <script src="js/seed.js"></script>
-  <script src="js/ui.js"></script>
+  <script src="js/formula.js?v=2026102312"></script>
+  <script src="js/catalog.js?v=2026102312"></script>
+  <script src="js/store.js?v=2026102312"></script>
+  <script src="js/engine.js?v=2026102312"></script>
+  <script src="js/seed.js?v=2026102312"></script>
+  <script src="js/ui.js?v=2026102312"></script>
 
   <!-- Halaman -->
-  <script src="js/pages/auth.js"></script>
-  <script src="js/pages/setup.js"></script>        <!-- Program Setup step 0–3d: daftar/clone, header, channel, brand, kelas & tier, pilar, rumus -->
-  <script src="js/pages/setup2.js"></script>       <!-- Program Setup step 3a eligibility & jadwal, 3f–8: fase (form + approval), MOU/SKN, simulasi, validasi, publish, close, audit -->
-  <script src="js/pages/registration.js"></script> <!-- Registration CBD/CDT -->
-  <script src="js/pages/monitoring.js"></script>   <!-- Monitoring: evidence per lead measure -->
-  <script src="js/pages/payout.js"></script>       <!-- Payout: Conditional & Fix terpisah -->
-  <script src="js/pages/inbox.js"></script>        <!-- Inbox approval semua fase -->
-  <script src="js/pages/master.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/pages/auth.js?v=2026102312"></script>
+  <script src="js/pages/setup.js?v=2026102312"></script>        <!-- Program Setup step 0–3d: daftar/clone, header, channel, brand, kelas & tier, pilar, rumus -->
+  <script src="js/pages/setup2.js?v=2026102312"></script>       <!-- Program Setup step 3a eligibility & jadwal, 3f–8: fase (form + approval), MOU/SKN, simulasi, validasi, publish, close, audit -->
+  <script src="js/pages/setup-view.js?v=2026102312"></script>   <!-- Program Setup: mode lihat/edit, catatan dilipat, ringkasan kelas & layer (lapisan tampilan) -->
+  <script src="js/pages/registration.js?v=2026102312"></script> <!-- Registration CBD/CDT -->
+  <script src="js/pages/monitoring.js?v=2026102312"></script>   <!-- Monitoring: evidence per lead measure -->
+  <script src="js/pages/payout.js?v=2026102312"></script>       <!-- Payout: Conditional & Fix terpisah -->
+  <script src="js/pages/inbox.js?v=2026102312"></script>        <!-- Inbox approval semua fase -->
+  <script src="js/pages/master.js?v=2026102312"></script>
+  <script src="js/app.js?v=2026102312"></script>
 </body>
 </html>

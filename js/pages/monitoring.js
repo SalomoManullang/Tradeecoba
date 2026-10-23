@@ -23,7 +23,7 @@
   route('/monitoring', ({}, q, { user, year }) => {
     const programs = DB.where('programs', (p) => p.year === year && p.status !== 'DRAFT').map((p) => E.loadProgram(p.id));
     return {
-      title: 'Monitoring', html: `<div class="page-head"><div><h1>Monitoring ${year}</h1><div class="sub">Evidence per lead measure untuk peserta yang registrasinya sudah disetujui. Frekuensi mengikuti setup channel.</div></div></div>
+      title: 'Monitoring', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Monitoring ${year}</h1><div class="sub">Evidence per lead measure untuk peserta yang registrasinya sudah disetujui. Frekuensi mengikuti setup channel.</div></div></div>
       ${programs.map((p) => p.channels.map((ch) => {
         const regs = DB.where('registrations', (r) => r.program_channel_id === ch.id && r.status === 'approved' && inScope(user, store(r.customer_id)));
         if (!regs.length) return '';
@@ -35,7 +35,7 @@
               if (m && m.status !== 'returned') return `<td><a href="#/monitoring/item/${m.id}">${h.badge(m.status)}</a><div class="small text-muted">${Object.keys(m.evidence || {}).length}/${ch.leadMeasures.length} evidence</div></td>`;
               return `<td>${user.role === 'CBD' ? `<a class="btn btn-sm ${m ? 'btn-outline-info' : 'btn-outline-brand'}" href="#/monitoring/form/${r.id}/${per.key}">${m ? 'Revisi' : 'Isi'}</a>` : '<span class="text-muted small">belum</span>'}</td>`; }).join('')}</tr>`).join('')}
           </tbody></table></div></div>`;
-      }).join('')).join('') || '<div class="card"><div class="card-body text-muted">Belum ada peserta yang disetujui dalam scope Anda.</div></div>'}`,
+      }).join('')).join('') || '<div class="card"><div class="card-body text-muted">Belum ada peserta yang disetujui dalam scope Anda.</div></div>'}</div></div>`,
     };
   });
 
@@ -55,10 +55,12 @@
     const other = fields.filter((f) => f.repeat_per === 'NONE');
     const s = store(reg.customer_id);
     return {
-      title: `Monitoring ${s.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/monitoring">Monitoring</a> / ${esc(program.name)} · ${esc(ch.channel_name)}</div>
-        <h1>Monitoring ${esc(per.label)} · ${esc(s.name)}</h1><div class="sub">${h.date(per.start)} – ${h.date(per.end)}</div></div></div>
+      title: `Monitoring ${s.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: '/monitoring', crumb: `<a href="#/monitoring">Monitoring</a> / ${esc(program.name)} · ${esc(ch.channel_name)}`,
+        title: `Monitoring ${esc(per.label)} · ${esc(s.name)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Periode', `${h.date(per.start)} – ${h.date(per.end)}`], ['Customer ID', reg.customer_id], ['Lead measure', `${ch.leadMeasures.length}`]] })}
       ${UI.errorsHtml(pend && pend.errors)}
+      <div class="cps-work">
       <form data-action="mon.submit" data-reg="${reg.id}" data-per="${per.key}">
       <div class="card mb-3"><div class="card-header">${esc(ch.pillar_framework_name || 'Pilar')} — evidence per lead measure</div><div class="table-responsive"><table class="table table-sm mb-0">
         <thead><tr><th>Pilar · JTBD</th><th>Lead measure</th>${lmFields.map((f) => `<th>${esc(f.label)}${f.is_required ? ' <span class="text-danger">*</span>' : ''}</th>`).join('')}</tr></thead>
@@ -72,7 +74,7 @@
       </div></div></div>
       <div class="col-lg-5"><div class="card"><div class="card-header">Approval Monitoring</div><div class="card-body">${UI.layerPath(ch.phases.MONITORING.layers)}
         <div class="small text-muted mt-2">Prototype menyimpan nama file saja.</div>
-        <button class="btn btn-brand w-100 mt-3"><i class="bi bi-send"></i> ${ex ? 'Kirim ulang' : 'Ajukan monitoring'}</button></div></div></div></div></form>`,
+        <button class="btn btn-brand w-100 mt-3"><i class="bi bi-send"></i> ${ex ? 'Kirim ulang' : 'Ajukan monitoring'}</button></div></div></div></div></form></div></div>`,
     };
   });
 
@@ -114,10 +116,12 @@
     const s = store(reg.customer_id);
     const comp = E.pillarCompliance(ch, reg.id, m.start, m.end);
     return {
-      title: `Monitoring ${s.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/monitoring">Monitoring</a> / <a href="#/registration/participant/${reg.id}">${esc(s.name)}</a></div>
-        <h1>Monitoring ${esc(m.period_label)} ${h.badge(m.status)}</h1><div class="sub">${esc(program.name)} · ${esc(ch.channel_name)} · ${h.date(m.start)} – ${h.date(m.end)}</div></div>
-        ${m.status === 'returned' && user.role === 'CBD' ? `<a href="#/monitoring/form/${reg.id}/${m.period_key}" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi</a>` : ''}</div>
+      title: `Monitoring ${s.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: '/monitoring', crumb: `<a href="#/monitoring">Monitoring</a> / <a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`,
+        title: `Monitoring ${esc(m.period_label)} ${h.badge(m.status)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Toko', `<a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`], ['Periode', `${h.date(m.start)} – ${h.date(m.end)}`],
+          ['Evidence', `${Object.keys(m.evidence || {}).length} / ${ch.leadMeasures.length}`]],
+        actions: m.status === 'returned' && user.role === 'CBD' ? `<a href="#/monitoring/form/${reg.id}/${m.period_key}" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi</a>` : '' })}
       <div class="row g-3"><div class="col-lg-8">
         ${canAct ? UI.approvalBox('monitoring', m.id, layer, `/monitoring/item/${m.id}`) : ''}
         <div class="card mb-3"><div class="card-header">Evidence</div><div class="table-responsive"><table class="table table-sm mb-0">
@@ -129,7 +133,7 @@
           <div class="text-muted mt-1">Fix Rebate termin ini dibayar bila Monitoring ini disetujui (bukan dari persentase di atas).</div></div></div>
       </div>
       <div class="col-lg-4"><div class="card mb-3"><div class="card-header">Jalur approval</div><div class="card-body">${UI.layerPath(ch.phases.MONITORING.layers, 'monitoring', m)}</div></div>
-        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('monitoring', m.id)}</div></div></div></div>`,
+        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('monitoring', m.id)}</div></div></div></div></div>`,
     };
   });
 })();

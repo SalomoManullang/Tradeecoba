@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" rx="24" fill="#304DDE"/><g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M124 76H82a24 24 0 0 0 0 48h10"/><path d="M100 56 78 76l22 20"/></g><circle cx="132" cy="126" r="18" fill="#FFCD00"/></svg>
+</template>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:var(--color-border-default); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
+  @keyframes rt-fade { from { opacity:0; } to { opacity:1; } }
+  input::placeholder { color:var(--color-text-disabled); opacity:1; }
+  button.rt-reject:hover:not(:disabled) { background:var(--error-100) !important; }
+  tr.rt-returned > td { background:var(--primary-100) !important; }
+  tr.rt-sub > td { background:var(--color-bg-primary); }
+  .rt-freeze2 th:nth-child(1), .rt-freeze2 td:nth-child(1) { position:sticky; left:0; z-index:2; }
+  .rt-freeze2 th:nth-child(2), .rt-freeze2 td:nth-child(2) { position:sticky; left:var(--f1w,150px); z-index:2; }
+  .rt-freeze2 td:nth-child(1), .rt-freeze2 td:nth-child(2) { background:inherit; }
+  .rt-freeze2 th:nth-child(1), .rt-freeze2 th:nth-child(2) { z-index:3; }
+  .rt-freeze2 th:nth-child(2), .rt-freeze2 td:nth-child(2) { border-right:1px solid var(--color-border-subtle); }
+  .rt-freeze2.is-scrolled th:nth-child(2), .rt-freeze2.is-scrolled td:nth-child(2) { border-right:1px solid var(--color-border-default); box-shadow:10px 0 12px -4px rgba(42,61,74,0.22); }
+  [role="dialog"] > div:first-child { border-bottom:none !important; }
+  [role="dialog"] > div:last-child { border-top:none !important; }
+  a { color:var(--primary-500); }
+  a:hover { color:var(--primary-600); }
+  tbody td, tbody td * { font-size:12px !important; }
+  .cmp-side { transition:width 180ms ease; }
+  .cmp-side.is-collapsed { width:72px !important; }
+  .cmp-side.is-collapsed .cmp-side-full { display:none !important; }
+  .cmp-side.is-collapsed .cmp-side-head { justify-content:center !important; padding:20px 0 12px !important; }
+  .cmp-side-toggle { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-base,4px); cursor:pointer; flex-shrink:0; background:none; border:none; padding:0; }
+  .cmp-side-toggle:hover { background:var(--neutral-variant-100, #F0F2F5); }
+  .cmp-side.is-collapsed .cmp-side-menu { overflow:visible !important; }
+  .rt-crit-col { border:none; background:transparent; cursor:pointer; font-family:var(--font-sans); border-radius:var(--radius-base); padding:0 4px 10px; text-align:center; transition:background 120ms ease; }
+  .rt-crit-col:hover { background:color-mix(in srgb, var(--primary-500) 6%, transparent); }
+  .rt-crit-col.is-on { background:color-mix(in srgb, var(--primary-500) 10%, transparent); }
+  .rt-bar { transition:filter 120ms ease, opacity 120ms ease; border-radius:var(--radius-base) var(--radius-base) 0 0; }
+  .rt-crit-col:hover .rt-bar { filter:brightness(0.92); }
+  .rt-crit-col.is-dim .rt-bar { opacity:.35; }
+</style>
+</helmet>
+<div data-screen-label="COMPASS — Retur" style="display:flex; height:100vh; font-family:var(--font-sans); background:var(--color-bg-primary); color:var(--color-text-primary); overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="{{ sideClass }}" style="width:240px; flex-shrink:0; border-right:1px solid var(--color-border-default); background:var(--color-bg-secondary); display:flex; flex-direction:column; box-sizing:border-box;">
+    <div class="cmp-side-head" style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <span class="cmp-side-full" style="display:inline-flex;"><x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import></span>
+      <button type="button" class="cmp-side-toggle" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" onClick="{{ toggleSidebar }}">
+        <sc-if value="{{ sideCollapsed }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 8.5L13 13L8.5 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 8.5L17.5 13L13 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+        <sc-if value="{{ sideExpanded }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13.5L4.5 9L9 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.5 13.5L9 9L13.5 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </button>
+    </div>
+    <div class="cmp-side-full" style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div class="cmp-side-menu" style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex:1; overflow:auto; background:var(--color-bg-primary); padding:24px 24px 40px; box-sizing:border-box; width:100%;">
+
+      <!-- ==================== UNAUTHORIZED ==================== -->
+      <sc-if value="{{ isDenied }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%; background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:48px 24px; box-sizing:border-box;">
+          {{ deniedState }}
+        </div>
+      </sc-if>
+
+      <!-- ==================== LIST VIEW ==================== -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+      <div style="width:100%; display:flex; flex-direction:column; gap:24px; animation:rt-fade .2s ease;">
+
+        <!-- Summary card -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; justify-content:space-between; column-gap:16px; row-gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:nowrap; flex:0 1 auto; min-width:0;">
+              <div style="font-family:var(--font-sans); font-weight:700; font-size:16px; line-height:24px; color:var(--neutral-950);">Ringkasan Retur</div>
+              <span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--color-text-tertiary);">
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Icon" name="InfoOutlineIcon" size="14" color="var(--color-text-tertiary)" hint-size="14px,14px"></x-import>
+                Mengikuti filter &amp; pencarian aktif
+              </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              {{ freshness }}
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ reloadProps }}" hint-size="120px,36px">Muat Ulang</x-import>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ dateModeProps }}" style="width:168px" hint-size="168px,38px"></x-import>
+            <div style="min-width:190px;">{{ dateValueControl }}</div>
+          </div>
+          {{ criteriaBlocks }}
+          {{ statusDistribution }}
+          {{ approvalFlow }}
+          <div style="display:none; font-size:12px; line-height:16px; color:var(--color-text-tertiary);">{{ scopeLabel }}</div>
+        </div>
+
+        <!-- Content card -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+          <div style="font-family:var(--font-display); font-weight:700; font-size:24px; line-height:32px; color:var(--neutral-950);">Retur</div>
+
+          <!-- Action bar -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ searchProps }}" style="width:300px" hint-size="300px,36px"></x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ filterProps }}" hint-size="96px,36px">Filter</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ exportBtnProps }}" hint-size="100px,36px">Ekspor</x-import>
+            </div>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ bulkToggleProps }}" hint-size="150px,36px">{{ bulkToggleLabel }}</x-import>
+          </div>
+
+          <sc-if value="{{ filterBar }}" hint-placeholder-val="{{ false }}">
+            <div>{{ filterBar }}</div>
+          </sc-if>
+
+          <sc-if value="{{ bulkBar }}" hint-placeholder-val="{{ false }}">
+            <div>{{ bulkBar }}</div>
+          </sc-if>
+
+          <div style="min-height:320px;">{{ tableRegion }}</div>
+
+          <sc-if value="{{ showPagination }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:14px; line-height:20px; color:var(--color-text-primary);">Item per halaman</span>
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ perPageProps }}" style="width:84px" hint-size="84px,38px"></x-import>
+                <span style="font-size:14px; line-height:20px; color:var(--color-text-primary);">{{ totalLabel }}</span>
+              </div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.PageNumbers" dc-props="{{ pageProps }}" hint-size="260px,34px"></x-import>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ==================== DETAIL VIEW ==================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Detail Retur" style="width:100%; display:flex; flex-direction:column; gap:24px; animation:rt-fade .2s ease;">
+
+        <!-- Detail header -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; align-items:flex-start; justify-content:space-between; gap:24px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:24px; min-width:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ dBackProps }}" hint-size="104px,36px">Kembali</x-import>
+            <div style="width:1px; height:36px; flex-shrink:0; background:var(--color-border-default);"></div>
+            <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-weight:700; font-size:22px; line-height:28px; color:var(--color-text-primary);">{{ dTitle }}</span>
+                {{ dHeaderTags }}
+              </div>
+              <div style="font-weight:600; font-size:14px; line-height:20px; color:var(--color-text-primary);">{{ dStore }}</div>
+              <div style="font-size:12px; line-height:16px; color:var(--color-text-disabled);">{{ dCaption }}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+            <sc-if value="{{ dCanAct }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ dRejectProps }}" hint-size="100px,36px">Tolak</x-import>
+            </sc-if>
+            <sc-if value="{{ dCanAct }}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ dApproveProps }}" hint-size="120px,36px">Setujui</x-import>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- Stale data warning -->
+        <sc-if value="{{ dStale }}" hint-placeholder-val="{{ false }}">
+          <div>{{ staleAlert }}</div>
+        </sc-if>
+
+
+
+        <!-- Ratio / SOA card -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px;">
+          {{ ratioTiles }}
+        </div>
+
+        <!-- Informasi Retur -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; box-sizing:border-box;">
+          <div style="font-weight:700; font-size:14px; line-height:20px; color:var(--color-text-primary); padding-bottom:16px; border-bottom:1px solid var(--color-border-default); margin-bottom:24px;">Informasi Retur</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px 64px;">
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">No. Reference</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dRef }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Create Date</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dCreate }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">DC (Sales Area)</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dDc }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Salesman</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dSalesman }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Business Partner</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dStore }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Nominal Pengajuan</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dNominal }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Nominal Approved</span><span style="font-weight:700; font-size:14px; color:{{ dApprovedColor }};">{{ dNominalApproved }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Tipe Retur</span><div>{{ dConsiTag }}</div></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Status</span><div>{{ dStatusTag }}</div></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:start; gap:16px; grid-column:1/-1;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary); padding-top:4px;">Alur Approval</span><div>{{ dCriteriaInfo }}</div></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:center; gap:16px; grid-column:1/-1;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">Alasan Retur</span><span style="font-weight:700; font-size:14px; color:var(--color-text-primary);">{{ dAlasanRetur }}</span></div>
+            <div style="display:grid; grid-template-columns:180px 1fr; align-items:start; gap:16px; grid-column:1/-1;"><span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary); padding-top:2px;">Catatan SL</span><span style="font-size:14px; color:var(--color-text-secondary); font-style:italic;">{{ dCatatan }}</span></div>
+          </div>
+        </div>
+
+        <!-- Produk -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="font-weight:700; font-size:14px; line-height:20px; color:var(--color-text-primary);">Produk Retur <span style="color:var(--color-text-tertiary); font-weight:400;">({{ dSkuCount }} SKU)</span></div>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ prodSearchProps }}" style="width:300px" hint-size="300px,36px"></x-import>
+          </div>
+          <div>{{ approveGuard }}</div>
+          <div>{{ productRegion }}</div>
+        </div>
+
+        <!-- Detail Status -->
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+          <div style="font-weight:700; font-size:14px; line-height:20px; color:var(--color-text-primary); padding-bottom:16px; border-bottom:1px solid var(--color-border-default);">Riwayat Pengajuan Retur</div>
+          <div>{{ timeline }}</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ==================== QUEUE DONE ==================== -->
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%; background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:48px 24px; box-sizing:border-box;">
+          {{ doneState }}
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- ============ FILTER DRAWER ============ -->
+  <div onClick="{{ closeFilter }}" style="{{ backdropStyle }}">
+    <div onClick="{{ stopProp }}" style="{{ drawerStyle }}">
+      <div style="flex:1; min-height:0; overflow:auto; padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+        <div style="height:28px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+          <span style="font-weight:700; font-size:22px; line-height:28px; color:var(--color-text-primary);">Filter</span>
+          <span onClick="{{ closeFilter }}" style="cursor:pointer; display:inline-flex;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Icon" name="CloseIcon" size="24" color="var(--color-text-primary)" hint-size="24px,24px"></x-import>
+          </span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          {{ drawerStatusField }}
+          {{ drawerTipeField }}
+          {{ drawerCriteriaField }}
+          {{ drawerDcField }}
+          {{ drawerAreaField }}
+          <div>
+            <div style="font-size:12px; font-weight:600; line-height:16px; color:var(--color-text-primary); margin-bottom:6px;">Dibuat</div>
+            <div style="display:flex; align-items:center; gap:8px; height:44px; box-sizing:border-box; padding:0 12px; border:1px solid var(--color-border-default); border-radius:var(--radius-base); background:var(--color-bg-secondary);">
+              <input type="date" value="{{ drawerFrom }}" onInput="{{ onDrawerFrom }}" style="flex:1; min-width:0; border:none; outline:none; background:transparent; font-size:14px; color:var(--color-text-primary); font-family:var(--font-sans);">
+              <span style="color:var(--neutral-variant-600); flex-shrink:0;">–</span>
+              <input type="date" value="{{ drawerTo }}" onInput="{{ onDrawerTo }}" style="flex:1; min-width:0; border:none; outline:none; background:transparent; font-size:14px; color:var(--color-text-primary); font-family:var(--font-sans);">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0; padding:24px; display:flex; gap:12px; align-items:center; box-sizing:border-box;">
+        <sc-if value="{{ drawerAnyFilled }}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ hapusFilterProps }}" hint-size="120px,36px">Hapus Filter</x-import>
+        </sc-if>
+        <div style="flex:1;"></div>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ batalFilterProps }}" hint-size="64px,36px">Batal</x-import>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ terapkanFilterProps }}" hint-size="90px,36px">Terapkan</x-import>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal host -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Modal" dc-props="{{ modalProps }}" hint-size="0,0"></x-import>
+  </sc-if>
+
+  <!-- Toast host -->
+  <div style="position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; align-items:center;">
+    {{ toastStack }}
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;tableDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;xs&quot;,&quot;s&quot;,&quot;m&quot;],&quot;default&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tabel&quot;},&quot;simulateEmpty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Page States&quot;},&quot;simulateError&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Page States&quot;},&quot;simulateDenied&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Page States&quot;},&quot;pov&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Default&quot;,&quot;FOM&quot;,&quot;BFL&quot;,&quot;RSBL&quot;,&quot;Nasional CBD Lead&quot;,&quot;Nasional CBD&quot;,&quot;Finance Controller&quot;,&quot;BP LogDist&quot;,&quot;VP Commercial&quot;,&quot;VP LogDist&quot;,&quot;FBP SDBS Downstream&quot;],&quot;default&quot;:&quot;Default&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Point of View&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      view: "list",
+      returns: this.buildData(),
+      search: "", searchDraft: "",
+      filters: { status: [], tipe: [], dc: [], area: [], criteria: [], from: "", to: "", overSoa: false },
+      cardSel: { status: [], criteria: [] },
+      dateFilter: { mode: "Bulan", date: "2024-07-15", from: "2024-07-01", to: "2024-07-31", week: "2024-W28", month: "2024-07", year: "2024" },
+      page: 1, perPage: "10", sortKey: "writeDate", sortDir: "desc",
+      loading: false, tableScrolled: false, returnRow: null,
+      dataAt: new Date(new Date().setHours(9, 12, 0, 0)), minsAgo: 5,
+      filterOpen: false, filterDraft: {},
+      bulkMode: false, selected: [],
+      detailId: null, prodSearch: "", expanded: {}, queue: [], queueIdx: 0, stale: false, calcSnap: {},
+      sumExpanded: {}, sumExcluded: [], sumQty: {}, sumRecalcAt: 0,
+      modal: null, toasts: [],
+    };
+    this._tid = 0;
+  }
+
+  /* ---------------- config ---------------- */
+  statusMeta() {
+    return {
+      "Menunggu Approval":            { scheme: "yellow",  actionable: true },
+      "Menunggu Pengambilan Barang":  { scheme: "blue",    actionable: false },
+      "Barang Sudah Diambil":         { scheme: "blue",    actionable: false },
+      "Barang Diterima di Gudang":    { scheme: "blue",    actionable: false },
+      "Selesai":                      { scheme: "green",   actionable: false },
+      "Ditolak":                      { scheme: "red",     actionable: false },
+      "Dibatalkan":                   { scheme: "neutral", actionable: false },
+    };
+  }
+  SOA() { return { direct: 5, consi: 8 }; }
+  thresholdOf(r) { return r.consignment ? this.SOA().consi : this.SOA().direct; }
+  criteriaMap() {
+    return {
+      K1: { label: "Kriteria 1", kind: "Direct", desc: "Rasio \u2264 1%", short: "K1", color: "var(--status-800)", chain: ["FOM", "Nasional CBD Lead"] },
+      K2: { label: "Kriteria 2", kind: "Direct", desc: "Rasio >1%, Nominal \u2264 Rp100 juta", short: "K2", color: "var(--status-200)", chain: ["BFL", "RSBL", "Finance Controller"] },
+      K3: { label: "Kriteria 3", kind: "Direct", desc: "Rasio >1%, Rp100 juta < Nominal \u2264 Rp1 miliar", short: "K3", color: "var(--status-400)", chain: ["BFL", "RSBL", "BP LogDist"] },
+      K4: { label: "Kriteria 4", kind: "Direct", desc: "Rasio >1%, Nominal > Rp1 miliar", short: "K4", color: "var(--status-1000)", chain: ["BFL", "RSBL", "VP Commercial", "VP LogDist", "FBP SDBS Downstream"] },
+      K5: { label: "Kriteria 5", hidden: true, kind: "Consignment", desc: "Rasio \u2264 1%", short: "K5", color: "var(--status-600)", chain: ["FOM", "Nasional CBD", "BP LogDist"] },
+      K6: { label: "Kriteria 6", hidden: true, kind: "Consignment", desc: "Rasio >1% \u2013 1,9%", short: "K6", color: "var(--status-1100)", chain: ["BFL", "Nasional CBD Lead", "BP LogDist"] },
+      K7: { label: "Kriteria 7", hidden: true, kind: "Consignment", desc: "Rasio > 1,9%", short: "K7", color: "var(--status-500)", chain: ["BFL", "VP Commercial", "VP LogDist", "Finance Controller", "FBP SDBS Downstream"] },
+    };
+  }
+  critKeyOf(ratio, nominal, consi) {
+    if (ratio <= 1) return "K1";
+    if (nominal <= 100000000) return "K2";
+    if (nominal <= 1000000000) return "K3";
+    return "K4";
+  }
+  myRole() { const p = this.props.pov; return p && p !== "Default" ? p : null; }
+  waitingRole(r) { const cm = this.criteriaMap()[this.getCriteria(r)]; return cm.chain[r.approvalStage != null ? r.approvalStage : 0] || ""; }
+  canAct(r) { if (r.status !== "Menunggu Approval") return false; const role = this.myRole(); return !role || this.waitingRole(r) === role; }
+  getCriteria(r) { return this.critKeyOf(r.ratio, r.nominal, r.consignment); }
+  apprQtyOf(r, p) {
+    if (!this.statusMeta()[r.status].actionable) return p.qtyApprove;
+    return p.reasons.reduce((a, rs) => a + (rs.qtyApprove != null ? rs.qtyApprove : rs.qty), 0);
+  }
+  approvalCalc(r) {
+    const th = this.thresholdOf(r);
+    const submitQty = r.products.reduce((a, p) => a + p.qtyRetur, 0) || 1;
+    const apprQty = r.products.reduce((a, p) => a + this.apprQtyOf(r, p), 0);
+    const ratioAppr = +(r.ratio * (apprQty / submitQty)).toFixed(1);
+    const akumAfter = +(r.akumBefore + ratioAppr).toFixed(1);
+    const nominalAppr = r.products.reduce((a, p) => a + p.price * this.apprQtyOf(r, p), 0);
+    const maxRatio = Math.max(0, +(th - r.akumBefore).toFixed(1));
+    const maxQty = Math.min(submitQty, r.ratio > 0 ? Math.floor(submitQty * (maxRatio / r.ratio)) : submitQty);
+    return { th, submitQty, apprQty, ratioAppr, akumAfter, nominalAppr, maxRatio, maxQty,
+      adjusted: apprQty !== submitQty, overSubmit: r.akum > th, overAppr: akumAfter > th };
+  }
+
+  /* ---------------- data ---------------- */
+  buildData() {
+    const dcs = [
+      ["DC Banten", "Banten"], ["DC Bogor", "Bogor"],
+      ["DC Cirebon", "Cirebon"], ["DC Bandung", "Bandung"],
+      ["DC Bekasi", "Bekasi"], ["DC Karawang", "Karawang"],
+    ];
+    const stores = [
+      ["Toko Berkah Jaya", "1000004784"], ["Guardian Grand Indonesia", "1000007231"],
+      ["Watsons Central Park", "1000009418"], ["Alfamart Kemang Raya", "1000003652"],
+      ["Indomaret Sudirman 12", "1000011203"], ["Toko Sinar Kosmetik", "1000005877"],
+      ["Transmart Cempaka Putih", "1000008340"], ["Toko Cantik Selalu", "1000006129"],
+      ["Guardian Pondok Indah", "BP-50829"], ["Toko Maju Bersama", "BP-50830"],
+      ["Watsons Tunjungan Plaza", "BP-50831"], ["Toko Rejeki Makmur", "BP-50832"],
+    ];
+    const salesmen = [["Andi Prasetyo", "SL-2041"], ["Budi Santoso", "SL-2042"], ["Citra Lestari", "SL-2043"], ["Dewi Anggraini", "SL-2044"], ["Eko Nugroho", "SL-2045"], ["Fitri Handayani", "SL-2046"]];
+    const brands = ["Wardah", "Make Over", "Emina", "Kahf", "Instaperfect"];
+    // Prices in Rp/case (wholesale case pricing — scales nominal into realistic 10jt–2M range)
+    const products = [
+      ["4000000385", "Wardah Colorfit Velvet Lip Mousse", 9000000],
+      ["4000000412", "Wardah Lightening Day Cream", 7600000],
+      ["4000001847", "Make Over Powerstay Matte Powder", 29800000],
+      ["4000001203", "Make Over Ultra Hi-Matte Lipstick", 25800000],
+      ["4000000631", "Emina Bright Stuff Face Wash", 5800000],
+      ["4000000958", "Emina Sun Battle SPF45", 8400000],
+      ["4000000774", "Kahf Oil & Acne Face Wash", 6600000],
+      ["4000002219", "Instaperfect Mattesetter Lip Matte", 17800000],
+    ];
+    const reasons = ["Expired", "Rusak Kemasan", "Slow Moving", "Salah Kirim", "Retur Program"];
+    const statuses = ["Menunggu Approval", "Menunggu Approval", "Menunggu Approval", "Menunggu Pengambilan Barang", "Barang Sudah Diambil", "Barang Diterima di Gudang", "Selesai", "Ditolak", "Menunggu Approval", "Dibatalkan", "Menunggu Approval", "Selesai"];
+    const M = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    const out = [];
+    let n = 0;
+    for (let i = 0; i < 28; i++) {
+      const dc = dcs[i % dcs.length], st = stores[i % stores.length], sm = salesmen[i % salesmen.length];
+      const brand = brands[i % brands.length];
+      const baseStatus = i === 23 ? "Menunggu Pengambilan Barang" : statuses[i % statuses.length];
+      const critTarget = i % 4;
+      // Ensure K4 always has some "Menunggu Approval" so the 5-stage chain gets populated
+      // K4 needs some pending so all 5 approval stages get populated; last 2 K4 records stay at natural status
+      const k4indices = [3, 7, 11, 15, 19, 23, 27];
+      const k4pendingCap = 7; // show pending on first 5 K4 records to cover all 5 stages
+      const status = (critTarget === 3 && i !== 7 && i !== 23 && k4indices.indexOf(i) < k4pendingCap) ? "Menunggu Approval" : baseStatus;
+      const consi = i % 3 === 0;
+      const nSku = 2 + (i % 5);
+      const prods = []; let nominal = 0;
+      for (let j = 0; j < nSku; j++) {
+        const p = products[(i + j) % products.length];
+        const total = [6, 12, 18, 24, 30][(i + j) % 5];
+        const nR = (i + j) % 3 === 0 ? 2 : 1;
+        const rs = []; let left = total;
+        for (let k = 0; k < nR; k++) {
+          const q = k === nR - 1 ? left : Math.max(1, Math.floor(total / 2));
+          left -= q;
+          rs.push({ reason: reasons[(i + j + k) % reasons.length], qty: q, qtyApprove: q });
+        }
+        const approved = status === "Ditolak" || status === "Menunggu Approval" ? 0 : total;
+        // For multi-criteria completed returs, simulate first product qty reduction
+        const approvedAdj = (["Menunggu Pengambilan Barang","Barang Sudah Diambil","Barang Diterima di Gudang","Selesai"].includes(status) && critTarget >= 1 && j === 0) ? Math.floor(total * 0.6) : approved;
+        prods.push({ code: p[0], name: p[1], price: p[2], qtyRetur: total, qtyApprove: approvedAdj, qtyLfd: Math.max(0, total - ((i + j) % 4)), reasons: rs });
+        nominal += p[2] * total;
+      }
+      const day = 1 + (i % 26);
+      const th = consi ? 8 : 5;
+      // Ensure all criteria: K1(ratio≤1%), K2(>1%,nom≤100jt), K3(>1%,100jt<nom≤1M), K4(>1%,nom>1M)
+      const chainLens = [2, 3, 3, 5];
+      let ratio;
+      if (critTarget === 0) { ratio = +(0.4 + (i % 3) * 0.2).toFixed(1); }
+      else if (critTarget === 1) { ratio = +(1.5 + (i % 4) * 0.3).toFixed(1); nominal = [47000000, 63000000, 88000000, 74000000][i % 4]; }
+      else if (critTarget === 2) { ratio = +(2.1 + (i % 3) * 0.6).toFixed(1); nominal = [165000000, 395000000, 730000000][i % 3]; }
+      else { ratio = +(3.5 + (i % 2)).toFixed(1); nominal = [1400000000, 2850000000][i % 2]; }
+      if (critTarget >= 1) {
+        const base = prods.reduce((a, p) => a + p.price * p.qtyRetur, 0) || 1, k = nominal / base;
+        prods.forEach(p => { p.price = Math.max(100, Math.round(p.price * k / 100) * 100); });
+        nominal = prods.reduce((a, p) => a + p.price * p.qtyRetur, 0);
+      }
+      const akum = +(ratio + 1 + (i % 3) * 0.6).toFixed(1);
+      ++n;
+      const erpId = st[1];
+      const dd = String(day).padStart(2, "0"), mm = String(7).padStart(2, "0"), yy = "24";
+      const hh = String(8 + (i % 9)).padStart(2, "0"), mi = String((i * 7) % 60).padStart(2, "0"), ss = String((i * 3) % 60).padStart(2, "0");
+      const ref = "SFM-R/" + erpId + "/" + dd + mm + yy + "/" + hh + mi + ss;
+      const dateStr = day + " " + M[6] + " 2024";
+      const time = String(8 + (i % 9)).padStart(2, "0") + ":" + String((i * 7) % 60).padStart(2, "0");
+      const catatan = i % 4 === 0 ? "Produk mendekati expiry date, mohon segera diproses." : i % 4 === 1 ? "Kemasan rusak akibat pengiriman, foto terlampir di mobile." : null;
+      const cmKey = this.critKeyOf(ratio, nominal, consi);
+      const cm = this.criteriaMap()[cmKey];
+      const log = [{ actor: sm[0], role: "Sales Lead", action: "Pengajuan Dibuat", note: catatan || "", at: dateStr + " " + time }];
+      if (status === "Ditolak") log.unshift({ actor: "Rina Marlina", role: "Admin KDC", action: "Ditolak", note: "Bukti foto kemasan rusak tidak lengkap. Mohon lampirkan ulang.", at: dateStr + " 14:20" });
+      if (["Menunggu Pengambilan Barang", "Barang Sudah Diambil", "Barang Diterima di Gudang", "Selesai"].includes(status)) {
+        const submitQtyTotal = prods.reduce((a, p) => a + p.qtyRetur, 0);
+        const rasioAppr = +(ratio * (prods.reduce((a,p) => a + p.qtyApprove, 0) / (prods.reduce((a,p) => a + p.qtyRetur, 0) || 1))).toFixed(1);
+        const prodChanges = prods.filter(p => p.qtyApprove !== p.qtyRetur).map(p => ({ name: p.name, code: p.code, qtyAjukan: p.qtyRetur, qtyApprove: p.qtyApprove }));
+        if (critTarget >= 1) {
+          log.unshift({ actor: "Rina Marlina", role: cm.chain[0], action: "Disetujui", note: "Qty approve disesuaikan karena sebagian produk tidak memenuhi kriteria kondisi retur.", prodChanges, rasioAjukan: ratio, rasioApprove: rasioAppr, at: dateStr + " 09:15" });
+          if (critTarget >= 2 && cm.chain[1]) {
+            log.unshift({ actor: "Hendra Kusuma", role: cm.chain[1], action: "Disetujui", note: "Konfirmasi approval jenjang 2. Qty approve mengacu keputusan jenjang pertama.", rasioAjukan: ratio, rasioApprove: rasioAppr, at: dateStr + " 11:30" });
+          }
+          if (critTarget >= 3 && cm.chain[2]) {
+            log.unshift({ actor: "Dewi Rahayu", role: cm.chain[2], action: "Disetujui", note: "Final approval. Proses pengambilan barang dapat dilanjutkan.", rasioAjukan: ratio, rasioApprove: rasioAppr, at: dateStr + " 13:00" });
+          }
+        } else {
+          log.unshift({ actor: "Rina Marlina", role: cm.chain[0], action: "Disetujui", note: "Dokumen retur lengkap. Silakan koordinasi pengambilan barang.", at: dateStr + " 11:05" });
+        }
+      }
+      if (["Barang Sudah Diambil", "Barang Diterima di Gudang", "Selesai"].includes(status)) {
+        log.unshift({ actor: "Budi Santoso", role: "Kurir DC", action: "Barang Sudah Diambil", note: "Barang telah diambil dari toko. Dalam perjalanan ke gudang DC.", at: dateStr + " 13:30" });
+      }
+      if (["Barang Diterima di Gudang", "Selesai"].includes(status)) {
+        log.unshift({ actor: "Sari Dewi", role: "Admin Gudang", action: "Barang Diterima di Gudang", note: "Barang telah diterima dan dicek kondisi fisiknya. Sesuai dengan pengajuan.", at: dateStr + " 15:45" });
+      }
+      if (status === "Selesai") {
+        log.unshift({ actor: "Sistem", role: "Sistem", action: "Selesai", note: "Proses retur selesai. Kredit telah diproses ke akun toko.", at: dateStr + " 16:10" });
+      }
+      out.push({
+        id: ref, dc: dc[0], area: dc[1], reference: ref, partnerRef: st[1], partnerName: st[0], partnerLabel: st[1] + " - " + st[0],
+        brand, totalSku: nSku, consignment: consi, ratio, akumBefore: +(akum - ratio).toFixed(1), akum,
+        status, writeDate: dateStr, writeTime: time, createDate: dateStr + ", " + time + " WIB",
+        salesman: sm[0], salesmanId: sm[1], nominal, nominalApproved: status === "Menunggu Approval" || status === "Ditolak" || status === "Dibatalkan" ? 0 : nominal,
+        products: prods, log,
+        approvalStage: status === "Menunggu Approval" ? (i % cm.chain.length) : null,
+        catatan,
+      });
+    }
+    return out;
+  }
+
+  /* ---------------- helpers ---------------- */
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  multiSelect(props) {
+    if (!this._MultiSelect) {
+      const self = this; const h = React.createElement;
+      this._MultiSelect = function MultiSelect(p) {
+        const [open, setOpen] = React.useState(false);
+        const [rect, setRect] = React.useState(null);
+        const [q, setQ] = React.useState("");
+        const ref = React.useRef(null); const panelRef = React.useRef(null); const searchRef = React.useRef(null);
+        const vals = p.values || [];
+        const measure = React.useCallback(() => {
+          if (!ref.current) return;
+          const r = ref.current.getBoundingClientRect();
+          const below = window.innerHeight - r.bottom - 12, above = r.top - 12;
+          const flip = below < 220 && above > below;
+          setRect({ left: r.left, width: r.width, top: flip ? undefined : r.bottom + 4, bottom: flip ? (window.innerHeight - r.top + 4) : undefined, avail: Math.max(160, flip ? above : below) });
+        }, []);
+        React.useEffect(() => {
+          const onDoc = (e) => {
+            const a = ref.current && ref.current.contains(e.target);
+            const b = panelRef.current && panelRef.current.contains(e.target);
+            if (!a && !b) { setOpen(false); setQ(""); }
+          };
+          document.addEventListener("mousedown", onDoc);
+          return () => document.removeEventListener("mousedown", onDoc);
+        }, []);
+        React.useEffect(() => {
+          if (!open) return;
+          measure();
+          const on = () => measure();
+          window.addEventListener("resize", on); window.addEventListener("scroll", on, true);
+          const onKey = (e) => { if (e.key === "Escape") { setOpen(false); setQ(""); } };
+          const ft = setTimeout(() => { if (searchRef.current) searchRef.current.focus(); }, 40);
+          document.addEventListener("keydown", onKey);
+          return () => { clearTimeout(ft); window.removeEventListener("resize", on); window.removeEventListener("scroll", on, true); document.removeEventListener("keydown", onKey); };
+        }, [open, measure]);
+        const toggle = (v) => p.onChange(vals.includes(v) ? vals.filter(x => x !== v) : [...vals, v]);
+        const filled = vals.length > 0;
+        const summary = !filled ? null : (vals.length <= 2 ? vals.join(", ") : vals.slice(0, 2).join(", ") + " +" + (vals.length - 2));
+        return h("div", { ref, style: { position: "relative", width: "100%", fontFamily: "var(--font-sans)" } },
+          h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, p.label),
+          h("div", { role: "button", tabIndex: 0, "aria-label": p.label, onClick: () => setOpen(o => { if (o) setQ(""); return !o; }), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => { if (o) setQ(""); return !o; }); } },
+            style: { display: "flex", alignItems: "center", gap: 8, height: 44, boxSizing: "border-box", padding: "0 8px 0 12px", background: "var(--color-bg-secondary)", border: "1px solid " + (open ? "var(--primary-500)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", cursor: "pointer", outline: "none", transition: "border-color 120ms ease" } },
+            h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: filled ? "var(--color-text-primary)" : "var(--color-text-disabled)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, filled ? summary : p.placeholder),
+            filled
+              ? h("button", { type: "button", "aria-label": "Kosongkan " + p.label, title: "Kosongkan", onClick: (e) => { e.stopPropagation(); p.onChange([]); setOpen(false); setQ(""); }, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, flexShrink: 0, background: "none", border: "none", borderRadius: "var(--radius-full)", cursor: "pointer", padding: 0 } }, self.iconColored("CloseIcon", 16, "var(--color-text-tertiary)"))
+              : h("span", { style: { display: "inline-flex", flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 140ms ease" } }, self.iconColored("ChevronDownIcon", 18, "var(--color-text-tertiary)"))),
+          open && rect && window.ReactDOM && window.ReactDOM.createPortal
+            ? window.ReactDOM.createPortal(h("div", { ref: panelRef, style: { position: "fixed", left: rect.left, width: rect.width, top: rect.top, bottom: rect.bottom, zIndex: 4000, background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", boxShadow: "0 16px 40px rgba(42,61,74,0.22), 0 2px 6px rgba(42,61,74,0.10)", overflow: "hidden", fontFamily: "var(--font-sans)" } },
+                (p.options || []).length > 4 ? h("div", { style: { padding: 8, borderBottom: "1px solid var(--color-border-subtle)" } },
+                  h("div", { style: { display: "flex", alignItems: "center", gap: 8, height: 36, boxSizing: "border-box", padding: "0 10px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)" } },
+                    self.iconColored("SearchOutlineIcon", 16, "var(--color-text-tertiary)"),
+                    h("input", { ref: searchRef, type: "text", value: q, placeholder: "Cari " + (p.label || "").toLowerCase() + "…",
+                      onChange: (e) => setQ(e.target.value),
+                      style: { flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }),
+                    q ? h("button", { type: "button", "aria-label": "Bersihkan pencarian", onClick: () => { setQ(""); if (searchRef.current) searchRef.current.focus(); },
+                      style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, flexShrink: 0 } }, self.iconColored("CloseIcon", 14, "var(--color-text-tertiary)")) : null)) : null,
+                h("div", { style: { maxHeight: Math.min(260, rect.avail - 20), overflowY: "auto", padding: 4 } },
+                  (function () {
+                    const list = (p.options || []).filter(o => o.toLowerCase().includes(q.trim().toLowerCase()));
+                    if (!list.length) return h("div", { style: { padding: "16px 10px", textAlign: "center", fontSize: 13, color: "var(--color-text-tertiary)" } }, "Tidak ada hasil untuk \u201C" + q + "\u201D");
+                    return list.map(o => {
+                    const on = vals.includes(o);
+                    return h("div", { key: o, role: "option", "aria-selected": on, onClick: () => toggle(o),
+                      style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: "var(--radius-base)", cursor: "pointer", background: "transparent" },
+                      onMouseEnter: (e) => { e.currentTarget.style.background = "var(--color-bg-primary)"; },
+                      onMouseLeave: (e) => { e.currentTarget.style.background = "transparent"; } },
+                      h(self.nsAll().Checkbox, { checked: on, size: "s", onChange: () => toggle(o), style: { flexShrink: 0, pointerEvents: "none" } }),
+                      h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, o));
+                    });
+                  })())), document.body)
+            : null);
+      };
+    }
+    return React.createElement(this._MultiSelect, props);
+  }
+
+  nsAll() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(name, size) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20 }) : null; }
+  iconColored(name, size, color) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20, color }) : null; }
+  fmtRp(n) { return "Rp " + Number(n || 0).toLocaleString("id-ID"); }
+  fmtRpShort(n) { n = Number(n || 0); if (n >= 1e9) return "Rp " + (n / 1e9).toFixed(1).replace(".", ",") + " M"; if (n >= 1e6) return "Rp " + (n / 1e6).toFixed(1).replace(".", ",") + " jt"; if (n >= 1e3) return "Rp " + Math.round(n / 1e3) + " rb"; return "Rp " + n; }
+  fmtRpCompact(n) {
+    n = Number(n || 0);
+    const t = (v, d) => String(+v.toFixed(d)).replace(".", ",");
+    if (n >= 1e9) return "Rp" + t(n / 1e9, 1) + " M";
+    if (n >= 1e6) return "Rp" + t(n / 1e6, 1) + " jt";
+    if (n >= 1e3) return "Rp" + t(n / 1e3, 0) + " rb";
+    return "Rp" + n;
+  }
+  niceStep(raw) {
+    if (raw <= 0) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / mag;
+    return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag;
+  }
+  hexA(color, a) { return "color-mix(in srgb, " + color + " " + Math.round(a * 100) + "%, transparent)"; }
+  statusColor(status) {
+    return {
+      "Menunggu Approval":           "var(--status-cl-block)",
+      "Menunggu Pengambilan Barang": "var(--status-sending)",
+      "Barang Sudah Diambil":        "var(--status-packing)",
+      "Barang Diterima di Gudang":   "var(--status-shipping)",
+      "Selesai":                     "var(--status-delivered)",
+      "Ditolak":                     "var(--status-failed)",
+      "Dibatalkan":                  "var(--status-cancelled)",
+    }[status] || "var(--color-text-tertiary)";
+  }
+  statusChip(status, size) {
+    const { Tag } = this.ns();
+    const c = this.statusColor(status);
+    return React.createElement(Tag, { colorScheme: (this.statusMeta()[status] || {}).scheme || "neutral", size: size === "s" ? "s" : "xs", dot: false, style: { background: this.hexA(c, 0.12), color: c } },
+      React.createElement("span", { style: { width: 6, height: 6, borderRadius: "var(--radius-full)", background: c, flexShrink: 0 } }),
+      status);
+  }
+  detail() { return this.state.returns.find(r => r.id === this.state.detailId); }
+  msDate(d) { const M = { Jan:0,Feb:1,Mar:2,Apr:3,Mei:4,Jun:5,Jul:6,Agu:7,Sep:8,Okt:9,Nov:10,Des:11 }; const p = String(d).split(" "); return new Date(+p[2], M[p[1]] || 0, +p[0]).getTime(); }
+
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4600);
+  }
+
+  scrollHost() {
+    const el = document.querySelector('[data-screen-label="COMPASS — Retur"]');
+    if (!el) return null;
+    return [...el.querySelectorAll("div")].find(d => /auto/.test(getComputedStyle(d).overflow) && d.scrollHeight > d.clientHeight + 20) || null;
+  }
+  syncFreeze() {
+    const c1 = document.querySelector(".rt-freeze2 th:nth-child(1)");
+    const w = document.querySelector(".rt-freeze2");
+    if (c1 && w) w.style.setProperty("--f1w", c1.getBoundingClientRect().width + "px");
+  }
+  markReturnedRow() {
+    const host = document.querySelector(".rt-freeze2");
+    if (!host) return;
+    const rows = host.querySelectorAll("tbody tr");
+    const id = this.state.returnRow;
+    const paged = this.paged();
+    const idx = id ? paged.findIndex(o => o.id === id) : -1;
+    rows.forEach((tr, i) => tr.classList.toggle("rt-returned", i === idx));
+  }
+  componentDidMount() { this.syncFreeze(); this.markReturnedRow(); this._rz = () => this.syncFreeze(); window.addEventListener("resize", this._rz); }
+  componentDidUpdate() { this.syncFreeze(); this.markReturnedRow(); }
+  componentWillUnmount() { if (this._rz) window.removeEventListener("resize", this._rz); clearTimeout(this._rowT); }
+
+  /* ---------------- filtering ---------------- */
+  isoOf(r) { const t = new Date(this.msDate(r.writeDate)); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0"); }
+  isoWeek(iso) {
+    const d = new Date(iso + "T00:00:00Z"); const day = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - day + 3);
+    const firstThu = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const week = 1 + Math.round(((d - firstThu) / 86400000 - 3 + ((firstThu.getUTCDay() + 6) % 7)) / 7);
+    return d.getUTCFullYear() + "-W" + String(week).padStart(2, "0");
+  }
+  matchDate(r) {
+    const d = this.state.dateFilter, iso = this.isoOf(r);
+    if (d.mode === "Tanggal") return !d.date || iso === d.date;
+    if (d.mode === "Rentang") { if (d.from && iso < d.from) return false; if (d.to && iso > d.to) return false; return true; }
+    if (d.mode === "Minggu") return !d.week || this.isoWeek(iso) === d.week;
+    if (d.mode === "Bulan") return !d.month || iso.slice(0, 7) === d.month;
+    if (d.mode === "Tahun") return !d.year || iso.slice(0, 4) === String(d.year);
+    return true;
+  }
+  setDateFilter(patch) { this.setState(s => ({ dateFilter: { ...s.dateFilter, ...patch }, page: 1, selected: [] })); }
+  buildDateValue() {
+    const d = this.state.dateFilter; const h = React.createElement;
+    const base = { height: 38, boxSizing: "border-box", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)", padding: "0 12px", fontSize: 14, color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", outline: "none", background: "var(--color-bg-secondary)" };
+    if (d.mode === "Rentang") return h("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+      h("input", { type: "date", value: d.from, onInput: (e) => this.setDateFilter({ from: e.target.value }), style: { ...base, width: 150 } }),
+      h("span", { style: { color: "var(--color-text-tertiary)" } }, "–"),
+      h("input", { type: "date", value: d.to, onInput: (e) => this.setDateFilter({ to: e.target.value }), style: { ...base, width: 150 } }));
+    if (d.mode === "Minggu") return h("input", { type: "week", value: d.week, onInput: (e) => this.setDateFilter({ week: e.target.value }), style: { ...base, width: 190 } });
+    if (d.mode === "Bulan") return h("input", { type: "month", value: d.month, onInput: (e) => this.setDateFilter({ month: e.target.value }), style: { ...base, width: 190 } });
+    if (d.mode === "Tahun") return h("select", { value: d.year, onChange: (e) => this.setDateFilter({ year: e.target.value }), style: { ...base, width: 130, cursor: "pointer" } }, ["2023", "2024", "2025", "2026"].map(y => h("option", { key: y, value: y }, y)));
+    return h("input", { type: "date", value: d.date, onInput: (e) => this.setDateFilter({ date: e.target.value }), style: { ...base, width: 190 } });
+  }
+  filtered(skip) {
+    const s = this.state; let rows = s.returns.slice();
+    const q = s.search.trim().toLowerCase();
+    if (q) rows = rows.filter(r => (r.reference + " " + r.partnerLabel + " " + r.id).toLowerCase().includes(q));
+    const f = s.filters;
+    const sm = skip === "summary", dr = skip === "summary" || skip === "cardStatus";
+    rows = rows.filter(r => this.matchDate(r));
+    const cs = s.cardSel || { status: [], criteria: [] };
+    if (!dr && f.status.length) rows = rows.filter(r => f.status.includes(r.status));
+    if (!sm && skip !== "cardStatus" && cs.status.length) rows = rows.filter(r => cs.status.includes(r.status));
+    if (!sm && cs.criteria.length) rows = rows.filter(r => cs.criteria.includes(this.getCriteria(r)));
+    if (!dr && f.dc.length) rows = rows.filter(r => f.dc.includes(r.dc));
+    if (!dr && f.area.length) rows = rows.filter(r => f.area.includes(r.area));
+    if (!dr && f.tipe.length) rows = rows.filter(r => f.tipe.includes(r.consignment ? "Consignment" : "Direct"));
+    if (!dr && f.criteria && f.criteria.length) rows = rows.filter(r => f.criteria.includes(this.getCriteria(r)));
+    if (!dr && f.overSoa) rows = rows.filter(r => r.akum > this.thresholdOf(r));
+    if (!dr && f.from) { const t = new Date(f.from).getTime(); rows = rows.filter(r => this.msDate(r.writeDate) >= t); }
+    if (!dr && f.to) { const t = new Date(f.to).getTime(); rows = rows.filter(r => this.msDate(r.writeDate) <= t); }
+    const k = s.sortKey, dir = s.sortDir === "desc" ? -1 : 1;
+    if (k && s.sortDir) {
+      rows.sort((a, b) => {
+        let av = k === "writeDate" ? this.msDate(a.writeDate) : a[k], bv = k === "writeDate" ? this.msDate(b.writeDate) : b[k];
+        if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+        return av < bv ? -dir : av > bv ? dir : 0;
+      });
+    }
+    return rows;
+  }
+  paged() {
+    const s = this.state, list = this.filtered(), per = parseInt(s.perPage, 10);
+    const pc = Math.max(1, Math.ceil(list.length / per));
+    const page = Math.min(s.page, pc);
+    return list.slice((page - 1) * per, page * per);
+  }
+  activeFilterCount() {
+    const f = this.state.filters;
+    return ["status", "tipe", "dc", "area", "criteria"].filter(k => (f[k] || []).length).length + (f.from || f.to ? 1 : 0) + (f.overSoa ? 1 : 0);
+  }
+  cycleSort(key) {
+    this.setState(s => {
+      if (s.sortKey !== key) return { sortKey: key, sortDir: "asc", page: 1 };
+      if (s.sortDir === "asc") return { sortDir: "desc", page: 1 };
+      if (s.sortDir === "desc") return { sortKey: "", sortDir: null, page: 1 };
+      return { sortDir: "asc", page: 1 };
+    });
+  }
+
+  /* ---------------- filter drawer ---------------- */
+  openFilter() { this.setState(s => ({ filterOpen: true, filterDraft: { criteria: (s.filters.criteria || []).slice(), status: s.filters.status.slice(), tipe: (s.filters.tipe || []).slice(), dc: s.filters.dc.slice(), area: s.filters.area.slice(), from: s.filters.from, to: s.filters.to, overSoa: !!s.filters.overSoa } })); }
+  closeFilter() { this.setState({ filterOpen: false }); }
+  setDraft(patch) { this.setState(s => ({ filterDraft: { ...s.filterDraft, ...patch } })); }
+  clearDraft() { this.setState({ filterDraft: { status: [], tipe: [], dc: [], area: [], criteria: [], from: "", to: "", overSoa: false } }); }
+  applyFilter() {
+    const d = this.state.filterDraft;
+    this.afterFilterChange({ filters: { status: (d.status || []).slice(), tipe: (d.tipe || []).slice(), dc: (d.dc || []).slice(), area: (d.area || []).slice(), criteria: (d.criteria || []).slice(), from: d.from || "", to: d.to || "", overSoa: !!d.overSoa }, filterOpen: false, page: 1 });
+  }
+  afterFilterChange(patch) {
+    const had = this.state.selected.length > 0;
+    this.setState({ ...patch, selected: [] });
+    if (had) this.toast("warning", "Pilihan dibatalkan", "Pilihan dihapus karena filter berubah.");
+  }
+  removeFilter(key) {
+    if (key === "date") this.afterFilterChange({ filters: { ...this.state.filters, from: "", to: "" }, page: 1 });
+    else if (key === "overSoa") this.afterFilterChange({ filters: { ...this.state.filters, overSoa: false }, page: 1 });
+    else this.afterFilterChange({ filters: { ...this.state.filters, [key]: [] }, page: 1 });
+  }
+  resetFilters() { this.afterFilterChange({ filters: { status: [], tipe: [], dc: [], area: [], criteria: [], from: "", to: "", overSoa: false }, cardSel: { status: [], criteria: [] }, search: "", searchDraft: "", page: 1 }); }
+
+  buildFilterBar() {
+    const f = this.state.filters, h = React.createElement, chips = [];
+    const label = { status: "Status", tipe: "Tipe Retur", dc: "DC", area: "Sales Area", criteria: "Kriteria", overSoa: "Rasio SOA" };
+    const brief = (a) => a.length <= 2 ? a.join(", ") : a.slice(0, 2).join(", ") + " +" + (a.length - 2);
+    const chip = (key, text) => h("div", { key, style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 8px 6px 12px", background: "var(--color-border-subtle)", borderRadius: "var(--radius-base)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } },
+      h("span", null, h("span", { style: { fontWeight: 700 } }, label[key] || "Write Date"), ": ", text),
+      h("button", { type: "button", "aria-label": "Hapus filter " + (label[key] || "Dibuat"), onClick: () => this.removeFilter(key), style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--color-text-secondary)" } }, this.icon("CloseIcon", 16)));
+    ["status", "tipe", "dc", "area", "criteria"].forEach(k => { if (f[k] && f[k].length) chips.push(chip(k, brief(k === "criteria" ? f[k].map(x => x.replace("K", "Kriteria ")) : f[k]))); });
+    if (f.overSoa) chips.push(chip("overSoa", "Melebihi threshold"));
+    if (f.from || f.to) chips.push(chip("date", f.from && f.to ? f.from + " – " + f.to : f.from ? "≥ " + f.from : "≤ " + f.to));
+    if (!chips.length) return null;
+    return h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", animation: "rt-fade .18s ease" } },
+      h("span", { style: { fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" } }, "Filters by:"),
+      chips,
+      h("button", { type: "button", onClick: () => this.resetFilters(), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 14, fontWeight: 700, color: "var(--primary-500)" } }, this.iconColored("RefreshIcon", 18, "var(--primary-500)"), "Hapus Filter"));
+  }
+
+  /* ---------------- summary ---------------- */
+  buildAttentionRow(rows) {
+    const h = React.createElement;
+    const statusSel = this.state.filters.status || [];
+    const isOn = (st) => statusSel.includes(st);
+    const setStatusFilter = (st) => this.afterFilterChange({ filters: { ...this.state.filters, status: isOn(st) ? statusSel.filter(v => v !== st) : [...statusSel, st] }, page: 1 });
+    const pendingN = rows.filter(r => r.status === "Menunggu Approval").length;
+    const overN = rows.filter(r => r.status === "Menunggu Approval" && r.akum > this.thresholdOf(r)).length;
+    const alerts = [
+      { label: "Menunggu Approval", n: pendingN, color: this.statusColor("Menunggu Approval"), key: "pending",
+        onClick: () => setStatusFilter("Menunggu Approval"), on: isOn("Menunggu Approval") },
+      { label: "Melebihi SOA", n: overN, color: "var(--status-failed)", key: "over",
+        onClick: () => { const on = !!this.state.filters.overSoa; this.afterFilterChange({ filters: { ...this.state.filters, overSoa: !on, status: on ? [] : ["Menunggu Approval"] }, page: 1 }); },
+        on: !!this.state.filters.overSoa },
+    ];
+    const anyBad = alerts.some(a => a.n > 0);
+    return h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "10px 14px", borderRadius: "var(--radius-lg)", background: anyBad ? "var(--warning-100)" : "var(--success-100)", border: "1px solid " + (anyBad ? "var(--warning-500)" : "var(--success-500)") } },
+      h("span", { style: { display: "inline-flex", alignItems: "flex-start", gap: 8, flexShrink: 0 } },
+        h("span", { style: { display: "inline-flex", marginTop: 1 } }, this.iconColored(anyBad ? "HazardFilledIcon" : "CheckFilledIcon", 18, anyBad ? "var(--warning-700)" : "var(--success-600)")),
+        h("span", { style: { display: "flex", flexDirection: "column", gap: 2 } },
+          h("span", { style: { fontSize: 12, fontWeight: 700, color: "var(--color-text-primary)" } }, anyBad ? "Perlu Perhatian:" : "Tidak ada retur menunggu approval"),
+          anyBad ? h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "Klik pill untuk memfilter") : null)),
+      anyBad ? h("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } },
+        alerts.filter(a => a.n > 0).map((a) => {
+          const hp = this.state.hoverPill === a.key;
+          return h("button", { key: a.key, type: "button", title: "Klik untuk memfilter daftar ke \u201C" + a.label + "\u201D",
+            onClick: a.onClick,
+            onMouseEnter: () => { if (this.state.hoverPill !== a.key) this.setState({ hoverPill: a.key }); },
+            onMouseLeave: () => { if (this.state.hoverPill) this.setState({ hoverPill: null }); },
+            style: { display: "inline-flex", alignItems: "center", gap: 8, background: a.on ? this.hexA(a.color, 0.12) : (hp ? this.hexA(a.color, 0.06) : "var(--color-bg-secondary)"), border: "1px solid " + this.hexA(a.color, a.on ? 0.9 : (hp ? 0.6 : 0.4)), boxShadow: a.on ? "0 0 0 1px " + this.hexA(a.color, 0.5) : "none", borderRadius: "var(--radius-full)", padding: "4px 10px", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "background 120ms ease, border-color 120ms ease" } },
+            h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: a.color, flexShrink: 0 } }),
+            h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, a.label),
+            h("span", { style: { fontSize: 12, fontWeight: 700, color: a.color, fontVariantNumeric: "tabular-nums" } }, a.n));
+        })) : null);
+  }
+  buildStatusDistribution(rows) {
+    const h = React.createElement, meta = this.statusMeta();
+    const statusSel = this.state.cardSel.status;
+    const isOn = (st) => statusSel.includes(st);
+    const activeStatus = statusSel.length ? (statusSel.length === 1 ? statusSel[0] : statusSel.length + " status") : "";
+    const setStatusFilter = (st) => this.afterFilterChange({ cardSel: { ...this.state.cardSel, status: isOn(st) ? statusSel.filter(v => v !== st) : [...statusSel, st] }, page: 1 });
+    const hov = this.state.hoverStatus;
+    const setHov = (st) => { if (this.state.hoverStatus !== st) this.setState({ hoverStatus: st }); };
+    const order = Object.keys(meta);
+    const segs = order.map(st => {
+      const sub = rows.filter(r => r.status === st);
+      return { st, n: sub.length, amt: sub.reduce((a, r) => a + r.nominal, 0), c: this.statusColor(st) };
+    });
+    const denom = rows.length || 1;
+    const maxN = segs.reduce((m, x) => Math.max(m, x.n), 0) || 1;
+    const barRow = (x) => {
+      const on = isOn(x.st);
+      const hover = hov === x.st && !on;
+      return h("button", { key: x.st, type: "button", title: "Klik untuk memfilter ke \u201C" + x.st + "\u201D \u00B7 " + x.n + " retur \u00B7 " + this.fmtRp(x.amt), onClick: () => setStatusFilter(x.st), onMouseEnter: () => setHov(x.st), onMouseLeave: () => setHov(null),
+        style: { display: "flex", alignItems: "center", gap: 6, width: "100%", textAlign: "left", background: on ? "var(--primary-100)" : (hover ? "var(--color-bg-primary)" : "transparent"), border: "1px solid " + (on ? "var(--primary-500)" : "transparent"), borderRadius: "var(--radius-lg)", padding: "4px 6px", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "background 120ms ease" } },
+        h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: x.c, flexShrink: 0 } }),
+        h("span", { style: { flex: "1 1 auto", minWidth: 140, fontSize: 12, fontWeight: 600, color: "var(--color-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, x.st),
+        h("span", { style: { width: 30, height: 5, background: "var(--color-border-subtle)", borderRadius: "var(--radius-base)", overflow: "hidden", flexShrink: 0 } },
+          h("span", { style: { display: "block", height: "100%", width: x.n ? Math.max(8, x.n / maxN * 100) + "%" : "0%", background: x.c, borderRadius: "var(--radius-base)" } })),
+        h("span", { style: { width: 18, textAlign: "right", fontSize: 12, fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums", flexShrink: 0 } }, x.n),
+        h("span", { style: { width: 30, textAlign: "right", fontSize: 12, color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums", flexShrink: 0 } }, Math.round(x.n / denom * 100) + "%"),
+        h("span", { style: { width: 62, textAlign: "right", fontSize: 12, fontWeight: 600, color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums", flexShrink: 0 } }, this.fmtRpShort(x.amt)),
+        h("span", { style: { width: 16, flexShrink: 0, display: "inline-flex", justifyContent: "center", opacity: on ? 1 : (hover ? 0.7 : 0) } }, this.iconColored(on ? "CloseIcon" : "info-circle-i", 14, on ? "var(--primary-500)" : "var(--color-text-tertiary)")));
+    };
+    const colStyle = { display: "flex", flexDirection: "column", gap: 6, minWidth: 0 };
+    const half = Math.ceil(segs.length / 2);
+    return h("div", null,
+      h("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 8 } },
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } },
+          h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)" } }, "Distribusi Status"),
+          h("div", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-tertiary)" } }, this.iconColored("info-circle-i", 13, "var(--color-text-tertiary)"), "Klik status untuk memfilter daftar")),
+        activeStatus
+          ? h("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+              h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, background: "var(--primary-100)", border: "1px solid var(--primary-500)", borderRadius: "var(--radius-full)", padding: "2px 6px 2px 10px", fontSize: 12, fontFamily: "var(--font-sans)", color: "var(--color-text-primary)" } },
+                h("span", { style: { color: "var(--color-text-tertiary)" } }, "Difilter:"), h("b", null, activeStatus)),
+              h("button", { type: "button", onClick: () => this.afterFilterChange({ cardSel: { ...this.state.cardSel, status: [] }, page: 1 }), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: "var(--primary-500)" } }, this.iconColored("RefreshIcon", 15, "var(--primary-500)"), "Tampilkan Semua"))
+          : null),
+      h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "0 24px" } },
+        h("div", { style: colStyle }, segs.slice(0, half).map(barRow)),
+        h("div", { style: colStyle }, segs.slice(half).map(barRow))));
+  }
+
+  buildCriteriaBlocks(rows) {
+    const h = React.createElement, cm = this.criteriaMap();
+    if (!this.state.returns.length) return null;
+    const critSel = this.state.cardSel.criteria;
+    const isOn = (k) => critSel.includes(k);
+    const toggle = (k) => this.afterFilterChange({ cardSel: { ...this.state.cardSel, criteria: isOn(k) ? [] : [k] }, page: 1 });
+    const segs = Object.entries(cm).filter(([, c]) => !c.hidden).map(([k, c]) => {
+      const sub = rows.filter(r => this.getCriteria(r) === k);
+      return { k, c, n: sub.length, amt: sub.reduce((a, r) => a + r.nominal, 0) };
+    });
+    const maxAmt = segs.reduce((m, x) => Math.max(m, x.amt), 0) || 1;
+    const step = this.niceStep(maxAmt / 7), yMax = step * 7, PLOT = 200;
+    const ticks = [0, 1, 2, 3, 4, 5, 6, 7].map(i => i * step);
+    const totalN = segs.reduce((a, x) => a + x.n, 0), totalAmt = segs.reduce((a, x) => a + x.amt, 0);
+    const active = critSel.length ? cm[critSel[0]].label : "";
+    const barColor = (amt) => "color-mix(in srgb, var(--orange-600) " + Math.round(100 * (amt / maxAmt)) + "%, var(--orange-200))";
+    return h("div", null,
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", paddingBottom: 14, marginBottom: 16, borderBottom: "1px solid var(--color-border-subtle)" } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+          h("span", { style: { fontSize: 24, lineHeight: "32px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, "Total " + totalN + " retur"),
+          h("span", { style: { width: 1, height: 22, background: "var(--color-border-default)" } }),
+          h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 600, color: "var(--color-text-secondary)", fontVariantNumeric: "tabular-nums" } }, "Total Value " + this.fmtRp(totalAmt))),
+        active
+          ? h("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+              h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, background: "var(--primary-100)", border: "1px solid var(--primary-500)", borderRadius: "var(--radius-full)", padding: "2px 10px", fontSize: 12, fontFamily: "var(--font-sans)", color: "var(--color-text-primary)" } },
+                h("span", { style: { color: "var(--color-text-tertiary)" } }, "Difilter:"), h("b", null, active)),
+              h("button", { type: "button", onClick: () => this.afterFilterChange({ cardSel: { ...this.state.cardSel, criteria: [] }, page: 1 }), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, color: "var(--primary-500)" } }, this.iconColored("RefreshIcon", 15, "var(--primary-500)"), "Tampilkan Semua"))
+          : null),
+      h("div", { style: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 12 } },
+        h("div", { style: { display: "inline-flex", alignItems: "center", gap: 8 } },
+          h("span", { style: { width: 40, height: 12, background: "linear-gradient(90deg, var(--orange-200), var(--orange-600))", borderRadius: 2 } }),
+          h("span", { style: { fontSize: 12, color: "var(--color-text-secondary)" } }, "Total value retur")),
+        h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-tertiary)" } }, this.iconColored("info-circle-i", 13, "var(--color-text-tertiary)"), "Klik batang kriteria untuk memfilter daftar dan melihat alur approval")),
+      h("div", { style: { overflowX: "auto" } },
+        h("div", { style: { display: "flex", gap: 8, minWidth: 560, paddingTop: 10 } },
+          h("div", { style: { width: 56, height: PLOT, position: "relative", flexShrink: 0 } },
+            ticks.map(t => h("span", { key: t, style: { position: "absolute", right: 0, bottom: (t / yMax * 100) + "%", transform: "translateY(50%)", fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" } }, t === 0 ? "0" : this.fmtRpCompact(t)))),
+          h("div", { style: { position: "relative", flex: 1, minWidth: 0 } },
+            h("div", { style: { position: "absolute", left: 0, right: 0, top: 0, height: PLOT, pointerEvents: "none" } },
+              ticks.map(t => h("div", { key: t, style: { position: "absolute", left: 0, right: 0, bottom: (t / yMax * 100) + "%", borderTop: t === 0 ? "1px solid var(--color-border-default)" : "1px dashed var(--color-border-subtle)" } }))),
+            h("div", { style: { position: "relative", display: "grid", gridTemplateColumns: "repeat(" + segs.length + ", minmax(0, 1fr))", gap: 8 } },
+              segs.map(x => {
+                const on = isOn(x.k), dim = critSel.length > 0 && !on;
+                const pct = x.amt ? Math.max(1, x.amt / yMax * 100) : 0;
+                return h("button", { key: x.k, type: "button", "aria-pressed": on, className: "rt-crit-col" + (on ? " is-on" : "") + (dim ? " is-dim" : ""),
+                  title: x.c.label + " (" + x.c.kind + ") \u00B7 " + x.n + " retur \u00B7 " + this.fmtRp(x.amt),
+                  onClick: () => toggle(x.k),
+                  style: { display: "flex", flexDirection: "column", minWidth: 0 } },
+                  h("div", { style: { position: "relative", height: PLOT, width: "100%" } },
+                    h("span", { style: { position: "absolute", left: 0, right: 0, bottom: x.amt ? "calc(" + pct + "% + 4px)" : 6, textAlign: "center", fontSize: 12, lineHeight: "16px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" } }, this.fmtRpCompact(x.amt)),
+                    h("div", { className: "rt-bar", style: { position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "64%", maxWidth: 200, height: x.amt ? pct + "%" : 0, background: barColor(x.amt) } })),
+                  h("div", { style: { marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 0 } },
+                    h("span", { style: { fontSize: 12, lineHeight: "16px", fontWeight: 700, color: "var(--color-text-primary)" } }, x.c.label),
+                    h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-secondary)", minHeight: 48, textWrap: "pretty" } }, x.c.desc)));
+              }))))));
+  }
+
+  buildApprovalFlow(rows) {
+    const h = React.createElement, cm = this.criteriaMap();
+    const critSel = this.state.cardSel.criteria;
+    if (!critSel.length) return null;
+    const blocks = Object.keys(cm).filter(k => critSel.includes(k)).map(k => {
+      const c = cm[k];
+      const all = rows.filter(r => this.getCriteria(r) === k);
+      const pending = all.filter(r => r.status === "Menunggu Approval");
+      const totalAmt = all.reduce((a, r) => a + r.nominal, 0);
+      const counts = c.chain.map((_, si) => pending.filter(r => (r.approvalStage != null ? r.approvalStage : 0) === si).length);
+      const n = c.chain.length;
+      return h("div", { key: k, style: { display: "flex", flexDirection: "column", gap: 12 } },
+        h("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" } },
+          h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } },
+            h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)" } }, "Alur Approval \u00B7 " + c.label),
+            h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, c.kind + " \u00B7 " + c.desc + " \u00B7 " + pending.length + " menunggu approval")),
+          h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } },
+            h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, "Total " + all.length + " retur"),
+            h("span", { style: { width: 1, height: 18, background: "var(--color-border-default)" } }),
+            h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 600, color: "var(--color-text-secondary)", fontVariantNumeric: "tabular-nums" } }, "Total Value " + this.fmtRp(totalAmt)))),
+        h("div", { style: { overflowX: "auto" } },
+          h("div", { style: { display: "grid", gridTemplateColumns: "repeat(" + n + ", minmax(130px, 1fr))", columnGap: 28, rowGap: 12 } },
+            c.chain.map((role, si) => h("div", { key: si, style: { position: "relative", minWidth: 0, padding: "12px 14px", background: "var(--color-bg-primary)", borderRadius: "var(--radius-lg)", display: "flex", flexDirection: "column", gap: 2 } },
+              h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, "Tahap " + (si + 1)),
+              h("span", { style: { fontSize: 12, lineHeight: "16px", fontWeight: 700, color: "var(--color-text-primary)", minHeight: 32, textWrap: "pretty" } }, role),
+              h("span", { style: { fontSize: 20, lineHeight: "28px", fontWeight: 700, color: counts[si] ? "var(--color-text-primary)" : "var(--color-text-disabled)", fontVariantNumeric: "tabular-nums" } }, counts[si]),
+              h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, "retur menunggu"),
+              si < n - 1 ? h("span", { "aria-hidden": "true", style: { position: "absolute", right: -22, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "var(--color-text-tertiary)" } }, "\u2192") : null)))));
+    });
+    return h("div", { style: { borderTop: "1px solid var(--color-border-subtle)", paddingTop: 16, display: "flex", flexDirection: "column", gap: 20, animation: "rt-fade .18s ease" } }, blocks);
+  }
+
+  /* ---------------- list table ---------------- */
+  buildTableRegion(filtered, paged) {
+    const NS = this.ns(); const { Table, Tag, Button, EmptyState, ErrorState, Loader, Checkbox } = NS;
+    const h = React.createElement, meta = this.statusMeta();
+    if (this.props.simulateError) {
+      return h("div", { style: { padding: "40px 0" } }, h(ErrorState, { illustration: this.illus("error", 200), title: "Gagal Memuat Data", description: "Terjadi kesalahan saat mengambil daftar retur. Silakan coba lagi.", actions: h(Button, { variant: "primary", size: "s", leftIcon: this.icon("RefreshIcon", 18), onClick: () => this.reloadData() }, "Coba Lagi") }));
+    }
+    if (this.state.loading) return h("div", { style: { padding: "80px 0", display: "flex", justifyContent: "center" } }, Loader ? h(Loader, { size: "l" }) : "Memuat…");
+    if (this.props.simulateEmpty || !this.state.returns.length) {
+      return h("div", { style: { padding: "40px 0" } }, h(EmptyState, { colour: "neutral", illustration: this.illus("empty", 200), title: "Belum Ada Retur", description: "Belum ada pengajuan retur dalam cakupan akses Anda. Pengajuan akan muncul di sini setelah dikirim dari SFM Mobile." }));
+    }
+    if (!filtered.length) {
+      return h("div", { style: { padding: "40px 0" } }, h(EmptyState, { colour: "neutral", title: "Tidak Ada Hasil", description: "Tidak ada retur yang cocok dengan pencarian atau filter Anda.", actions: h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("RefreshIcon", 16), onClick: () => this.resetFilters() }, "Hapus Filter") }));
+    }
+    const sel = this.state.selected;
+    const selectable = paged.filter(r => this.canAct(r));
+    const allOn = selectable.length > 0 && selectable.every(r => sel.includes(r.id));
+    const columns = [];
+    if (this.state.bulkMode) {
+      columns.push({ key: "_sel", width: 48, align: "center",
+        header: h("span", { title: allOn ? "Kosongkan pilihan" : "Pilih semua di halaman ini" }, h(Checkbox, { checked: allOn, size: "s", disabled: !selectable.length, onChange: () => this.setState(st => ({ selected: allOn ? st.selected.filter(id => !selectable.some(r => r.id === id)) : [...new Set([...st.selected, ...selectable.map(r => r.id)])] })) })),
+        render: (r) => this.canAct(r)
+          ? h(Checkbox, { checked: sel.includes(r.id), size: "s", onChange: () => this.setState(st => ({ selected: st.selected.includes(r.id) ? st.selected.filter(x => x !== r.id) : [...st.selected, r.id] })) })
+          : h("span", { title: r.status === "Menunggu Approval" ? "Menunggu " + this.waitingRole(r) + ", bukan role Anda (" + this.myRole() + ")" : "Hanya status Menunggu Approval dapat dipilih", style: { color: "var(--color-text-disabled)", fontSize: 12, cursor: "not-allowed" } }, "—") });
+    }
+    columns.push(
+      { key: "reference", header: "Reference", sortable: true, width: 150, render: (r) => h("span", { style: { fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, r.reference) },
+      { key: "partnerLabel", header: "Business Partner", sortable: true, width: 300, render: (r) => h("span", { style: { fontWeight: 600, color: "var(--color-text-primary)" } }, r.partnerLabel) },
+      { key: "dc", header: "DC", sortable: true, render: (r) => h("span", { style: { color: "var(--color-text-primary)" } }, r.dc) },
+      { key: "area", header: "Sales Area", sortable: true, render: (r) => h("span", { style: { color: "var(--color-text-primary)" } }, r.area) },
+      { key: "totalSku", header: "Total SKU", sortable: true, render: (r) => h("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--color-text-primary)" } }, r.totalSku) },
+      { key: "consignment", header: "Tipe Retur", render: (r) => h(Tag, { colorScheme: r.consignment ? "purple" : "neutral", size: "xs" }, r.consignment ? "Consignment" : "Direct") },
+      { key: "nominal", header: "Nominal Pengajuan Retur", sortable: true, width: 170, render: (r) => h("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--color-text-primary)", whiteSpace: "nowrap" } }, this.fmtRp(r.nominal)) },
+      { key: "ratio", header: "Rasio Pengajuan", sortable: true, render: (r) => {
+        return h("span", { style: { fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text-primary)" } }, r.ratio.toFixed(1) + "%");
+      } },
+      { key: "status", header: "Status", sortable: true, width: 200, render: (r) => this.statusChip(r.status, "s") },
+      { key: "_ket", header: "Keterangan", width: 200, render: (r) => {
+        if (r.status !== "Menunggu Approval") return null;
+        const cm = this.criteriaMap()[this.getCriteria(r)];
+        const role = cm.chain[r.approvalStage != null ? r.approvalStage : 0] || "";
+        return h("span", { style: { color: "var(--color-text-primary)", whiteSpace: "nowrap" } }, "Menunggu " + role);
+      } },
+      { key: "writeDate", header: "Dibuat", sortable: true, width: 160, render: (r) => h("div", null,
+        h("div", { style: { color: "var(--color-text-primary)", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" } }, r.writeDate + ", " + r.writeTime + " WIB"),
+        h("div", { style: { fontSize: 12, color: "var(--color-text-tertiary)", whiteSpace: "nowrap" } }, r.salesman)) },
+      { key: "_act", header: "Action", align: "left", width: 88, render: (r) => {
+          const fom = !!this.myRole() && this.canAct(r);
+          return fom
+            ? h(Button, { variant: "primary", size: "xs", onClick: () => this.openDetail(r.id) }, "Setujui")
+            : h(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r.id) }, "Lihat");
+        } },
+    );
+    return h("div", { className: "rt-freeze2" + (this.state.tableScrolled ? " is-scrolled" : ""), onScrollCapture: (e) => { const sl = e.target.scrollLeft > 0; if (sl !== this.state.tableScrolled) this.setState({ tableScrolled: sl }); } },
+      h(Table, { columns, data: paged, size: this.props.tableDensity || "s", rowKey: "id", hoverable: true, sortKey: this.state.sortKey, sortDir: this.state.sortDir, onSort: (k) => this.cycleSort(k), style: { border: "none", borderRadius: 0 } }));
+  }
+
+  buildBulkBar() {
+    const h = React.createElement, { Button } = this.ns();
+    if (!this.state.bulkMode) return null;
+    const n = this.state.selected.length, role = this.myRole();
+    const pend = this.state.returns.filter(r => r.status === "Menunggu Approval"), mine = pend.filter(r => this.canAct(r)).length;
+    return h("div", { style: { display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-md)", animation: "rt-fade .18s ease" } },
+      h("div", { style: { flex: "1 1 220px", minWidth: 0, display: "flex", alignItems: "baseline", columnGap: 12, rowGap: 4, flexWrap: "wrap", paddingTop: 8 } },
+      h("span", { style: { fontSize: 14, fontWeight: 700, color: n ? "var(--primary-600)" : "var(--color-text-secondary)" } }, n ? n + " dari " + mine + " retur dipilih" : "Pilih retur yang menunggu untuk di approve"),
+      role ? h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "Ada " + mine + " permintaan retur yang menunggu untuk di approve.") : null,),
+      h("div", { style: { flex: "0 1 auto", minWidth: 0, display: "flex", flexWrap: "wrap-reverse", justifyContent: "flex-end", alignItems: "center", gap: 8, columnGap: 12 } },
+        h(Button, { variant: "tertiary", size: "s", onClick: () => this.setState({ bulkMode: false, selected: [] }) }, "Batal Bulk Approval"),
+        n ? h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+          h(Button, { variant: "secondary", size: "s", className: "rt-reject", style: { color: "var(--color-text-error)", borderColor: "var(--color-text-error)" }, onClick: () => this.setState({ modal: { type: "bulkReject", reason: "" } }) }, "Tolak Semua"),
+          h(Button, { variant: "primary", size: "s", leftIcon: this.icon("check-circle", 16), style: { gap: 6 }, onClick: () => this.openBulkSummary() }, "Setujui Semua")) : null));
+  }
+
+  /* ---------------- product table (detail) ---------------- */
+  buildProductRegion() {
+    const NS = this.ns(); const { Table, Tag, Button } = NS; const h = React.createElement;
+    const r = this.detail(); if (!r) return null;
+    const q = this.state.prodSearch.trim().toLowerCase();
+    let list = r.products.filter(p => !q || (p.code + " " + p.name).toLowerCase().includes(q));
+    if (!list.length) return h("div", { style: { padding: "32px 0", textAlign: "center", fontSize: 14, color: "var(--color-text-tertiary)" } }, "Tidak ada produk yang cocok.");
+    const exp = this.state.expanded;
+    const rows = [];
+    list.forEach(p => { rows.push({ ...p, _k: p.code, _sub: false }); });
+    const editable = this.statusMeta()[r.status].actionable && this.canAct(r);
+    const columns = [
+      { key: "code", header: "Kode Produk", width: 150, render: (x) => h("span", { style: { fontWeight: 600, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, x.code) },
+      { key: "name", header: "Nama Item", render: (x) => h("span", { style: { color: "var(--color-text-primary)" } }, x.name) },
+      { key: "qtyRetur", header: "Qty Diajukan", align: "right", render: (x) => h("span", { style: { fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-text-primary)" } }, x.qtyRetur) },
+      { key: "qtyApprove", header: "Qty Approve", align: "right", render: (x) => {
+        const box = (val, max, code, idx) => h("div", { style: { display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 2 } },
+          h("input", { type: "number", min: 0, max, value: val, onChange: (e) => this.setApproveQty(code, idx, e.target.value),
+            style: { width: 76, height: 32, boxSizing: "border-box", textAlign: "right", padding: "0 8px", border: "1px solid " + (val < max ? "var(--primary-500)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)", background: "var(--color-bg-secondary)" } }),
+          h("span", { style: { fontSize: 10, lineHeight: "14px", color: "var(--color-text-tertiary)" } }, val < max ? "−" + (max - val) + " dari " + max : "maks " + max));
+        const a = this.apprQtyOf(r, x);
+        if (editable) return box(a, x.qtyRetur, x.code, 0);
+        return h("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 700, color: !a ? "var(--color-text-disabled)" : a < x.qtyRetur ? "var(--primary-500)" : "var(--success-600)" } }, !a ? "—" : a);
+      } },
+      { key: "qtyLfd", header: "Qty LFD", align: "right", render: (x) => { const r = this.detail(); if (!r || r.status !== "Selesai") return null; return x._sub ? null : h("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, x.qtyLfd); } },
+    ];
+    return h("div", { className: "rt-prodtable" }, h(Table, { columns, data: rows, size: "s", rowKey: "_k", hoverable: true, style: { border: "none", borderRadius: 0 } }));
+  }
+  sigOf(r) { return r.products.map(p => p.reasons.map(rs => rs.qtyApprove != null ? rs.qtyApprove : rs.qty).join(",")).join("|"); }
+  isDirty(r) { const sn = this.state.calcSnap[r.id]; return !!sn && sn.sig !== this.sigOf(r); }
+  shownCalc(r) { const sn = this.state.calcSnap[r.id]; return sn ? sn.calc : this.approvalCalc(r); }
+  recalcApprove() {
+    const r = this.detail(); if (!r) return;
+    this.setState(s => { const c = { ...s.calcSnap }; delete c[r.id]; return { calcSnap: c }; });
+    const c = this.approvalCalc(r);
+    this.toast(c.overAppr ? "warning" : "success", "Rasio approval dihitung ulang", "Rasio approval " + c.ratioAppr.toFixed(1) + "%, akumulasi " + c.akumAfter.toFixed(1) + "% dari batas " + c.th + "%.");
+  }
+  setApproveQty(code, idx, val) {
+    const raw = Math.max(0, parseInt(val, 10) || 0);
+    const r0 = this.detail();
+    if (r0 && !this.state.calcSnap[r0.id]) { const snap = { sig: this.sigOf(r0), calc: this.approvalCalc(r0) }; this.setState(s => ({ calcSnap: { ...s.calcSnap, [r0.id]: snap } })); }
+    this.setState(s => ({
+      returns: s.returns.map(r => r.id !== s.detailId ? r : {
+        ...r, products: r.products.map(p => p.code !== code ? p : {
+          ...p, reasons: p.reasons.map((rs, i) => i === idx ? { ...rs, qtyApprove: Math.min(raw, rs.qty) } : rs),
+        }),
+      }),
+    }));
+  }
+  autoFitApprove() {
+    const r = this.detail(); if (!r) return;
+    const calc = this.approvalCalc(r);
+    const f = calc.submitQty > 0 ? calc.maxQty / calc.submitQty : 0;
+    let left = calc.maxQty;
+    const plan = {};
+    r.products.forEach(p => p.reasons.forEach((rs, i) => { const v = Math.min(rs.qty, Math.floor(rs.qty * f)); plan[p.code + "-" + i] = v; left -= v; }));
+    r.products.forEach(p => p.reasons.forEach((rs, i) => { const k = p.code + "-" + i; while (left > 0 && plan[k] < rs.qty) { plan[k]++; left--; } }));
+    this.setState(s => ({
+      returns: s.returns.map(x => x.id !== r.id ? x : {
+        ...x, products: x.products.map(p => ({ ...p, reasons: p.reasons.map((rs, i) => ({ ...rs, qtyApprove: plan[p.code + "-" + i] })) })),
+      }),
+    }));
+    this.setState(s => { const c = { ...s.calcSnap }; delete c[r.id]; return { calcSnap: c }; });
+    this.toast("info", "Qty approve disesuaikan", "Total qty approve dipotong menjadi " + calc.maxQty + " unit agar akumulasi tetap di bawah threshold " + calc.th + "%.");
+  }
+  resetApprove() {
+    const r = this.detail(); if (!r) return;
+    this.setState(s => { const c = { ...s.calcSnap }; delete c[r.id]; return { calcSnap: c }; });
+    this.setState(s => ({
+      returns: s.returns.map(x => x.id !== r.id ? x : {
+        ...x, products: x.products.map(p => ({ ...p, reasons: p.reasons.map(rs => ({ ...rs, qtyApprove: rs.qty })) })),
+      }),
+    }));
+  }
+
+  /* ---------------- timeline ---------------- */
+  buildTimeline() {
+    const h = React.createElement, r = this.detail(); if (!r) return null;
+    const approvalActions = new Set(["Pengajuan Dibuat", "Disetujui", "Ditolak"]);
+    const color = (a) => a === "Ditolak" ? "var(--color-text-error)" : a === "Disetujui" ? "var(--success-600)" : a === "Selesai" ? "var(--success-600)" : a === "Pengajuan Dibuat" ? "var(--color-text-secondary)" : "var(--info-700)";
+    return h("div", { style: { display: "flex", flexDirection: "column" } },
+      r.log.map((e, i) => {
+        const isApproval = approvalActions.has(e.action);
+        return h("div", { key: i, style: { display: "grid", gridTemplateColumns: "20px 1fr", gap: 16, paddingBottom: i === r.log.length - 1 ? 0 : 20 } },
+          h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center" } },
+            h("span", { style: { width: 12, height: 12, borderRadius: "50%", background: color(e.action), flexShrink: 0, marginTop: 4 } }),
+            i === r.log.length - 1 ? null : h("span", { style: { flex: 1, width: 2, background: "var(--color-border-subtle)", marginTop: 4 } })),
+          h("div", { style: { display: "flex", flexDirection: "column", gap: 4, minWidth: 0 } },
+            h("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } },
+              h("span", { style: { fontWeight: 700, fontSize: 14, color: color(e.action) } }, e.action),
+              h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, e.at)),
+            isApproval ? h("div", { style: { fontSize: 13, color: "var(--color-text-primary)" } }, e.actor, h("span", { style: { color: "var(--color-text-tertiary)" } }, " · " + e.role)) : null,
+            isApproval && e.prodChanges && e.prodChanges.length ? h("div", { style: { background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", padding: "10px 12px", marginTop: 4, display: "flex", flexDirection: "column", gap: 4 } },
+              h("div", { style: { fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", marginBottom: 2 } }, "Penyesuaian Qty per Produk"),
+              e.prodChanges.map((p, pi) => h("div", { key: pi, style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, fontSize: 12 } },
+                h("span", { style: { color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, p.name),
+                h("span", { style: { fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", color: "var(--primary-600)", fontWeight: 600 } }, p.qtyAjukan + " → " + p.qtyApprove + " unit"))),
+              e.rasioAjukan != null ? h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, borderTop: "1px solid var(--color-border-subtle)", marginTop: 4, paddingTop: 6 } },
+                h("span", { style: { color: "var(--color-text-tertiary)" } }, "Rasio Pengajuan → Rasio Approval"),
+                h("b", { style: { color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, e.rasioAjukan + "% → " + e.rasioApprove + "%")) : null) : null,
+            isApproval && !e.prodChanges && e.rasioAjukan != null ? h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--color-text-secondary)", background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", padding: "8px 10px", marginTop: 4 } },
+              h("span", null, "Rasio Pengajuan → Rasio Approval"),
+              h("b", { style: { color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, e.rasioAjukan + "% → " + e.rasioApprove + "%")) : null,
+            isApproval && e.note ? h("div", { style: { fontSize: 13, color: "var(--color-text-secondary)", background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", padding: "8px 10px", marginTop: 2 } }, e.note) : null));
+      }));
+  }
+
+  /* ---------------- queue / detail nav ---------------- */
+  openDetail(id) {
+    const host = this.scrollHost();
+    this._listScroll = host ? host.scrollTop : 0;
+    const queue = this.filtered().filter(r => this.statusMeta()[r.status].actionable).map(r => r.id);
+    const idx = queue.indexOf(id);
+    this.setState({ view: "detail", detailId: id, prodSearch: "", expanded: {}, queue, queueIdx: idx, stale: id.endsWith("2") });
+    requestAnimationFrame(() => { const hh = this.scrollHost(); if (hh) hh.scrollTop = 0; });
+  }
+  isQtyDirty() {
+    const r = this.detail(); if (!r || !this.statusMeta()[r.status].actionable) return false;
+    return r.products.some(p => p.reasons.some(rs => rs.qtyApprove != null && rs.qtyApprove !== rs.qty));
+  }
+  askLeave() {
+    if (this.isQtyDirty()) this.setState({ modal: { type: "leave" } });
+    else this.backToList();
+  }
+  confirmLeave() {
+    const id = this.state.detailId;
+    this.setState(s => ({
+      modal: null,
+      returns: s.returns.map(x => x.id !== id ? x : { ...x, products: x.products.map(p => ({ ...p, reasons: p.reasons.map(rs => ({ ...rs, qtyApprove: rs.qty })) })) }),
+    }));
+    this.backToList();
+  }
+  backToList() {
+    const id = this.state.detailId;
+    this.setState({ view: "list", returnRow: id });
+    requestAnimationFrame(() => { const h = this.scrollHost(); if (h) h.scrollTop = this._listScroll || 0; });
+    clearTimeout(this._rowT);
+    this._rowT = setTimeout(() => this.setState({ returnRow: null }), 2600);
+  }
+  goQueue(step) {
+    const s = this.state, q = s.queue.filter(id => { const r = s.returns.find(x => x.id === id); return r && this.statusMeta()[r.status].actionable; });
+    if (!q.length) { this.setState({ view: "done" }); return; }
+    const cur = q.indexOf(s.detailId);
+    let next = (cur === -1 ? 0 : cur) + step;
+    if (next < 0) next = 0;
+    if (next >= q.length) { this.setState({ view: "done" }); return; }
+    this.setState({ detailId: q[next], queue: q, queueIdx: next, prodSearch: "", expanded: {}, stale: false });
+    requestAnimationFrame(() => { const h = this.scrollHost(); if (h) h.scrollTop = 0; });
+  }
+  advanceAfterAction() {
+    const s = this.state;
+    const q = s.queue.filter(id => { const r = s.returns.find(x => x.id === id); return r && this.statusMeta()[r.status].actionable; });
+    if (!q.length) { this.setState({ view: "done", queue: [] }); return; }
+    const next = q[0];
+    this.setState({ detailId: next, queue: q, queueIdx: 0, prodSearch: "", expanded: {}, stale: false });
+    requestAnimationFrame(() => { const h = this.scrollHost(); if (h) h.scrollTop = 0; });
+  }
+
+  /* ---------------- actions ---------------- */
+  reloadData() {
+    const d = this.state.dataAt || new Date();
+    this.setState({ loading: true, dataAt: new Date(d.getTime() + (this.state.minsAgo || 0) * 60000), minsAgo: 0, stale: false });
+    setTimeout(() => { this.setState({ loading: false }); this.toast("info", "Data dimuat ulang", "Daftar retur diperbarui dari sumber terbaru."); }, 500);
+  }
+  doExport() {
+    const n = this.filtered().length;
+    this.toast("info", "Ekspor dimulai", "Menyiapkan " + n + " baris sesuai filter, pencarian, dan urutan aktif…");
+    setTimeout(() => this.toast("success", "Ekspor selesai", "File retur.xlsx siap diunduh."), 1400);
+  }
+  askApprove() {
+    const r = this.detail(); if (!r) return;
+    this.setState({ modal: { type: "approve", id: r.id, reason: "", over: r.akum > this.thresholdOf(r) } });
+  }
+  askReject() {
+    const r = this.detail(); if (!r) return;
+    this.setState({ modal: { type: "reject", id: r.id, reason: "" } });
+  }
+  applyStatus(ids, status, note) {
+    const stamp = "2 Jul 2024 15:40";
+    this.setState(s => ({
+      returns: s.returns.map(r => {
+        if (!ids.includes(r.id)) return r;
+        const rejected = status === "Ditolak";
+        const calc = this.approvalCalc(r);
+        const apprPer = r.products.map(p => rejected ? 0 : this.apprQtyOf(r, p));
+        const total = r.products.reduce((a, p, i) => a + p.price * apprPer[i], 0);
+        const akumAfter = rejected ? r.akumBefore : calc.akumAfter;
+        const adjNote = !rejected && calc.adjusted
+          ? "Qty approve disesuaikan menjadi " + calc.apprQty + " dari " + calc.submitQty + " unit — ratio pengajuan " + r.ratio.toFixed(1) + "% → ratio approval " + calc.ratioAppr.toFixed(1) + "%." : "";
+        return {
+          ...r, status, akum: akumAfter, ratioAppr: rejected ? 0 : calc.ratioAppr,
+          nominalApproved: rejected ? 0 : total,
+          products: r.products.map((p, i) => ({ ...p, qtyApprove: apprPer[i], reasons: p.reasons.map(rs => ({ ...rs, qtyApprove: rejected ? 0 : (rs.qtyApprove != null ? rs.qtyApprove : rs.qty) })) })),
+          log: [{ actor: "M. Lutfi Maulana", role: "Admin KDC", action: rejected ? "Ditolak" : "Disetujui", before: r.akumBefore.toFixed(1) + "%", after: akumAfter.toFixed(1) + "%", note: [note, adjNote].filter(Boolean).join(" "), at: stamp }, ...r.log],
+        };
+      }),
+    }));
+  }
+  confirmApprove() {
+    const m = this.state.modal;
+    if (!m.reason || !m.reason.trim()) { this.setState({ modal: { ...m, error: "Catatan approval wajib diisi." } }); return; }
+    this.applyStatus([m.id], "Menunggu Pengambilan Barang", m.reason.trim());
+    this.setState({ modal: null });
+    this.toast("success", "Retur disetujui", "1 retur berhasil disetujui dan menunggu pengambilan barang.");
+    setTimeout(() => this.backToList(), 60);
+  }
+  confirmReject() {
+    const m = this.state.modal;
+    if (!m.reason || !m.reason.trim()) { this.setState({ modal: { ...m, error: "Alasan penolakan wajib diisi." } }); return; }
+    this.applyStatus([m.id], "Ditolak", m.reason.trim());
+    this.setState({ modal: null });
+    this.toast("success", "Retur ditolak", "Alasan penolakan telah dikirim ke Sales Lead.");
+    setTimeout(() => this.backToList(), 60);
+  }
+
+  /* ---------------- bulk ---------------- */
+  openBulkSummary() { this.setState({ selected: this.state.selected.filter(id => { const x = this.state.returns.find(y => y.id === id); return x && this.canAct(x); }), modal: { type: "bulkSummary", reason: "" }, sumQty: {}, sumExpanded: {} }); }
+  noteField(label, placeholder) {
+    const NS = this.ns(); const { TextArea } = NS; const h = React.createElement; const m = this.state.modal;
+    const set = (e) => this.setState({ modal: { ...this.state.modal, reason: e.target.value, error: "" } });
+    return h("div", null,
+      h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, [label + " ", h("span", { key: "s", style: { color: "var(--color-text-error)" } }, "*")]),
+      TextArea
+        ? h(TextArea, { value: m.reason || "", rows: 3, placeholder, error: !!m.error, errorText: m.error, onChange: set })
+        : h("textarea", { value: m.reason || "", rows: 3, placeholder, onChange: set, style: { width: "100%", boxSizing: "border-box", padding: 10, border: "1px solid " + (m.error ? "var(--color-text-error)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", fontSize: 14 } }),
+      h("div", { style: { fontSize: 11, marginTop: 4, color: m.error && !TextArea ? "var(--color-text-error)" : "var(--color-text-tertiary)" } },
+        m.error && !TextArea ? m.error : "Catatan ini tercatat pada Riwayat Pengajuan Retur dan terlihat oleh Sales Lead."));
+  }
+  selectedRows() { return this.state.returns.filter(r => this.state.selected.includes(r.id)); }
+  sumRatio(r) {
+    const q = this.state.sumQty[r.id];
+    if (!q) return { ratio: r.ratio, akum: r.akum };
+    const origQty = r.products.reduce((a, p) => a + p.qtyRetur, 0) || 1;
+    const newQty = r.products.reduce((a, p) => a + p.reasons.reduce((b, rs, i) => b + (q[p.code + "-" + i] != null ? q[p.code + "-" + i] : rs.qty), 0), 0);
+    const ratio = +(r.ratio * (newQty / origQty)).toFixed(1);
+    return { ratio, akum: +(r.akumBefore + ratio).toFixed(1) };
+  }
+  confirmBulkApprove() {
+    const m = this.state.modal;
+    if (!m.reason || !m.reason.trim()) { this.setState({ modal: { ...m, error: "Catatan approval wajib diisi." } }); return; }
+    const bulkNote = m.reason.trim();
+    const ids = this.selectedRows().map(r => r.id);
+    const fail = ids.filter((_, i) => i === 1 && ids.length > 3);
+    const ok = ids.filter(id => !fail.includes(id));
+    this.applyStatus(ok, "Menunggu Pengambilan Barang", bulkNote);
+    if (fail.length) {
+      this.setState({ modal: { type: "bulkResult", ok: ok.length, fail: fail.map(id => ({ id, reason: "Status sudah diubah oleh pengguna lain." })) }, selected: [] });
+    } else {
+      this.setState({ modal: null, selected: [], bulkMode: false });
+      this.toast("success", "Bulk approval selesai", ok.length + " retur berhasil disetujui.");
+    }
+  }
+  confirmBulkReject() {
+    const m = this.state.modal;
+    if (!m.reason || !m.reason.trim()) { this.setState({ modal: { ...m, error: "Alasan penolakan wajib diisi." } }); return; }
+    const ids = this.state.selected.slice();
+    this.applyStatus(ids, "Ditolak", m.reason.trim());
+    this.setState({ modal: null, selected: [], bulkMode: false });
+    this.toast("success", "Bulk penolakan selesai", ids.length + " retur ditolak; alasan dikirim ke masing-masing Sales Lead.");
+  }
+  closeModal() { this.setState({ modal: null }); }
+
+  /* ---------------- illustrations ---------------- */
+  emptyBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="#EBEBEB"/><path d="M73.6599 211.452V157.942H205.86V212.162L138.68 224L73.6599 211.452Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M74.1399 211.162V153.713L138.78 162.671V223.43L74.1399 211.162Z" fill="#EBEBEB"/><path d="M74.1399 153.713L138.78 162.671V223.43" stroke="#999999" stroke-width="2"/><path d="M139.23 161.561L119.96 182.267L54.9399 162.011L72.4299 144.514L54.9899 127.067L120.02 112L139.27 124.988L160.92 112L224.93 129.417L206.53 144.514L225.02 159.682L165.72 182.267L139.23 161.561Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M74.5801 144.484L139.28 124.918L204.45 144.484L139.28 161.721L74.5801 144.484Z" fill="#C2C2C2" stroke="#999999" stroke-width="2"/><path d="M74.5801 144.484L138.78 125.068V161.591L74.5801 144.484Z" fill="#EBEBEB" stroke="#999999" stroke-width="2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M191.71 128C210.648 128 226 112.648 226 93.7099C226 74.7721 210.648 59.4199 191.71 59.4199C172.772 59.4199 157.42 74.7721 157.42 93.7099C157.42 112.648 172.772 128 191.71 128Z" fill="#7A7A7A"/></g><path d="M188.29 124.58C207.228 124.58 222.58 109.228 222.58 90.29C222.58 71.3522 207.228 56 188.29 56C169.352 56 154 71.3522 154 90.29C154 109.228 169.352 124.58 188.29 124.58Z" fill="#7A7A7A"/><path d="M188.29 105.16C190.66 105.16 192.58 107.08 192.58 109.45V109.5C192.58 111.87 190.66 113.79 188.29 113.79C185.92 113.79 184 111.87 184 109.5V109.45C184 107.08 185.92 105.16 188.29 105.16ZM188.29 66.7803C190.66 66.7803 192.58 68.7003 192.58 71.0703V96.1797C192.58 98.5497 190.66 100.47 188.29 100.47C185.92 100.47 184 98.5497 184 96.1797V71.0703C184 68.7003 185.92 66.7803 188.29 66.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  errorBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="#EBEBEB"/><path d="M84.1078 218L44.4178 107.689C43.6478 105.549 43.9578 103.11 45.2178 101.3C46.2478 99.8399 47.7678 99 49.3978 99H94.5078C96.6278 99 98.6478 99.9199 100.208 101.6L107.838 109.849H163.068C166.478 109.849 169.518 112.219 170.798 115.879L205.978 216.14C206.128 216.57 206.068 217.03 205.798 217.41C205.538 217.78 205.118 218 204.668 218H84.1078Z" fill="#C2C2C2" stroke="#999999" stroke-width="2"/><path d="M84.1778 218L64.6078 115.509C64.5178 115.089 64.6078 114.669 64.8578 114.369C65.0378 114.139 65.2878 114.019 65.5478 114.019H186.848L206.418 216.34C206.498 216.75 206.388 217.17 206.128 217.49C205.868 217.81 205.468 217.99 205.058 217.99L84.1878 216.99L84.1778 218Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M81.9377 106.809C81.9177 106.419 82.0477 106.069 82.2777 105.819C82.4577 105.629 82.6777 105.529 82.9077 105.529H203.528C204.048 105.529 204.468 106.019 204.498 106.649L206.818 209.241L84.2377 216.95L81.9277 106.789L81.9377 106.809Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M101.568 112.669C101.758 111.249 102.778 110.219 103.988 110.219L227.698 109.669C227.938 109.669 228.178 109.779 228.358 109.989C228.598 110.259 228.708 110.659 228.658 111.049L208.498 209.171L84.3477 216.96L101.558 112.669H101.568Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M84.998 218L112.628 125.578C113.758 121.588 116.948 118.908 120.568 118.908H229.598C231.168 118.908 232.608 119.658 233.648 121.038C234.928 122.728 235.328 124.998 234.728 127.128L207.678 215.67C207.258 217.06 205.988 218 204.538 218H84.998Z" fill="#EBEBEB" stroke="#999999" stroke-width="2"/><path d="M200.378 203.861H161.288C160.148 203.861 159.538 202.941 159.928 201.801L167.668 179.023C168.058 177.883 169.288 176.963 170.428 176.963H209.518C210.658 176.963 211.268 177.883 210.878 179.023L203.138 201.801C202.748 202.941 201.518 203.861 200.378 203.861Z" fill="#C2C2C2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M193.71 134C212.648 134 228 118.648 228 99.7099C228 80.7721 212.648 65.4199 193.71 65.4199C174.772 65.4199 159.42 80.7721 159.42 99.7099C159.42 118.648 174.772 134 193.71 134Z" fill="#7A7A7A"/></g><path d="M190.29 130.58C209.228 130.58 224.58 115.228 224.58 96.29C224.58 77.3522 209.228 62 190.29 62C171.352 62 156 77.3522 156 96.29C156 115.228 171.352 130.58 190.29 130.58Z" fill="#7A7A7A"/><path d="M190.29 111.16C192.66 111.16 194.58 113.08 194.58 115.45V115.5C194.58 117.87 192.66 119.79 190.29 119.79C187.92 119.79 186 117.87 186 115.5V115.45C186 113.08 187.92 111.16 190.29 111.16ZM190.29 72.7803C192.66 72.7803 194.58 74.7003 194.58 77.0703V102.18C194.58 104.55 192.66 106.47 190.29 106.47C187.92 106.47 186 104.55 186 102.18V77.0703C186 74.7003 187.92 72.7803 190.29 72.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  illus(kind, size) {
+    if (kind === "error") return this.errorBoxIllustration(size);
+    return this.emptyBoxIllustration(size);
+  }
+
+  /* ---------------- modals ---------------- */
+  buildModal() {
+    const NS = this.ns(); const { Button, Alert, TextArea, Tag, Table, Checkbox } = NS; const h = React.createElement;
+    const m = this.state.modal;
+    if (!m) return { open: false };
+    const wrap = (title, body, footer, size) => ({ open: true, onClose: () => this.closeModal(), closeOnOverlay: true, title, size: size || "m", children: body, footer });
+
+    if (m.type === "leave") {
+      const r = this.detail();
+      const n = r ? r.products.reduce((a, p) => a + p.reasons.filter(rs => rs.qtyApprove != null && rs.qtyApprove !== rs.qty).length, 0) : 0;
+      return wrap("Perubahan Belum Disimpan",
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 8, fontSize: 14, lineHeight: "20px", color: "var(--color-text-secondary)" } },
+          h("span", null, "Anda telah mengubah Qty Approve pada " + n + " baris produk di retur ini. Perubahan tersebut belum disimpan."),
+          h("span", null, "Jika keluar dari halaman ini, nilai yang diubah tidak akan disimpan dan kembali ke qty pengajuan.")),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+          h(Button, { variant: "secondary", size: "s", style: { color: "var(--color-text-error)", borderColor: "var(--color-text-error)" }, className: "rt-reject", onClick: () => this.confirmLeave() }, "Keluar Tanpa Menyimpan"),
+          h(Button, { variant: "primary", size: "s", onClick: () => this.closeModal() }, "Lanjut Mengedit")));
+    }
+
+    if (m.type === "approve") {
+      const r = this.state.returns.find(x => x.id === m.id);
+      const calc = this.approvalCalc(r);
+      return wrap("Setujui Retur", h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        false
+          ? h(Alert, { state: "warning" }, "")
+          : h(Alert, { state: "info" }, "Rasio akumulasi saat ini: " + r.akum.toFixed(1) + "%."),
+        h("div", { style: { fontSize: 14, color: "var(--color-text-primary)" } }, "Setujui pengajuan retur ", h("b", null, r.reference), "?"),
+        h("div", { style: { border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-md)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 } },
+          this.kv("Business Partner", r.partnerLabel), this.kv("Total SKU", r.totalSku + " SKU"),
+          this.kv("Qty Approve", calc.apprQty + " / " + calc.submitQty + " unit"),
+          this.kv("Rasio Pengajuan → Approval", r.ratio.toFixed(1) + "% → " + calc.ratioAppr.toFixed(1) + "%"),
+          this.kv("Nominal Approve", this.fmtRp(calc.nominalAppr) + " dari " + this.fmtRp(r.nominal))),
+        this.noteField("Catatan Approval", calc.adjusted ? "Jelaskan alasan penyesuaian qty approve, mis. sisa stok LFD hanya 12 unit." : "Mis. bukti foto lengkap, retur sesuai program.")),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+          h(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, "Batal"),
+          h(Button, { variant: "primary", size: "s", leftIcon: this.icon("check-circle", 16), style: { gap: 6 }, onClick: () => this.confirmApprove() }, calc.overAppr ? "Tetap Setujui" : "Setujui")));
+    }
+
+    if (m.type === "reject" || m.type === "bulkReject") {
+      const bulk = m.type === "bulkReject";
+      const n = this.state.selected.length;
+      const r = bulk ? null : this.state.returns.find(x => x.id === m.id);
+      return wrap(bulk ? "Tolak " + n + " Retur" : "Tolak Retur", h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        h(Alert, { state: "info" }, "Alasan penolakan dikirim ke Sales Lead agar pengajuan dapat diperbaiki dan dikirim ulang."),
+        h("div", { style: { fontSize: 14, color: "var(--color-text-primary)" } }, bulk ? ["Tolak ", h("b", { key: "b" }, n + " retur"), " yang dipilih?"] : ["Tolak pengajuan retur ", h("b", { key: "b" }, r.reference), "?"]),
+        h("div", null,
+          h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, ["Alasan Penolakan ", h("span", { key: "s", style: { color: "var(--color-text-error)" } }, "*")]),
+          TextArea
+            ? h(TextArea, { value: m.reason || "", rows: 4, placeholder: "Tulis alasan yang jelas, mis. bukti foto kemasan rusak belum dilampirkan.", error: !!m.error, errorText: m.error, onChange: (e) => this.setState({ modal: { ...m, reason: e.target.value, error: "" } }) })
+            : h("textarea", { value: m.reason || "", rows: 4, onChange: (e) => this.setState({ modal: { ...m, reason: e.target.value, error: "" } }), style: { width: "100%", boxSizing: "border-box", padding: 10, border: "1px solid " + (m.error ? "var(--color-text-error)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", fontSize: 14 } }),
+          m.error && TextArea ? null : (m.error ? h("div", { style: { color: "var(--color-text-error)", fontSize: 12, marginTop: 4 } }, m.error) : null))),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+          h(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, "Batal"),
+          h(Button, { variant: "primary", size: "s", style: { background: "var(--color-text-error)", borderColor: "var(--color-text-error)" }, onClick: () => bulk ? this.confirmBulkReject() : this.confirmReject() }, "Tolak")));
+    }
+
+    if (m.type === "bulkSummary") {
+      const returns = this.selectedRows();
+      const stores = [...new Set(returns.map(r => r.partnerLabel))];
+      const exp = this.state.sumExpanded || {};
+      const getTotalAppr = (r) => r.products.reduce((a, p) => a + p.qtyRetur, 0);
+      const getRatio = (r) => r.ratio;
+      const toggleExp = (id) => this.setState(s => ({ sumExpanded: { ...s.sumExpanded, [id]: !s.sumExpanded[id] } }));
+      const tile = (label, value) => h("div", { style: { flex: 1, minWidth: 140, background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-md)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 } },
+        h("span", { style: { fontSize: 12, color: "var(--color-text-secondary)" } }, label),
+        h("span", { style: { fontWeight: 700, fontSize: 20, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, value));
+      const tableRows = [];
+      returns.forEach((r, ri) => {
+        const submitQty = r.products.reduce((a, p) => a + p.qtyRetur, 0);
+        const ratio = getRatio(r);
+        const on = !!exp[r.id];
+        tableRows.push(h("tr", { key: r.id, style: { background: ri % 2 === 0 ? "var(--color-bg-secondary)" : "var(--color-bg-primary)", borderBottom: "1px solid var(--color-border-subtle)" } },
+          h("td", { style: { padding: "10px 12px" } },
+            h("button", { type: "button", onClick: () => toggleExp(r.id), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-sans)", textAlign: "left" } },
+              h("span", { style: { display: "inline-flex", transform: on ? "none" : "rotate(-90deg)", transition: "transform 140ms ease" } }, this.iconColored("ChevronDownIcon", 16, "var(--primary-500)")),
+              h("span", null,
+                h("div", { style: { fontWeight: 600, fontSize: 13, color: "var(--color-text-primary)" } }, r.partnerLabel),
+                h("div", { style: { fontSize: 11, color: "var(--color-text-tertiary)" } }, r.reference + " · " + r.totalSku + " SKU")))),
+          h("td", { style: { padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)", fontSize: 13 } }, submitQty),
+          h("td", { style: { padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 700, color: "var(--color-text-primary)", fontSize: 13 } }, submitQty),
+          h("td", { style: { padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--color-text-primary)", fontSize: 13 } }, ratio.toFixed(1) + "%"),
+          h("td", { style: { padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--color-text-primary)", fontSize: 13 } }, ratio.toFixed(1) + "%")));
+        if (on) r.products.forEach((p, pi) => {
+          tableRows.push(h("tr", { key: r.id + "|" + p.code, style: { background: "var(--color-bg-primary)", borderBottom: pi < r.products.length - 1 ? "1px dashed var(--color-border-subtle)" : "1px solid var(--color-border-default)" } },
+            h("td", { style: { padding: "8px 12px 8px 36px" } },
+              h("div", { style: { fontSize: 12, fontWeight: 600, color: "var(--color-text-primary)" } }, p.name),
+              h("div", { style: { fontSize: 11, color: "var(--color-text-tertiary)" } }, p.code)),
+            h("td", { style: { padding: "8px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--color-text-tertiary)", fontSize: 12 } }, p.qtyRetur),
+            h("td", { style: { padding: "8px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: "var(--color-text-primary)", fontSize: 12 } }, p.qtyRetur),
+            h("td", null), h("td", null)));
+        });
+      });
+      const body = h("div", { style: { display: "flex", flexDirection: "column", gap: 16, width: "100%" } },
+        Alert ? h(Alert, { state: "info" }, "Qty approve mengikuti qty pengajuan pada bulk approval. Untuk mengubah qty per SKU, gunakan approval individual pada masing-masing retur.") : null,
+        h("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } },
+          tile("Retur dipilih", returns.length),
+          tile("Total Business Partner", stores.length)),
+        h("div", { style: { border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-md)", overflow: "hidden" } },
+          h("table", { style: { width: "100%", borderCollapse: "collapse" } },
+            h("thead", null,
+              h("tr", { style: { background: "var(--color-bg-primary)", borderBottom: "2px solid var(--color-border-default)" } },
+                h("th", { style: { padding: "8px 12px", textAlign: "left", fontWeight: 600, color: "var(--color-text-secondary)", fontSize: 12 } }, "Business Partner / Produk"),
+                h("th", { style: { padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "var(--color-text-secondary)", fontSize: 12 } }, "Qty Diajukan"),
+                h("th", { style: { padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "var(--color-text-secondary)", fontSize: 12 } }, "Qty Approve"),
+                h("th", { style: { padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "var(--color-text-secondary)", fontSize: 12 } }, "Rasio Pengajuan"),
+                h("th", { style: { padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "var(--color-text-secondary)", fontSize: 12 } }, "Rasio Approval"))),
+            h("tbody", null, tableRows))),
+        this.noteField("Catatan Approval", "Catatan yang sama akan tercatat pada seluruh retur yang disetujui di bulk ini."));
+      return wrap("Ringkasan Bulk Approval", body,
+        h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+          h(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, "Batal"),
+          h(Button, { variant: "primary", size: "s", disabled: !returns.length, onClick: () => this.confirmBulkApprove() }, "Konfirmasi Approval (" + returns.length + ")")), "xl");
+    }
+
+    if (m.type === "bulkResult") {
+      return wrap("Hasil Bulk Approval", h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        h(Alert, { state: "warning", title: "Sebagian gagal" }, m.ok + " retur disetujui, " + m.fail.length + " gagal. Retur yang berhasil tidak terpengaruh."),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+          m.fail.map(f => h("div", { key: f.id, style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 12px", border: "1px solid var(--color-border-error)", background: "var(--error-100)", borderRadius: "var(--radius-base)", fontSize: 13 } },
+            h("b", { style: { color: "var(--color-text-primary)" } }, f.id),
+            h("span", { style: { color: "var(--error-800)" } }, f.reason))))),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+          h(Button, { variant: "primary", size: "s", onClick: () => this.setState({ modal: null, bulkMode: false }) }, "Selesai")));
+    }
+    return { open: false };
+  }
+  kv(k, v) {
+    return React.createElement("div", { key: k, style: { display: "flex", justifyContent: "space-between", gap: 12 } },
+      React.createElement("span", { style: { color: "var(--color-text-tertiary)" } }, k),
+      React.createElement("b", { style: { color: "var(--color-text-primary)" } }, v));
+  }
+  buildOverTable(over) {
+    const NS = this.ns(); const { Table, Button } = NS; const h = React.createElement;
+    const exp = this.state.sumExpanded, qmap = this.state.sumQty;
+    const rows = [];
+    over.forEach(r => {
+      const calc = this.sumRatio(r);
+      rows.push({ _k: r.id, _d: 0, r, calc });
+      if (exp[r.id]) r.products.forEach(p => {
+        rows.push({ _k: r.id + "|" + p.code, _d: 1, r, p });
+      });
+    });
+    const setQ = (r, p, i, v) => this.setState(s => ({ sumQty: { ...s.sumQty, [r.id]: { ...(s.sumQty[r.id] || {}), [p.code + "-" + i]: Math.max(0, parseInt(v, 10) || 0) } } }));
+    const columns = [
+      { key: "store", header: "Business Partner / Produk", render: (x) => {
+        if (x._d === 0) {
+          const on = !!exp[x.r.id];
+          return h("button", { type: "button", onClick: () => this.setState(s => ({ sumExpanded: { ...s.sumExpanded, [x.r.id]: !s.sumExpanded[x.r.id] } })), style: { display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)", textAlign: "left" } },
+            h("span", { style: { display: "inline-flex", transform: on ? "rotate(180deg)" : "none", transition: "transform 140ms ease" } }, this.iconColored("ChevronDownIcon", 16, "var(--primary-500)")),
+            h("span", null, x.r.partnerLabel, h("span", { style: { display: "block", fontWeight: 400, fontSize: 12, color: "var(--color-text-tertiary)" } }, x.r.reference)));
+        }
+        if (x._d === 1) {
+          return h("span", { style: { marginLeft: 24, fontSize: 13, color: "var(--color-text-primary)" } }, x.p.name);
+        }
+        return null;
+      } },
+      { key: "ratio", header: "Ratio Pengajuan", align: "right", render: (x) => x._d === 0 ? h("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 600 } }, x.calc.ratio.toFixed(1) + "%") : null },
+      { key: "before", header: "Akum. Sebelum", align: "right", render: (x) => x._d === 0 ? h("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, x.r.akumBefore.toFixed(1) + "%") : null },
+      { key: "after", header: "Akum. Sesudah", align: "right", render: (x) => {
+        if (x._d !== 0) return null;
+        const ok = x.calc.akum <= this.thresholdOf(x.r);
+        return h("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 700, color: ok ? "var(--success-600)" : "var(--color-text-error)" } }, x.calc.akum.toFixed(1) + "%");
+      } },
+      { key: "th", header: "Threshold SOA", align: "right", render: (x) => x._d === 0 ? h("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, this.thresholdOf(x.r) + "%") : null },
+      { key: "qty", header: "Qty", align: "right", render: (x) => {
+        if (x._d === 2) {
+          const v = (qmap[x.r.id] || {})[x.p.code + "-" + x.idx];
+          return h("input", { type: "number", min: 0, value: v != null ? v : x.rs.qty, onChange: (e) => setQ(x.r, x.p, x.idx, e.target.value),
+            style: { width: 72, height: 32, boxSizing: "border-box", textAlign: "right", padding: "0 8px", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--color-text-primary)", background: "var(--color-bg-secondary)" } });
+        }
+        if (x._d === 1) return h("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, x.p.qtyRetur);
+        return null;
+      } },
+      { key: "_act", header: "Action", align: "left", width: 110, render: (x) => x._d === 0
+        ? h(Button, { variant: "secondary", size: "xs", style: { color: "var(--color-text-error)", borderColor: "var(--color-text-error)" }, onClick: () => this.setState(s => ({ sumExcluded: [...s.sumExcluded, x.r.id] })) }, "Keluarkan")
+        : null },
+    ];
+    return h("div", null, h(Table, { columns, data: rows, size: "s", rowKey: "_k", hoverable: true, style: { border: "none", borderRadius: 0 } }));
+  }
+
+  /* ---------------- render ---------------- */
+  navDateText() {
+    const d = new Date(), D = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"], M = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return D[d.getDay()] + ", " + d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  navClock() {
+    if (!this._NavClock) {
+      this._NavClock = function NavClock() {
+        const fmt = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Jakarta", hour12: false }) + " WIB";
+        const [t, setT] = React.useState(fmt());
+        React.useEffect(() => { const i = setInterval(() => setT(fmt()), 1000); return () => clearInterval(i); }, []);
+        return React.createElement("span", null, t);
+      };
+    }
+    return React.createElement(this._NavClock, null);
+  }
+  renderVals() {
+    const NS = this.ns(); const { Tag, Alert, Button, EmptyState, ErrorState } = NS;
+    const h = React.createElement, icon = (n, sz) => this.icon(n, sz);
+    const s = this.state, meta = this.statusMeta();
+    const filtered = this.filtered();
+    const per = parseInt(s.perPage, 10);
+    const pageCount = Math.max(1, Math.ceil(filtered.length / per));
+    const page = Math.min(s.page, pageCount);
+    const paged = filtered.slice((page - 1) * per, page * per);
+    const fcount = this.activeFilterCount();
+    const all = s.returns;
+
+    const toastStack = h(React.Fragment, null, s.toasts.map(t =>
+      h(NS.Toast, { key: t.id, state: t.state, variant: "filled", title: t.title,
+        onClose: () => this.setState(st => ({ toasts: st.toasts.filter(x => x.id !== t.id) })),
+        style: { animation: "rt-fade .18s ease" } }, t.msg)));
+
+    const vals = {
+      isList: s.view === "list" && !this.props.simulateDenied,
+      isDetail: s.view === "detail" && !this.props.simulateDenied,
+      isDone: s.view === "done" && !this.props.simulateDenied,
+      isDenied: !!this.props.simulateDenied,
+      deniedState: ErrorState ? h(ErrorState, { illustration: this.illus("error", 200), title: "Akses Ditolak", description: "Akun Anda tidak memiliki izin untuk membuka modul Retur. Hubungi Admin Operasional untuk meminta akses.", actions: h(Button, { variant: "secondary", size: "s", onClick: () => { window.location.href = "Order.dc.html"; } }, "Kembali ke Order") }) : null,
+      doneState: EmptyState ? h(EmptyState, { colour: "neutral", illustration: this.illus("empty", 200), title: "Semua Pengajuan Sudah Ditinjau", description: "Tidak ada lagi retur yang menunggu approval pada antrean aktif Anda.", actions: h(Button, { variant: "primary", size: "s", onClick: () => this.setState({ view: "list", queue: [] }) }, "Kembali ke Daftar") }) : null,
+
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: icon("SearchOutlineIcon") },
+      sideClass: "cmp-side" + (this.state.sideCollapsed ? " is-collapsed" : ""),
+      sideCollapsed: !!this.state.sideCollapsed,
+      sideExpanded: !this.state.sideCollapsed,
+      sideToggleLabel: this.state.sideCollapsed ? "Perluas menu" : "Tutup menu",
+      toggleSidebar: () => this.setState(s => ({ sideCollapsed: !s.sideCollapsed })),
+      sidebarProps: {
+        collapsed: !!this.state.sideCollapsed, activeKey: "retur", defaultExpanded: ["sales-execution"],
+        onSelect: (k) => { const go = { "manage-roles": "Account Management.dc.html#roles", "manage-users": "Account Management.dc.html#users", "md-bp": "Master Data.dc.html#bp", "product-list": "Master Data.dc.html#product", "product-rule": "Master Data.dc.html#rule", "standar-stok": "Standard Stock Management.dc.html", "npd-setting": "NPD Setting.dc.html", "mhs-setting": "MHS Setting.dc.html", "target-sku-setting": "Target SKU Setting.dc.html", "order": "Order.dc.html", "retur": "Retur.dc.html", "bp": "Business Partner Management.dc.html", "parameter": "Parameter.dc.html", "manage-project": "Manage Project.dc.html", "target-management": "Target Management.dc.html", "target-management-sl": "Target Management SL.dc.html", "target-mvp": "Target Mngmt MVP.dc.html", "manage-content": "Manage Content.dc.html", "content-type": "Content Type.dc.html" }[k]; if (go) window.location.href = go; },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [
+            { key: "manage-roles", label: "Manage Roles" }, { key: "manage-users", label: "Manage Users" } ] },
+          { key: "project", label: "Project", icon: "project-plus", children: [ { key: "project-list", label: "Coming Soon" } ] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [
+            { key: "md-bp", label: "Business Partner" },
+            { key: "product", label: "Product", children: [ { key: "product-list", label: "Product List" }, { key: "product-rule", label: "Product Rule" } ] },
+            { key: "employee", label: "Employee" }, { key: "holiday", label: "Holiday" }, { key: "consumer-data", label: "Consumer Data" } ] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [
+            { key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" } ] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [
+            { key: "product-configuration", label: "Product Configuration", children: [ { key: "standar-stok", label: "Standar Stok" }, { key: "npd-setting", label: "NPD Setting" }, { key: "mhs-setting", label: "MHS Setting" }, { key: "target-sku-setting", label: "Target SKU Setting" } ] } ] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [ { key: "order", label: "Order" }, { key: "retur", label: "Retur" } ] },
+          { key: "bp", label: "BP Management", icon: "account-mgmt" },
+          { key: "parameter", label: "Parameter", icon: "note-list" },
+          { key: "manage-project", label: "Manage Project", icon: "project-plus" },
+          { key: "target-management", label: "Target Management", icon: "visit-list" },
+          { key: "target-management-sl", label: "Target Management MVP", icon: "visit-list" },
+          { key: "target-mvp", label: "Target Mngmt MVP", icon: "visit-list" },
+          { key: "content-management", label: "Content Management", icon: "note-list", children: [ { key: "manage-content", label: "Manage Content" }, { key: "content-type", label: "Content Type" } ] },
+        ],
+      },
+      navProps: {
+        left: h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, h("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, this.navDateText()), h("span", { style: { fontWeight: 400, fontSize: 12, lineHeight: "18px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, this.navClock())),
+        user: { name: "M. Lutfi Maulana", role: "Admin KDC", status: "active" },
+      },
+
+      freshness: (() => {
+        const d = s.dataAt || new Date();
+        const mins = Math.max(0, s.minsAgo || 0);
+        const rel = mins < 1 ? "baru saja" : mins < 60 ? (mins + " menit lalu") : (Math.floor(mins / 60) + " jam lalu");
+        const abs = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + " WIB";
+        return h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-tertiary)" } },
+          this.iconColored("clock", 14, "var(--color-text-tertiary)"),
+          h("span", null, "Diperbarui ", h("span", { style: { fontWeight: 600, color: "var(--color-text-primary)" } }, abs), " · ", rel));
+      })(),
+      dateModeProps: { size: "s", value: s.dateFilter.mode, options: [{ value: "Tanggal", label: "Tanggal" }, { value: "Rentang", label: "Rentang Tanggal" }, { value: "Minggu", label: "Minggu" }, { value: "Bulan", label: "Bulan" }, { value: "Tahun", label: "Tahun" }], onChange: (v) => this.setDateFilter({ mode: v }) },
+      dateValueControl: this.buildDateValue(),
+      reloadProps: { variant: "ghost", size: "s", leftIcon: icon("RefreshIcon", 16), style: { gap: 6 }, onClick: () => this.reloadData() },
+      criteriaBlocks: this.buildCriteriaBlocks(this.filtered("summary")),
+      statusDistribution: h("div", { style: { borderTop: "1px solid var(--color-border-subtle)", paddingTop: 16 } }, this.buildStatusDistribution(this.filtered("cardStatus"))),
+      approvalFlow: this.buildApprovalFlow(this.filtered("summary")),
+      scopeLabel: "Menampilkan " + filtered.length + " dari " + all.length + " retur" + (fcount ? " · " + fcount + " filter aktif" : " · tanpa filter") + (s.search ? " · pencarian \u201C" + s.search + "\u201D" : ""),
+
+      searchProps: { placeholder: "Cari reference atau business partner…", size: "s", value: s.searchDraft, leftIcon: icon("SearchOutlineIcon"),
+        onChange: (e) => this.setState({ searchDraft: e.target.value }),
+        onKeyDown: (e) => { if (e.key === "Enter") this.afterFilterChange({ search: s.searchDraft, page: 1 }); if (e.key === "Escape") this.afterFilterChange({ search: "", searchDraft: "", page: 1 }); },
+        rightIcon: s.searchDraft ? h("span", { role: "button", "aria-label": "Bersihkan pencarian", onClick: () => this.afterFilterChange({ search: "", searchDraft: "", page: 1 }), style: { display: "inline-flex", cursor: "pointer" } }, this.iconColored("CloseIcon", 16, "var(--color-text-tertiary)")) : null },
+      filterProps: fcount
+        ? { variant: "secondary", size: "s", leftIcon: h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "var(--primary-500)", color: "var(--color-text-inverse)", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, fcount), style: { gap: 10, background: "var(--primary-100)", borderColor: "var(--primary-500)", color: "var(--primary-500)" }, onClick: () => this.openFilter() }
+        : { variant: "tertiary", size: "s", leftIcon: icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.openFilter() },
+      exportBtnProps: { variant: "tertiary", size: "s", leftIcon: icon("export-up", 16), style: { gap: 6 }, onClick: () => this.doExport() },
+      bulkToggleLabel: s.bulkMode ? "Selesai Memilih" : "Bulk Approve",
+      bulkToggleProps: s.bulkMode
+        ? { variant: "secondary", size: "s", style: { display: "none" }, onClick: () => this.setState({ bulkMode: false, selected: [] }) }
+        : { variant: "primary", size: "s", leftIcon: icon("check-circle", 16), style: { gap: 6 }, onClick: () => this.setState({ bulkMode: true }) },
+      filterBar: this.buildFilterBar(),
+      bulkBar: this.buildBulkBar(),
+      tableRegion: this.buildTableRegion(filtered, paged),
+      showPagination: !s.loading && !this.props.simulateError && !this.props.simulateEmpty && filtered.length > 0,
+      perPageProps: { options: ["10", "25", "50"], value: s.perPage, size: "s", onChange: (v) => this.setState({ perPage: v, page: 1 }) },
+      totalLabel: "Menampilkan " + ((page - 1) * per + 1) + "–" + Math.min(page * per, filtered.length) + " dari " + filtered.length + " retur",
+      pageProps: { page, pageCount, onPageChange: (p) => this.setState({ page: p }) },
+
+      backdropStyle: { position: "fixed", inset: 0, background: "rgba(42,61,74,0.45)", display: "flex", justifyContent: "flex-end", zIndex: 50, opacity: s.filterOpen ? 1 : 0, pointerEvents: s.filterOpen ? "auto" : "none", transition: "opacity 260ms ease" },
+      drawerStyle: { width: 480, height: "100%", background: "var(--color-bg-secondary)", display: "flex", flexDirection: "column", boxSizing: "border-box", fontFamily: "var(--font-sans)", transform: s.filterOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 280ms cubic-bezier(0.4,0,0.2,1)" },
+      closeFilter: () => this.closeFilter(), stopProp: (e) => e.stopPropagation(),
+      drawerStatusField: this.multiSelect({ label: "Status", placeholder: "Pilih status…", options: Object.keys(meta), values: s.filterDraft.status || [], onChange: (v) => this.setDraft({ status: v }) }),
+      drawerTipeField: this.multiSelect({ label: "Tipe Retur", placeholder: "Pilih tipe retur…", options: ["Consignment", "Direct"], values: s.filterDraft.tipe || [], onChange: (v) => this.setDraft({ tipe: v }) }),
+      drawerDcField: this.multiSelect({ label: "DC", placeholder: "Pilih DC…", options: [...new Set(all.map(r => r.dc))], values: s.filterDraft.dc || [], onChange: (v) => this.setDraft({ dc: v }) }),
+      drawerAreaField: this.multiSelect({ label: "Sales Area", placeholder: "Pilih sales area…", options: [...new Set(all.map(r => r.area))], values: s.filterDraft.area || [], onChange: (v) => this.setDraft({ area: v }) }),
+      drawerCriteriaField: (() => {
+        const cmx = this.criteriaMap();
+        const lbl = (k) => cmx[k].label + " (" + cmx[k].kind + ") \u2013 " + cmx[k].desc;
+        const keys = Object.keys(cmx).filter(k => !cmx[k].hidden);
+        return this.multiSelect({ label: "Kriteria Retur", placeholder: "Pilih kriteria\u2026", options: keys.map(lbl),
+          values: (s.filterDraft.criteria || []).map(k => cmx[k] ? lbl(k) : k),
+          onChange: (v) => this.setDraft({ criteria: v.map(x => keys.find(k => lbl(k) === x)).filter(Boolean) }) });
+      })(),
+      drawerFrom: s.filterDraft.from || "", onDrawerFrom: (e) => this.setDraft({ from: e.target.value }),
+      drawerTo: s.filterDraft.to || "", onDrawerTo: (e) => this.setDraft({ to: e.target.value }),
+      drawerAnyFilled: ["status", "tipe", "dc", "area", "criteria"].some(k => (s.filterDraft[k] || []).length > 0) || !!(s.filterDraft.from || s.filterDraft.to || s.filterDraft.overSoa),
+      hapusFilterProps: { variant: "ghost", size: "s", leftIcon: icon("RefreshIcon", 16), onClick: () => this.clearDraft() },
+      batalFilterProps: { variant: "secondary", size: "s", onClick: () => this.closeFilter() },
+      terapkanFilterProps: { variant: "primary", size: "s", onClick: () => this.applyFilter() },
+
+      modalOpen: !!s.modal,
+      modalProps: this.buildModal(),
+      toastStack,
+    };
+
+    if (s.view === "detail") {
+      const r = this.detail();
+      if (r) {
+        const mt = meta[r.status], th = this.thresholdOf(r), calc = this.shownCalc(r), over = calc.overAppr, dirty = this.isDirty(r);
+        const allowed = this.canAct(r), role = this.myRole(), waitRole = this.waitingRole(r), denyMsg = "Hanya " + waitRole + " yang dapat melakukan approval pada tahap ini" + (role ? " (role Anda: " + role + ")" : "") + ".";
+        const q = s.queue.filter(id => { const x = s.returns.find(y => y.id === id); return x && this.canAct(x); });
+        const pos = q.indexOf(r.id);
+        vals.dTitle = "Detail Retur: " + r.reference;
+        vals.dHeaderTags = h("span", { style: { display: "inline-flex", gap: 8 } },
+          this.statusChip(r.status, "s"),
+          null);
+        vals.dStore = r.partnerLabel;
+        vals.dCaption = r.dc + " · " + r.area + " · dibuat " + r.createDate;
+        vals.dCanAct = mt.actionable && allowed;
+        vals.dApproveProps = { variant: "primary", size: "s", disabled: dirty || !allowed, title: !allowed ? denyMsg : dirty ? "Hitung ulang rasio approval terlebih dahulu" : undefined, leftIcon: icon("check-circle", 16), style: { gap: 6 }, onClick: () => this.askApprove() };
+        vals.dRejectProps = { variant: "secondary", size: "s", disabled: !allowed, title: !allowed ? denyMsg : undefined, className: "rt-reject", style: { color: "var(--color-text-error)", borderColor: "var(--color-text-error)" }, onClick: () => this.askReject() };
+        vals.dBackProps = { variant: "ghost", size: "s", leftIcon: this.iconColored("arrow-left", 18, "var(--primary-500)"), onClick: () => this.askLeave() };
+        vals.dStale = s.stale;
+        vals.staleAlert = Alert ? h(Alert, { state: "warning", title: "Data mungkin sudah berubah", action: h(Button, { variant: "secondary", size: "s", leftIcon: icon("RefreshIcon", 16), onClick: () => this.reloadData() }, "Muat Ulang") }, "Record ini telah diperbarui oleh pengguna lain. Muat ulang untuk melihat data terbaru.") : null;
+        vals.queueCounter = mt.actionable && pos >= 0 ? (pos + 1) + " / " + q.length + " menunggu approval" : q.length + " menunggu approval di antrean";
+        vals.queueHint = "Antrean mengikuti filter aktif di daftar. Setelah aksi dikonfirmasi, sistem otomatis membuka pengajuan berikutnya.";
+        vals.prevProps = { variant: "secondary", size: "s", disabled: pos <= 0, leftIcon: this.iconColored("arrow-left", 16, "var(--primary-500)"), onClick: () => this.goQueue(-1) };
+        vals.nextLabel = pos >= 0 && pos === q.length - 1 ? "Antrean Selesai" : "Berikutnya";
+        vals.nextProps = { variant: "secondary", size: "s", disabled: !q.length, onClick: () => this.goQueue(1) };
+        vals.approveGuard = null;
+        if (mt.actionable && Alert && !allowed) vals.approveGuard = h(Alert, { state: "info", title: "Menunggu approval " + waitRole }, "Pengajuan ini berada di tahap " + waitRole + ". Role Anda (" + role + ") hanya dapat melihat detail; qty approve, Tolak, dan Setujui dinonaktifkan.");
+        else if (mt.actionable && Alert) {
+          if (dirty) vals.approveGuard = h(Alert, { state: "warning", title: "Rasio approval belum dihitung ulang",
+            action: h(Button, { variant: "primary", size: "s", leftIcon: icon("RefreshIcon", 16), style: { gap: 6 }, onClick: () => this.recalcApprove() }, "Hitung Ulang") },
+            "Qty approve telah diubah menjadi " + this.approvalCalc(r).apprQty + " dari " + calc.submitQty + " unit. Rasio approval dan akumulasi di bawah masih memakai perhitungan sebelumnya. Hitung ulang sebelum menyetujui.");
+          else if (calc.adjusted) vals.approveGuard = h(Alert, { state: "info", title: "Qty approve disesuaikan",
+            action: h(Button, { variant: "secondary", size: "s", onClick: () => this.resetApprove() }, "Reset") },
+            calc.apprQty + " dari " + calc.submitQty + " unit disetujui. Ratio approval " + calc.ratioAppr.toFixed(1) + "% (pengajuan " + r.ratio.toFixed(1) + "%), akumulasi " + calc.akumAfter.toFixed(1) + "% dari batas " + calc.th + "%.");
+        }
+        vals.ratioTiles = h(React.Fragment, null,
+          [["Rasio Pengajuan", r.ratio.toFixed(1) + "%", "var(--color-text-primary)", calc.submitQty + " unit diajukan · " + this.fmtRp(r.nominal), "Total Amount Pengajuan Retur yang diajukan ÷ Total Omset Toko (DO periode Last Year)"],
+           ["Rasio Approval", calc.ratioAppr.toFixed(1) + "%", calc.adjusted ? "var(--primary-500)" : "var(--success-600)", dirty ? "Belum dihitung ulang · nilai sebelum perubahan qty" : calc.apprQty + " unit disetujui · " + this.fmtRp(calc.nominalAppr), "Rasio retur berdasarkan qty yang diapprove pada pengajuan ini", dirty],
+           ["Rasio Akumulasi", r.akum.toFixed(1) + "%", "var(--color-text-primary)", "Akumulasi retur periode berjalan", "Total Amount Pengajuan Retur yang telah diapprove atas Business Partner ini ÷ Total Omset Toko (DO periode Last Year)"]].map(([label, value, color, hint, formula, stale]) =>
+            h("div", { key: label, style: { background: stale ? "var(--warning-50, var(--color-bg-secondary))" : "var(--color-bg-secondary)", border: stale ? "1px dashed var(--warning-500, var(--color-border-subtle))" : "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-md)", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 6 } },
+              h("div", { style: { display: "flex", alignItems: "center", gap: 6 } },
+                h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, label),
+                h("span", { title: formula, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 14, height: 14, borderRadius: "50%", background: "var(--color-border-subtle)", fontSize: 9, fontWeight: 700, color: "var(--color-text-tertiary)", cursor: "help", flexShrink: 0, lineHeight: 1 } }, "?")),
+              h("span", { style: { fontWeight: 700, fontSize: 20, lineHeight: "26px", color: stale ? "var(--color-text-tertiary)" : color, textDecoration: stale ? "line-through" : "none", fontVariantNumeric: "tabular-nums" } }, value),
+              h("span", { style: { fontSize: 11, lineHeight: "15px", color: "var(--color-text-tertiary)" } }, hint))));
+        vals.dRef = r.reference; vals.dCreate = r.createDate; vals.dDc = r.dc + " (" + r.area + ")";
+        vals.dSalesman = r.salesman + " (" + r.salesmanId + ")";
+        vals.dNominal = this.fmtRp(r.nominal);
+        vals.dNominalApproved = mt.actionable
+          ? (dirty ? "Belum dihitung ulang" : this.fmtRp(calc.nominalAppr) + " · estimasi")
+          : (r.nominalApproved ? this.fmtRp(r.nominalApproved) : "Belum tersedia");
+        vals.dApprovedColor = mt.actionable ? "var(--primary-500)" : r.nominalApproved ? "var(--success-600)" : "var(--neutral-variant-600)";
+        vals.dConsiTag = h(Tag, { colorScheme: r.consignment ? "purple" : "neutral", size: "s" }, r.consignment ? "Ya" : "Tidak");
+        vals.dStatusTag = this.statusChip(r.status, "s");
+        const allReasons = [...new Set((r.products || []).flatMap(p => (p.reasons || []).map(rs => rs.reason)))];
+        vals.dAlasanRetur = allReasons.join(' · ') || '—';
+        vals.dCatatan = r.catatan || '—';
+        const crit = this.getCriteria(r), cm = this.criteriaMap()[crit];
+        const stage = r.approvalStage != null ? r.approvalStage : (mt.actionable ? 0 : cm.chain.length - 1);
+        vals.dCriteriaInfo = h("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+          h("div", { style: { display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", fontSize: 14, lineHeight: "20px" } },
+            h("span", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, cm.label),
+            h("span", { style: { color: "var(--color-text-tertiary)" } }, cm.desc),
+            mt.actionable ? h("span", { style: { color: "var(--color-text-secondary)", fontWeight: 600 } }, "\u00B7 Menunggu " + cm.chain[stage]) : null),
+          h("div", { style: { display: "flex", alignItems: "flex-start", flexWrap: "wrap", columnGap: 10, rowGap: 6 } },
+            cm.chain.map((role, i) => {
+              const done = !mt.actionable || i < stage;
+              const current = mt.actionable && i === stage;
+              return h("div", { key: i, style: { display: "flex", alignItems: "baseline", gap: 10 } },
+                h("span", { style: { display: "inline-flex", alignItems: "baseline", gap: 6, fontSize: 12, lineHeight: "16px", fontWeight: current ? 700 : 600, color: current ? "var(--primary-500)" : done ? "var(--success-600)" : "var(--color-text-tertiary)" } },
+                  h("span", { style: { fontVariantNumeric: "tabular-nums" } }, done ? "\u2713" : (i + 1) + "."), role),
+                i < cm.chain.length - 1 ? h("span", { "aria-hidden": "true", style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "\u2192") : null);
+            })));
+        vals.dSkuCount = r.products.length;
+        vals.prodSearchProps = { placeholder: "Cari kode atau nama item…", size: "s", value: s.prodSearch, leftIcon: icon("SearchOutlineIcon"), onChange: (e) => this.setState({ prodSearch: e.target.value }) };
+        vals.productRegion = this.buildProductRegion();
+        vals.timeline = this.buildTimeline();
+      }
+    }
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

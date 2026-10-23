@@ -28,13 +28,13 @@
     };
     const bName = (code) => (DB.t('brands').find((b) => b.code === code) || {}).name || code;
     return {
-      title: 'Inbox Approval', html: `
+      title: 'Inbox Approval', html: `<div class="cps cps-app"><div class="cps-list">
       <div class="page-head"><div><h1>Inbox Approval</h1><div class="sub">Menunggu di layer milik <strong>${h.ROLE_LABEL[user.role]}</strong>. Layer yang kondisinya terpenuhi sudah dilewati otomatis.</div></div></div>
       ${section('registration', 'Registration', ['Program', 'Brand · growth · total rebate'], (rec) => [esc(DB.byId('programs', rec.program_id).code),
         rec.brands.map((b) => `<span class="mr-2 text-nowrap">${esc(bName(b.brand_code))} ${b.growth_pct}% · ${b.total_pct}%</span>`).join('')])}
       ${section('monitoring', 'Monitoring', ['Periode', 'Evidence'], (rec, r) => { const ch = E.loadProgram(r.program_id).channels.find((c) => c.id === r.program_channel_id);
         return [esc(rec.period_label), `${Object.keys(rec.evidence || {}).length} / ${ch.leadMeasures.length} lead measure`]; })}
-      ${section('payout', 'Payout', ['Komponen · periode', 'Nominal'], (rec) => [`${rec.component === 'CONDITIONAL' ? 'Conditional' : 'Fix'} · ${esc(rec.period_label)}`, `<strong>${h.rp(rec.amount)}</strong>`])}`,
+      ${section('payout', 'Payout', ['Komponen · periode', 'Nominal'], (rec) => [`${rec.component === 'CONDITIONAL' ? 'Conditional' : 'Fix'} · ${esc(rec.period_label)}`, `<strong>${h.rp(rec.amount)}</strong>`])}</div></div>`,
     };
   });
 

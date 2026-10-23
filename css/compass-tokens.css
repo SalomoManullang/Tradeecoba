@@ -1,0 +1,507 @@
+/* =====================================================================
+   COMPASS design tokens untuk prototype Tradee 2027.
+   Gabungan apa adanya dari reference/compass/_ds/compass-design-system-2e97fc3c-…/tokens/:
+     1. fig-tokens.css   (Figma Variables + ramp status; blok tema gelap hanya aktif lewat [data-theme="dark"],
+                          selector `.dark` dibuang supaya tidak bentrok dengan class Metronic/Bootstrap)
+     2. typography.css
+     3. effects.css      (alias px untuk radius/spacing, elevation, focus ring; menimpa angka tanpa satuan di fig-tokens)
+     4. tambahan dari compass-ui-kit-design-spec.md (skala tipe, spacing & radius lengkap, alias font)
+   fonts.css tidak di-@import: Lato, Plus Jakarta Sans & JetBrains Mono dimuat lewat <link> di index.html.
+   Jangan ubah nilai di sini; ubah gaya di css/compass-skin.css.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 1. fig-tokens.css */
+/* Generated from Figma Variables. First mode = :root default.
+   FLOAT tokens are unitless — multiply by 1px in calc() where a length is needed. */
+
+:root {
+  --color-bg-brand-subtle: var(--primary-100); /* @kind color */
+  --color-bg-brand: var(--primary-500); /* @kind color */
+  --color-bg-disabled: var(--neutral-500); /* @kind color */
+  --color-bg-error: var(--error-100); /* @kind color */
+  --color-bg-info: var(--info-100); /* @kind color */
+  --color-bg-inverse: var(--neutral-900); /* @kind color */
+  --color-bg-primary: var(--neutral-variant-100); /* @kind color */
+  --color-bg-secondary: var(--neutral-100); /* @kind color */
+  --color-bg-success: var(--success-100); /* @kind color */
+  --color-bg-tertiary: var(--neutral-variant-200); /* @kind color */
+  --color-bg-warning: var(--warning-100); /* @kind color */
+  --color-border-brand: var(--primary-500); /* @kind color */
+  --color-border-default: var(--neutral-300); /* @kind color */
+  --color-border-disabled: var(--neutral-500); /* @kind color */
+  --color-border-error: var(--error-500); /* @kind color */
+  --color-border-focus: var(--primary-500); /* @kind color */
+  --color-border-strong: var(--neutral-variant-900); /* @kind color */
+  --color-border-subtle: var(--neutral-200); /* @kind color */
+  --color-border-success: var(--success-500); /* @kind color */
+  --color-border-warning: var(--warning-500); /* @kind color */
+  --color-icon-brand: var(--primary-500); /* @kind color */
+  --color-icon-disabled: var(--neutral-500); /* @kind color */
+  --color-icon-error: var(--error-500); /* @kind color */
+  --color-icon-inverse: var(--neutral-100); /* @kind color */
+  --color-icon-primary: var(--neutral-variant-900); /* @kind color */
+  --color-icon-success: var(--success-500); /* @kind color */
+  --color-icon-warning: var(--warning-500); /* @kind color */
+  --color-interactive-active: var(--primary-700); /* @kind color */
+  --color-interactive-disabled: var(--neutral-500); /* @kind color */
+  --color-interactive-hover: var(--primary-600); /* @kind color */
+  --color-neutral-0: rgb(255,255,255); /* @kind color */
+  --color-neutral-300: rgb(214,214,214); /* @kind color */
+  --color-neutral-950: rgb(51,51,51); /* @kind color */
+  --color-secondary-700: rgb(42,61,74); /* @kind color */
+  --color-text-brand: var(--primary-500); /* @kind color */
+  --color-text-disabled: var(--neutral-500); /* @kind color */
+  --color-text-error: var(--error-700); /* @kind color */
+  --color-text-info: var(--info-700); /* @kind color */
+  --color-text-inverse: var(--neutral-100); /* @kind color */
+  --color-text-primary: var(--neutral-variant-900); /* @kind color */
+  --color-text-secondary: var(--neutral-variant-800); /* @kind color */
+  --color-text-success: var(--success-700); /* @kind color */
+  --color-text-tertiary: var(--neutral-variant-700); /* @kind color */
+  --color-text-warning: var(--warning-700); /* @kind color */
+  --error-100: rgb(255,237,239); /* @kind color */
+  --error-400: rgb(235,51,73); /* @kind color */
+  --error-500-2: rgb(230,0,28); /* @kind color */
+  --error-500-3: rgb(230,0,28); /* @kind color */
+  --error-500: rgb(230,0,28); /* @kind color */
+  --error-600-2: rgb(184,0,22); /* @kind color */
+  --error-600: rgb(184,0,22); /* @kind color */
+  --error-700: rgb(138,0,17); /* @kind color */
+  --error-800-2: rgb(92,0,11); /* @kind color */
+  --error-800: rgb(92,0,11); /* @kind color */
+  --error-900: rgb(23,0,3); /* @kind color */
+  --font-family-lato-2: "Lato";
+  --font-family-lato-3: "Lato";
+  --font-family-lato: "Lato";
+  --font-lineheight-title-md: 24;
+  --font-size-body-1: 16;
+  --font-size-body-2-2: 14;
+  --font-size-body-2: 14;
+  --font-size-body-3-2: 12;
+  --font-size-body-3: 12;
+  --font-size-caption-1-2: 10;
+  --font-size-caption-1: 10;
+  --font-size-caption-2-2: 8;
+  --font-size-caption-2: 8;
+  --font-size-heading-3-2: 38;
+  --font-size-heading-3: 24;
+  --font-size-heading-5: 26;
+  --font-size-heading-6: 24;
+  --font-size-heading-7: 20;
+  --font-size-heading-8: 18;
+  --font-weight-bold: 700;
+  --font-weight-medium: 500;
+  --font-weight-regular-2: 400;
+  --font-weight-regular: 400;
+  --font-weight-semibold-2: 600;
+  --font-weight-semibold: 600;
+  --heron-exagon-500-2: rgb(114,93,163); /* @kind color */
+  --heron-exagon-500: rgb(114,93,163); /* @kind color */
+  --info-100: rgb(204,221,245); /* @kind color */
+  --info-400: rgb(51,120,214); /* @kind color */
+  --info-500: rgb(0,86,204); /* @kind color */
+  --info-600: rgb(0,69,163); /* @kind color */
+  --info-700: rgb(0,52,122); /* @kind color */
+  --info-800: rgb(0,34,82); /* @kind color */
+  --info-900: rgb(0,9,20); /* @kind color */
+  --information-500-2: rgb(0,86,204); /* @kind color */
+  --information-500: rgb(0,86,204); /* @kind color */
+  --information-600: rgb(0,69,163); /* @kind color */
+  --information-800: rgb(0,34,82); /* @kind color */
+  --line-height-1-2: 10;
+  --line-height-10: 32;
+  --line-height-11: 34;
+  --line-height-13: 50;
+  --line-height-1: 10;
+  --line-height-2-2: 14;
+  --line-height-2: 14;
+  --line-height-3-2: 16;
+  --line-height-3: 16;
+  --line-height-5-2: 18;
+  --line-height-5: 18;
+  --line-height-6: 32;
+  --line-height-7: 22;
+  --line-height-8: 24;
+  --line-height-9: 26;
+  --neutral-100-2: rgb(235,235,235); /* @kind color */
+  --neutral-100: rgb(255,255,255); /* @kind color */
+  --neutral-200-2: rgb(214,214,214); /* @kind color */
+  --neutral-200: rgb(235,235,235); /* @kind color */
+  --neutral-300-2: rgb(194,194,194); /* @kind color */
+  --neutral-300: rgb(214,214,214); /* @kind color */
+  --neutral-400-2: rgb(194,194,194); /* @kind color */
+  --neutral-400: rgb(173,173,173); /* @kind color */
+  --neutral-500-2: rgb(153,153,153); /* @kind color */
+  --neutral-500-3: rgb(153,153,153); /* @kind color */
+  --neutral-500: rgb(173,173,173); /* @kind color */
+  --neutral-50: rgb(255,255,255); /* @kind color */
+  --neutral-600-2: rgb(122,122,122); /* @kind color */
+  --neutral-600: rgb(153,153,153); /* @kind color */
+  --neutral-700: rgb(122,122,122); /* @kind color */
+  --neutral-800: rgb(92,92,92); /* @kind color */
+  --neutral-900: rgb(61,61,61); /* @kind color */
+  --neutral-950: rgb(31,31,31); /* @kind color */
+  --neutral-variant-100: rgb(248,249,253); /* @kind color */
+  --neutral-variant-200: rgb(222,226,231); /* @kind color */
+  --neutral-variant-300: rgb(196,202,208); /* @kind color */
+  --neutral-variant-600: rgb(119,132,141); /* @kind color */
+  --neutral-variant-700: rgb(94,108,119); /* @kind color */
+  --neutral-variant-800: rgb(68,85,96); /* @kind color */
+  --neutral-variant-900: rgb(42,61,74); /* @kind color */
+  --neutral-variant-950: rgb(0,0,0); /* @kind color */
+  --paragon-sfm-100: rgb(211,222,238); /* @kind color */
+  --paragon-sfm-500-2: rgb(33,90,168); /* @kind color */
+  --paragon-sfm-500: rgb(33,90,168); /* @kind color */
+  --primary-100: rgb(214,219,248); /* @kind color */
+  --primary-200: rgb(173,183,242); /* @kind color */
+  --primary-300: rgb(131,148,235); /* @kind color */
+  --primary-400: rgb(90,113,229); /* @kind color */
+  --primary-500: rgb(48,77,222); /* @kind color */
+  --primary-600: rgb(39,62,181); /* @kind color */
+  --primary-700: rgb(30,48,139); /* @kind color */
+  --primary-800: rgb(21,34,98); /* @kind color */
+  --primary-900: rgb(12,19,56); /* @kind color */
+  --radius-base: 4;
+  --radius-full: 9999;
+  --radius-lg: 8;
+  --radius-md: 6;
+  --radius-radius-full: 9999;
+  --radius-radius-medium: 6;
+  --radius-sm: 2;
+  --radius-xl: 12;
+  --secondary-100: rgb(210,234,252); /* @kind color */
+  --secondary-400: rgb(74,170,243); /* @kind color */
+  --secondary-500: rgb(28,149,240); /* @kind color */
+  --semantic-text: rgb(42,61,74); /* @kind color */
+  --semantic-white-2: rgb(255,255,255); /* @kind color */
+  --semantic-white: rgb(255,255,255); /* @kind color */
+  --spacing-0: 0;
+  --spacing-10: 20;
+  --spacing-11: 24;
+  --spacing-15: 40;
+  --spacing-1: 2;
+  --spacing-2: 4;
+  --spacing-3: 6;
+  --spacing-4: 8;
+  --spacing-5: 10;
+  --spacing-6: 12;
+  --spacing-7: 14;
+  --spacing-8: 16;
+  --spacing-spacing-4: 8;
+  --spacing-spacing-6: 12;
+  --success-100: rgb(217,242,227); /* @kind color */
+  --success-300-2: rgb(140,217,172); /* @kind color */
+  --success-300: rgb(140,217,172); /* @kind color */
+  --success-500-2: rgb(64,191,117); /* @kind color */
+  --success-500: rgb(64,191,117); /* @kind color */
+  --success-600-2: rgb(51,153,94); /* @kind color */
+  --success-600-3: rgb(51,153,94); /* @kind color */
+  --success-600: rgb(51,153,94); /* @kind color */
+  --success-700: rgb(38,115,70); /* @kind color */
+  --success-800: rgb(26,76,47); /* @kind color */
+  --success-900: rgb(6,19,12); /* @kind color */
+  --tertiary-500: rgb(134,74,156); /* @kind color */
+  --tertiary-600: rgb(189,33,194); /* @kind color */
+  --warning-100: rgb(255,251,228); /* @kind color */
+  --warning-200: rgb(255,242,171); /* @kind color */
+  --warning-400: rgb(255,221,12); /* @kind color */
+  --warning-500-2: rgb(255,205,0); /* @kind color */
+  --warning-500: rgb(255,205,0); /* @kind color */
+  --warning-600: rgb(209,164,0); /* @kind color */
+  --warning-700: rgb(157,123,0); /* @kind color */
+  --warning-800: rgb(105,82,0); /* @kind color */
+  --warning-900: rgb(52,41,0); /* @kind color */
+}
+
+:root[data-theme="dark"] {
+  --color-bg-brand-subtle: var(--primary-900); /* @kind color */
+  --color-bg-brand: var(--primary-400); /* @kind color */
+  --color-bg-disabled: var(--neutral-500); /* @kind color */
+  --color-bg-error: var(--error-900); /* @kind color */
+  --color-bg-info: var(--info-900); /* @kind color */
+  --color-bg-inverse: var(--neutral-900); /* @kind color */
+  --color-bg-primary: var(--neutral-950); /* @kind color */
+  --color-bg-secondary: var(--neutral-900); /* @kind color */
+  --color-bg-success: var(--success-900); /* @kind color */
+  --color-bg-tertiary: var(--neutral-800); /* @kind color */
+  --color-bg-warning: var(--warning-900); /* @kind color */
+  --color-border-brand: var(--primary-400); /* @kind color */
+  --color-border-default: var(--neutral-700); /* @kind color */
+  --color-border-disabled: var(--neutral-500); /* @kind color */
+  --color-border-error: var(--error-500); /* @kind color */
+  --color-border-focus: var(--primary-400); /* @kind color */
+  --color-border-strong: var(--neutral-600); /* @kind color */
+  --color-border-subtle: var(--neutral-900); /* @kind color */
+  --color-border-success: var(--success-500); /* @kind color */
+  --color-border-warning: var(--warning-500); /* @kind color */
+  --color-icon-brand: var(--primary-400); /* @kind color */
+  --color-icon-disabled: var(--neutral-700); /* @kind color */
+  --color-icon-error: var(--error-400); /* @kind color */
+  --color-icon-inverse: var(--neutral-950); /* @kind color */
+  --color-icon-primary: var(--neutral-300); /* @kind color */
+  --color-icon-success: var(--success-500); /* @kind color */
+  --color-icon-warning: var(--warning-500); /* @kind color */
+  --color-interactive-active: var(--primary-200); /* @kind color */
+  --color-interactive-disabled: var(--neutral-800); /* @kind color */
+  --color-interactive-hover: var(--primary-300); /* @kind color */
+  --color-neutral-0: rgb(0,0,0); /* @kind color */
+  --color-neutral-300: rgb(51,51,51); /* @kind color */
+  --color-neutral-950: rgb(214,214,214); /* @kind color */
+  --color-secondary-700: rgb(211,222,238); /* @kind color */
+  --color-text-brand: var(--primary-400); /* @kind color */
+  --color-text-disabled: var(--neutral-600); /* @kind color */
+  --color-text-error: var(--error-500); /* @kind color */
+  --color-text-info: var(--info-400); /* @kind color */
+  --color-text-inverse: var(--neutral-950); /* @kind color */
+  --color-text-primary: var(--neutral-200); /* @kind color */
+  --color-text-secondary: var(--neutral-500); /* @kind color */
+  --color-text-success: var(--success-500); /* @kind color */
+  --color-text-tertiary: var(--neutral-variant-700); /* @kind color */
+  --color-text-warning: var(--warning-400); /* @kind color */
+  --error-100: rgb(255,237,239); /* @kind color */
+  --error-400: rgb(235,51,73); /* @kind color */
+  --error-500: rgb(230,0,28); /* @kind color */
+  --error-600: rgb(184,0,22); /* @kind color */
+  --error-700: rgb(138,0,17); /* @kind color */
+  --error-800: rgb(92,0,11); /* @kind color */
+  --error-900: rgb(23,0,3); /* @kind color */
+  --info-100: rgb(204,221,245); /* @kind color */
+  --info-400: rgb(51,120,214); /* @kind color */
+  --info-500: rgb(0,86,204); /* @kind color */
+  --info-600: rgb(0,69,163); /* @kind color */
+  --info-700: rgb(0,52,122); /* @kind color */
+  --info-800: rgb(0,34,82); /* @kind color */
+  --info-900: rgb(0,9,20); /* @kind color */
+  --neutral-100: rgb(255,255,255); /* @kind color */
+  --neutral-200: rgb(235,235,235); /* @kind color */
+  --neutral-300: rgb(214,214,214); /* @kind color */
+  --neutral-400-2: rgb(194,194,194); /* @kind color */
+  --neutral-500: rgb(173,173,173); /* @kind color */
+  --neutral-50: rgb(255,255,255); /* @kind color */
+  --neutral-600: rgb(153,153,153); /* @kind color */
+  --neutral-700: rgb(122,122,122); /* @kind color */
+  --neutral-800: rgb(92,92,92); /* @kind color */
+  --neutral-900: rgb(61,61,61); /* @kind color */
+  --neutral-950: rgb(31,31,31); /* @kind color */
+  --neutral-variant-100: rgb(248,249,253); /* @kind color */
+  --neutral-variant-200: rgb(222,226,231); /* @kind color */
+  --neutral-variant-300: rgb(196,202,208); /* @kind color */
+  --neutral-variant-600: rgb(119,132,141); /* @kind color */
+  --neutral-variant-700: rgb(94,108,119); /* @kind color */
+  --neutral-variant-800: rgb(68,85,96); /* @kind color */
+  --neutral-variant-900: rgb(42,61,74); /* @kind color */
+  --neutral-variant-950: rgb(0,0,0); /* @kind color */
+  --primary-100: rgb(214,219,248); /* @kind color */
+  --primary-200: rgb(173,183,242); /* @kind color */
+  --primary-300: rgb(131,148,235); /* @kind color */
+  --primary-400: rgb(90,113,229); /* @kind color */
+  --primary-500: rgb(48,77,222); /* @kind color */
+  --primary-600: rgb(39,62,181); /* @kind color */
+  --primary-700: rgb(30,48,139); /* @kind color */
+  --primary-800: rgb(21,34,98); /* @kind color */
+  --primary-900: rgb(12,19,56); /* @kind color */
+  --secondary-100: rgb(210,234,252); /* @kind color */
+  --secondary-400: rgb(74,170,243); /* @kind color */
+  --secondary-500: rgb(28,149,240); /* @kind color */
+  --success-100: rgb(217,242,227); /* @kind color */
+  --success-300-2: rgb(140,217,172); /* @kind color */
+  --success-500: rgb(64,191,117); /* @kind color */
+  --success-600: rgb(51,153,94); /* @kind color */
+  --success-700: rgb(38,115,70); /* @kind color */
+  --success-800: rgb(26,76,47); /* @kind color */
+  --success-900: rgb(6,19,12); /* @kind color */
+  --tertiary-500: rgb(134,74,156); /* @kind color */
+  --tertiary-600: rgb(189,33,194); /* @kind color */
+  --warning-100: rgb(255,251,228); /* @kind color */
+  --warning-200: rgb(255,242,171); /* @kind color */
+  --warning-400: rgb(255,221,12); /* @kind color */
+  --warning-500: rgb(255,205,0); /* @kind color */
+  --warning-700: rgb(157,123,0); /* @kind color */
+  --warning-800: rgb(105,82,0); /* @kind color */
+  --warning-900: rgb(52,41,0); /* @kind color */
+}
+
+/* ── Order status palette ──────────────────────────────────────────────
+   12 perceptually-even hues (OKLCH, matched lightness/chroma) so every
+   order state is separable at a glance. Hue advances with the order
+   lifecycle: grey draft → blue/teal in-flight → green delivered →
+   amber/orange exceptions → red failure → plum cancelled. */
+:root {
+  --status-draft:            oklch(0.58 0.03 250); /* @kind color */
+  --status-sending:          oklch(0.55 0.17 258); /* @kind color */
+  --status-confirmed:        oklch(0.58 0.13 215); /* @kind color */
+  --status-packing:          oklch(0.58 0.11 190); /* @kind color */
+  --status-shipping:         oklch(0.58 0.13 162); /* @kind color */
+  --status-delivered:        oklch(0.54 0.15 145); /* @kind color */
+  --status-sendback:         oklch(0.60 0.13 115); /* @kind color */
+  --status-cl-block:         oklch(0.62 0.15 78);  /* @kind color */
+  --status-credit-revision:  oklch(0.62 0.16 55);  /* @kind color */
+  --status-revised:          oklch(0.58 0.17 32);  /* @kind color */
+  --status-failed:           oklch(0.55 0.21 22);  /* @kind color */
+  --status-cancelled:        oklch(0.52 0.16 330); /* @kind color */
+}
+
+/* ── COMPASS UI Kit — categorical status ramp (canonical, Light mode) ──────
+   12 categorical hues for labels with no semantic meaning, each paired 1:1
+   with a subtle background tint at the same step. Semantic states
+   (success / warning / error / neutral) keep their semantic tokens. */
+:root {
+  --status-100:  #6D7C8C; --status-bg-100:  #EDEFF1;
+  --status-200:  #276ED2; --status-bg-200:  #E5EEFA;
+  --status-300:  #008CAA; --status-bg-300:  #E0F1F5;
+  --status-400:  #B77800; --status-bg-400:  #F6EFE0;
+  --status-500:  #CC6600; --status-bg-500:  #F9EDE0;
+  --status-600:  #008E89; --status-bg-600:  #E0F1F1;
+  --status-700:  #009162; --status-bg-700:  #E0F2EC;
+  --status-800:  #248430; --status-bg-800:  #E5F0E6;
+  --status-900:  #7E8814; --status-bg-900:  #F0F1E3;
+  --status-1000: #D01A34; --status-bg-1000: #F9E4E7;
+  --status-1100: #993F94; --status-bg-1100: #F3E8F2;
+  --status-1200: #CB4832; --status-bg-1200: #F9E9E6;
+}
+
+/* Orange ramp — "value at risk" data (e.g. returns): soft = low, deep = high. */
+:root {
+  --orange-100: #FFEBD6;
+  --orange-200: #FFD1A3;
+  --orange-300: #FFB066;
+  --orange-400: #FF9433;
+  --orange-500: #FF7A00;
+  --orange-600: #E55A00;
+  --orange-700: #B84500;
+}
+
+/* ---------------------------------------------------------------- 2. typography.css */
+/* ── COMPASS typography ─────────────────────────────────────────────
+   The source .fig defines no named text styles; type is applied ad hoc,
+   almost entirely in Lato. These tokens + classes codify the observed
+   scale. Font-size / line-height numbers mirror the Figma Variables in
+   fig-tokens.css (--font-size-*, --line-height-*), expressed here in px.
+   ------------------------------------------------------------------- */
+:root {
+  /* Families */
+  --font-sans: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-alt: "Inter", "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Weights */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Semantic type ramp — size / line-height (px) */
+  --type-display-size: 40px;      --type-display-line: 48px;   /* Inter 40 */
+  --type-h1-size: 32px;           --type-h1-line: 40px;        /* Inter 32 */
+  --type-h2-size: 28px;           --type-h2-line: 36px;        /* Plus Jakarta 28 */
+  --type-h3-size: 22px;           --type-h3-line: 28px;        /* Lato Bold 22 */
+  --type-h4-size: 18px;           --type-h4-line: 24px;
+  --type-h5-size: 16px;           --type-h5-line: 24px;
+  --type-body-lg-size: 16px;      --type-body-lg-line: 24px;
+  --type-body-size: 14px;         --type-body-line: 20px;      /* default UI text */
+  --type-body-sm-size: 12px;      --type-body-sm-line: 16px;
+  --type-caption-size: 12px;      --type-caption-line: 16px;
+  --type-overline-size: 10px;     --type-overline-line: 14px;
+}
+
+/* Base — most COMPASS UI text is Lato 14/20, secondary ink. */
+.compass-type {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Specimen / utility classes */
+.type-display { font-family: var(--font-alt); font-weight: 700; font-size: var(--type-display-size); line-height: var(--type-display-line); color: var(--color-text-primary); }
+.type-h1      { font-family: var(--font-alt); font-weight: 700; font-size: var(--type-h1-size); line-height: var(--type-h1-line); color: var(--color-text-primary); }
+.type-h2      { font-family: var(--font-display); font-weight: 600; font-size: var(--type-h2-size); line-height: var(--type-h2-line); color: var(--color-text-primary); }
+.type-h3      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h3-size); line-height: var(--type-h3-line); color: var(--color-text-primary); }
+.type-h4      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h4-size); line-height: var(--type-h4-line); color: var(--color-text-primary); }
+.type-h5      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h5-size); line-height: var(--type-h5-line); color: var(--color-text-primary); }
+.type-body-lg { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-lg-size); line-height: var(--type-body-lg-line); color: var(--color-text-primary); }
+.type-body    { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--color-text-primary); }
+.type-body-strong { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--color-text-primary); }
+.type-body-sm { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-line); color: var(--color-text-secondary); }
+.type-caption { font-family: var(--font-sans); font-weight: 600; font-size: var(--type-caption-size); line-height: var(--type-caption-line); color: var(--color-text-tertiary); }
+.type-overline { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-overline-size); line-height: var(--type-overline-line); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); }
+
+/* ---------------------------------------------------------------- 3. effects.css */
+/* ── COMPASS elevation, radius & spacing helpers ────────────────────
+   The .fig FLOAT variables (radius/spacing) are unitless (see fig-tokens.css)
+   — consume them as calc(var(--x) * 1px). These px-valued aliases exist so
+   components and cards can reference lengths directly. Shadow values come
+   from the two dominant shadow colors in the file: rgba(0,0,0,0.06/0.10).
+   ------------------------------------------------------------------- */
+:root {
+  /* Radii (px) — mirror --radius-* */
+  --radius-sm: 2px;
+  --radius-base: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Spacing (px) — mirror --spacing-* */
+  --space-0: 0px;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-10: 20px;
+  --space-11: 24px;
+  --space-15: 40px;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 2px 4px rgba(0,0,0,0.06), 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.1);
+  --shadow-dropdown: 0 4px 16px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+
+  /* Focus ring — primary at low alpha */
+  --focus-ring: 0 0 0 3px rgba(48,77,222,0.24);
+}
+
+/* ---------------------------------------------------------------- 4. compass-ui-kit-design-spec.md §2–§4 */
+:root {
+  --font-body: var(--font-sans);
+  --font-mono: "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700; --fw-extrabold: 800;
+
+  /* size / line-height / tracking (px) */
+  --text-headline-sm: 24px; --lh-headline-sm: 32px; --ls-headline: 0;
+  --text-title-lg: 22px;    --lh-title-lg: 28px;    --ls-title-lg: 0;
+  --text-title-md: 16px;    --lh-title-md: 24px;    --ls-title-md: 0.15px;
+  --text-title-sm: 14px;    --lh-title-sm: 20px;    --ls-title-sm: 0.1px;
+  --text-label-lg: 14px;    --lh-label-lg: 20px;    --ls-label-lg: 0.1px;
+  --text-label-md: 12px;    --lh-label-md: 16px;    --ls-label-md: 0.5px;
+  --text-label-sm: 11px;    --lh-label-sm: 16px;    --ls-label-sm: 0.5px;
+  --text-body-lg: 16px;     --lh-body-lg: 24px;     --ls-body-lg: 0.5px;
+  --text-body-md: 14px;     --lh-body-md: 20px;     --ls-body-md: 0.25px;
+  --text-body-sm: 12px;     --lh-body-sm: 16px;     --ls-body-sm: 0.4px;
+
+  /* spacing & radius yang belum ada di effects.css */
+  --space-9: 18px; --space-12: 28px; --space-13: 32px; --space-14: 36px; --space-16: 48px;
+  --radius-2xl: 16px; --radius-3xl: 24px;
+  --radius-control: var(--radius-base);
+  --radius-card: var(--radius-lg);
+
+  /* token semantik spec §1 yang tidak ada di fig-tokens.css */
+  --color-interactive: var(--primary-500);         /* interactive/default */
+  --color-icon-secondary: var(--neutral-variant-800);
+
+  /* alias */
+  --color-border: var(--color-border-default);
+  --color-brand: var(--color-bg-brand);
+
+  /* tata letak (spec §5) */
+  --layout-sidebar-w: 240px;
+  --layout-sidebar-w-collapsed: 58px;
+  --layout-topbar-h: 76px;
+}

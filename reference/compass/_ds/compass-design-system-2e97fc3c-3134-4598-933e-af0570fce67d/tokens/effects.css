@@ -1,0 +1,40 @@
+/* ── COMPASS elevation, radius & spacing helpers ────────────────────
+   The .fig FLOAT variables (radius/spacing) are unitless (see fig-tokens.css)
+   — consume them as calc(var(--x) * 1px). These px-valued aliases exist so
+   components and cards can reference lengths directly. Shadow values come
+   from the two dominant shadow colors in the file: rgba(0,0,0,0.06/0.10).
+   ------------------------------------------------------------------- */
+:root {
+  /* Radii (px) — mirror --radius-* */
+  --radius-sm: 2px;
+  --radius-base: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Spacing (px) — mirror --spacing-* */
+  --space-0: 0px;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-10: 20px;
+  --space-11: 24px;
+  --space-15: 40px;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 2px 4px rgba(0,0,0,0.06), 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.1);
+  --shadow-dropdown: 0 4px 16px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-modal: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+
+  /* Focus ring — primary at low alpha */
+  --focus-ring: 0 0 0 3px rgba(48,77,222,0.24);
+}

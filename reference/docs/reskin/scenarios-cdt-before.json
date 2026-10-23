@@ -1,0 +1,454 @@
+{
+ "C1_registration": {
+  "links": [
+   "#/registration/program/2/2"
+  ]
+ },
+ "C1b_saran": {
+  "daftar": [
+   "#/registration/program/2/2/store/LOCOMM-0011",
+   "#/registration/program/2/2/store/LOCOMM-0012",
+   "#/registration/program/2/2/store/LOCOMM-0013",
+   "#/registration/program/2/2/store/LOCOMM-0015",
+   "#/registration/program/2/2/store/LOCOMM-0016",
+   "#/registration/program/2/2/store/LOCOMM-0017",
+   "#/registration/program/2/2/store/LOCOMM-0018",
+   "#/registration/program/2/2/store/LOCOMM-0019",
+   "#/registration/program/2/2/store/LOCOMM-0021",
+   "#/registration/program/2/2/store/LOCOMM-0022",
+   "#/registration/program/2/2/store/LOCOMM-0023",
+   "#/registration/program/2/2/store/LOCOMM-0024"
+  ],
+  "semuaBaris": 15,
+  "alasan": [
+   "Sell out baru 2 bulan (min 3)",
+   "Sell out baru 2 bulan (min 3)",
+   "Sell out baru 2 bulan (min 3)"
+  ]
+ },
+ "C2_daftar": {
+  "codes": [
+   "WRD",
+   "EMN",
+   "KHF",
+   "MO",
+   "OMG",
+   "LAB"
+  ],
+  "awal": [
+   [
+    "WRD",
+    true,
+    false,
+    [
+     "C",
+     "Rp 927.300.000",
+     "1%",
+     "3% (fix 2%)"
+    ],
+    ""
+   ],
+   [
+    "EMN",
+    true,
+    false,
+    [
+     "A",
+     "Rp 71.300.000",
+     "0.75%",
+     "1.75% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "KHF",
+    true,
+    false,
+    [
+     "A",
+     "Rp 285.200.000",
+     "0.75%",
+     "1.75% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "MO",
+    true,
+    false,
+    [
+     "B",
+     "Rp 199.500.000",
+     "1.25%",
+     "2.25% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "OMG",
+    true,
+    false,
+    [
+     "A",
+     "Rp 233.700.000",
+     "1%",
+     "2% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "LAB",
+    true,
+    false,
+    [
+     "B",
+     "Rp 261.000.000",
+     "1.25%",
+     "2.25% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "1. Admin DC manual2. ABL manual3. Chadev manual"
+   ]
+  ],
+  "ubah": [
+   [
+    "WRD",
+    true,
+    false,
+    [
+     "C",
+     "Rp 756.000.000",
+     "1.75%",
+     "3.75% (fix 2%)"
+    ],
+    ""
+   ],
+   [
+    "EMN",
+    false,
+    true,
+    [
+     "-",
+     "-",
+     "-",
+     "-"
+    ],
+    ""
+   ],
+   [
+    "KHF",
+    true,
+    false,
+    [
+     "A",
+     "Rp 285.200.000",
+     "0.75%",
+     "1.75% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "MO",
+    true,
+    false,
+    [
+     "B",
+     "Rp 199.500.000",
+     "1.25%",
+     "2.25% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "OMG",
+    true,
+    false,
+    [
+     "A",
+     "Rp 233.700.000",
+     "1%",
+     "2% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "LAB",
+    true,
+    false,
+    [
+     "B",
+     "Rp 261.000.000",
+     "1.25%",
+     "2.25% (fix 1%)"
+    ],
+    ""
+   ],
+   [
+    "1. Admin DC manual2. ABL manual3. Chadev manual"
+   ]
+  ],
+  "err": {
+   "hash": "#/registration/program/2/2/store/LOCOMM-0011",
+   "flash": null,
+   "formError": null,
+   "errors": "Wardah: Baseline / bulan wajib diisi"
+  },
+  "ok": {
+   "hash": "#/registration/participant/10",
+   "flash": "Rumah Cantik Malang diajukan (5 brand). Menunggu layer 1 · Admin DC.",
+   "formError": null,
+   "errors": null
+  },
+  "reg": {
+   "status": "in_review",
+   "brands": [
+    [
+     "WRD",
+     420000000,
+     80,
+     "C",
+     3.75
+    ],
+    [
+     "KHF",
+     184000000,
+     55,
+     "A",
+     1.75
+    ],
+    [
+     "MO",
+     133000000,
+     50,
+     "B",
+     2.25
+    ],
+    [
+     "OMG",
+     123000000,
+     90,
+     "A",
+     2
+    ],
+    [
+     "LAB",
+     87000000,
+     200,
+     "B",
+     2.25
+    ]
+   ],
+   "layer": 8
+  }
+ },
+ "C3_detail": {
+  "hasil": [
+   "WardahCRp 420.000.00080% Rp 756.000.0002%1.75%3.75%",
+   "KahfARp 184.000.00055% Rp 285.200.0001%0.75%1.75%",
+   "MakeOverBRp 133.000.00050% Rp 199.500.0001%1.25%2.25%",
+   "OMGARp 123.000.00090% Rp 233.700.0001%1%2%",
+   "LaboreBRp 87.000.000200% Rp 261.000.0001%1.25%2.25%"
+  ],
+  "jalur": [
+   "1. Admin DC",
+   "2. ABL",
+   "3. Chadev"
+  ],
+  "riwayat": [
+   "Diajukan CBD Locomm · 22 Okt 2026, 09.00"
+  ]
+ },
+ "C4_approve_detail": {
+  "role": "ADMIN_DC",
+  "hash": "#/registration/participant/10",
+  "flash": "Data disetujui. Lanjut ke layer 2 · ABL.",
+  "formError": null,
+  "errors": null,
+  "status": "in_review"
+ },
+ "C5_revisi": {
+  "ret": {
+   "hash": "#/registration/participant/9",
+   "flash": "Data dikembalikan untuk revisi.",
+   "formError": null,
+   "errors": null
+  },
+  "editLink": [
+   "#/registration/participant/9/edit"
+  ],
+  "kirimUlang": {
+   "hash": "#/registration/participant/9",
+   "flash": "Lovely Bandung dikirim ulang (6 brand). Menunggu layer 1 · Admin DC.",
+   "formError": null,
+   "errors": null
+  },
+  "reg": {
+   "status": "in_review",
+   "growth": [
+    78,
+    65,
+    60,
+    60,
+    90,
+    200
+   ]
+  }
+ },
+ "C6_inbox_bulk": {
+  "inboxAwal": {
+   "reg": 1,
+   "mon": 2,
+   "pay": 0
+  },
+  "dialogs": [
+   "Setujui semua yang dicentang?"
+  ],
+  "hash": "#/inbox",
+  "flash": "2 data disetujui.",
+  "formError": null,
+  "errors": null,
+  "mon": 2
+ },
+ "C7_monitoring": {
+  "isi": [
+   "#/monitoring/form/1/Q3-2027",
+   "#/monitoring/form/1/Q4-2027",
+   "#/monitoring/form/2/Q3-2027",
+   "#/monitoring/form/2/Q4-2027",
+   "#/monitoring/form/3/Q3-2027",
+   "#/monitoring/form/3/Q4-2027"
+  ],
+  "nFile": 11,
+  "tertahan": {
+   "hash": "#/monitoring/form/1/Q3-2027",
+   "invalid": 11
+  },
+  "mon": {
+   "hash": "#/monitoring/item/13",
+   "flash": "Monitoring Q3 2027 diajukan (11/11 evidence). Menunggu Admin DC.",
+   "formError": null,
+   "errors": null
+  },
+  "rec": {
+   "status": "in_review",
+   "evidence": {
+    "12": "evidence-1.jpg",
+    "13": "evidence-2.jpg",
+    "14": "evidence-3.jpg",
+    "15": "evidence-4.jpg",
+    "16": "evidence-5.jpg",
+    "17": "evidence-6.jpg",
+    "18": "evidence-7.jpg",
+    "19": "evidence-8.jpg",
+    "20": "evidence-9.jpg",
+    "21": "evidence-10.jpg",
+    "22": "evidence-11.jpg"
+   }
+  }
+ },
+ "C7b_monitoring_item": {
+  "evidence": [
+   "Being Relevant With TrendLive Stream Duration DedicatedWardah · B Face Care: Minimal 1 jam · Makeup: Minimal 2 jamKahf · A Minimal 1 jamOMG · A Minimal 1 jamLabore · A Minimal 1 jam evidence-1.jpg",
+   "Being Relevant With TrendLive Stream FrequencyWardah · B Minimal 2 sesi/mingguKahf · A Minimal 2 sesi/mingguOMG · A Minimal 2 sesi/mingguLabore · A Minimal 2 sesi/minggu evidence-2.jpg",
+   "Being Relevant With TrendShort Video ContentWardah · B Face Care: Minimal 6 video/bulan · Makeup: Minimal 8 video/bulanKahf · A Minimal 4 video/bulanOMG · A Minimal 4 video/bulanLabore · A Minimal 4 video/bulan evidence-3.jpg",
+   "Being Relevant With TrendTrend Campaign ParticipationWardah · B Ikut campaign tren setiap bulanKahf · A Ikut campaign tren setiap bulanOMG · A Ikut campaign tren setiap bulanLabore · A Ikut campaign tren setiap bulan evidence-4.jpg",
+   "Instore ExperienceBrand Store Banner ActiveWardah · B Banner brand aktif di tokoKahf · A Banner brand aktif di tokoOMG · A Banner brand aktif di tokoLabore · A Banner brand aktif di toko evidence-5.jpg",
+   "Instore ExperienceEtalase BrandWardah · B Minimal 5 etalaseKahf · A Minimal 3 etalaseOMG · A Minimal 3 etalaseLabore · A Minimal 3 etalase evidence-6.jpg",
+   "Instore ExperienceSKU Listing CompletenessWardah · B Minimal 85%Kahf · A Minimal 80%OMG · A Minimal 80%Labore · A Minimal 80% evidence-7.jpg",
+   "Instore ExperienceHero SKU Always AvailableWardah · B Minimal 3 bulanKahf · A Minimal 3 bulanOMG · A Minimal 3 bulanLabore · A Minimal 3 bulan evidence-8.jpg",
+   "Shopper ExperienceFollower GrowthWardah · B Minimal 100 orang/bulanKahf · A Minimal 50 orang/bulanOMG · A Minimal 50 orang/bulanLabore · A Minimal 50 orang/bulan evidence-9.jpg",
+   "Shopper ExperienceChat Response TimeWardah · B Maksimal 1 jamKahf · A Maksimal 1 jamOMG · A Maksimal 1 jamLabore · A Maksimal 1 jam evidence-10.jpg",
+   "Shopper ExperienceVoucher Program ActiveWardah · B Minimal 3 bulanKahf · A Minimal 3 bulanOMG · A Minimal 3 bulanLabore · A Minimal 3 bulan evidence-11.jpg"
+  ],
+  "jalur": [
+   "1. Admin DC",
+   "2. ABL"
+  ]
+ },
+ "C8_filter_peserta": {
+  "hash": "#/registration/participants?status=approved",
+  "baris": 6
+ },
+ "C8b_filter_toko": {
+  "hash": "#/master/stores?q=Malang",
+  "baris": 2
+ },
+ "C9_payout": {
+  "nav": [
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=",
+   "#/payout/program/2?ch=3&c=CONDITIONAL&per=",
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=",
+   "#/payout/program/2?ch=2&c=FIX&per=",
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=Q1-2027",
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=Q2-2027",
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=Q3-2027",
+   "#/payout/program/2?ch=2&c=CONDITIONAL&per=Q4-2027"
+  ],
+  "fpay": {
+   "total": "Ajukan payout Rp 0",
+   "baris": [
+    "WardahD4,47 M 72,5%70%2.5%Rp 0",
+    "KahfB1,54 M 68,9%60%1.5%Rp 0",
+    "MakeOverB888,7 jt 68,3%60%1.75%Rp 0",
+    "OMGB1,46 M 42,2%-0%Rp 0"
+   ]
+  },
+  "hash": "#/payout/item/5",
+  "flash": "Conditional Rebate Q1 2027 diajukan (Rp 0). Menunggu Finance.",
+  "formError": null,
+  "errors": null,
+  "rec": {
+   "status": "in_review",
+   "amount": 0
+  }
+ },
+ "C10_dashboard": {
+  "CBD": {
+   "links": [
+    "#/switch",
+    "#/registration",
+    "#/monitoring",
+    "#/registration/participants?program=2",
+    "#/payout/program/2"
+   ],
+   "stat": [
+    "Registrasi disetujui6",
+    "Menunggu approval4",
+    "Dibayar · Conditional2,5 jt",
+    "Dibayar · Fix0"
+   ]
+  },
+  "ADMIN_HO": {
+   "links": [
+    "#/setup/new",
+    "#/switch",
+    "#/setup/2/header",
+    "#/registration/participants?program=2",
+    "#/payout/program/2"
+   ],
+   "stat": [
+    "Registrasi disetujui6",
+    "Menunggu approval4",
+    "Dibayar · Conditional2,5 jt",
+    "Dibayar · Fix0"
+   ]
+  },
+  "FINANCE": {
+   "links": [
+    "#/inbox",
+    "#/switch",
+    "#/registration/participants?program=2",
+    "#/payout/program/2"
+   ],
+   "stat": [
+    "Registrasi disetujui6",
+    "Menunggu approval4",
+    "Dibayar · Conditional2,5 jt",
+    "Dibayar · Fix0"
+   ]
+  }
+ },
+ "consoleErrors": []
+}

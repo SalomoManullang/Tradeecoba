@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:var(--color-border-default); border-radius:var(--radius-lg); border:2px solid transparent; background-clip:padding-box; }
+  @keyframes am-fade { from { opacity:0; } to { opacity:1; } }
+  @keyframes am-slide-in { from { transform:translateX(24px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  @keyframes am-spin { to { transform:rotate(360deg); } }
+  input::placeholder { color:var(--color-text-disabled); opacity:1; }
+  [role="dialog"] > div:first-child { border-bottom:none !important; }
+  [role="dialog"] > div:last-child { border-top:none !important; }
+  a { color:var(--primary-500); }
+  a:hover { color:var(--primary-600); }
+  tbody td, tbody td * { font-size:12px !important; }
+  .cmp-side { transition:width 180ms ease; }
+  .cmp-side.is-collapsed { width:72px !important; }
+  .cmp-side.is-collapsed .cmp-side-full { display:none !important; }
+  .cmp-side.is-collapsed .cmp-side-head { justify-content:center !important; padding:20px 0 12px !important; }
+  .cmp-side-toggle { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-base,4px); cursor:pointer; flex-shrink:0; background:none; border:none; padding:0; }
+  .cmp-side-toggle:hover { background:var(--neutral-variant-100, #F0F2F5); }
+  .cmp-side.is-collapsed .cmp-side-menu { overflow:visible !important; }
+</style>
+</helmet>
+<div data-screen-label="COMPASS — Account Management" style="display:flex; height:100vh; font-family:var(--font-sans); background:var(--color-bg-primary); color:var(--color-text-primary); overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="{{ sideClass }}" style="width:240px; flex-shrink:0; border-right:1px solid var(--color-border-default); background:var(--color-bg-secondary); display:flex; flex-direction:column; box-sizing:border-box;">
+    <div class="cmp-side-head" style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <span class="cmp-side-full" style="display:inline-flex;"><x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import></span>
+      <button type="button" class="cmp-side-toggle" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" onClick="{{ toggleSidebar }}">
+        <sc-if value="{{ sideCollapsed }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 8.5L13 13L8.5 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 8.5L17.5 13L13 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+        <sc-if value="{{ sideExpanded }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13.5L4.5 9L9 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.5 13.5L9 9L13.5 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </button>
+    </div>
+    <div class="cmp-side-full" style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div class="cmp-side-menu" style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex:1; overflow:auto; background:var(--color-bg-primary); padding:24px 24px 40px; box-sizing:border-box; width:100%;">
+
+      <!-- ==================== LIST ==================== -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+      <div style="width:100%; animation:am-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+
+          <div style="font-family:var(--font-display); font-weight:700; font-size:24px; line-height:32px; color:var(--neutral-950);">{{ pageTitle }}</div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ searchProps }}" style="width:360px" hint-size="360px,36px"></x-import>
+              <sc-if value="{{ isUsers }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ filterProps }}" hint-size="96px,36px">Filter</x-import>
+              </sc-if>
+            </div>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ addBtnProps }}" hint-size="136px,36px">{{ addBtnLabel }}</x-import>
+          </div>
+
+          <sc-if value="{{ filterBar }}" hint-placeholder-val="{{ false }}">
+            <div>{{ filterBar }}</div>
+          </sc-if>
+
+          <div style="min-height:380px;">{{ tableRegion }}</div>
+
+          <sc-if value="{{ showPagination }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:14px; line-height:20px; color:var(--color-text-primary);">Menampilkan</span>
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ perPageProps }}" style="width:84px" hint-size="84px,38px"></x-import>
+                <span style="font-size:14px; line-height:20px; letter-spacing:0.25px; color:var(--color-text-primary);">{{ totalLabel }}</span>
+              </div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Pagination" dc-props="{{ pagerProps }}" hint-size="246px,34px"></x-import>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ==================== DETAIL ==================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="width:100%; display:flex; flex-direction:column; gap:20px; animation:am-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:16px; min-width:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ backProps }}" hint-size="96px,36px">Kembali</x-import>
+            <div style="width:1px; height:24px; background:var(--color-border-default);"></div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:20px; line-height:28px; color:var(--neutral-950); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ detailTitle }}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ deactivateProps }}" hint-size="150px,36px">{{ deactivateLabel }}</x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ editProps }}" hint-size="110px,36px">{{ editLabel }}</x-import>
+          </div>
+        </div>
+        {{ detailBody }}
+      </div>
+      </sc-if>
+
+      <!-- ==================== FORM ==================== -->
+      <sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+      <div style="width:100%; display:flex; flex-direction:column; gap:20px; animation:am-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:16px; min-width:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ backProps }}" hint-size="96px,36px">Kembali</x-import>
+            <div style="width:1px; height:24px; background:var(--color-border-default);"></div>
+            <div style="min-width:0;">
+              <div style="font-family:var(--font-display); font-weight:700; font-size:20px; line-height:28px; color:var(--neutral-950);">{{ formTitle }}</div>
+              <sc-if value="{{ formSubtitle }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px; line-height:18px; color:var(--color-text-tertiary);">{{ formSubtitle }}</div>
+              </sc-if>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ cancelProps }}" hint-size="100px,36px">Batalkan</x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ saveProps }}" hint-size="100px,36px">{{ saveLabel }}</x-import>
+          </div>
+        </div>
+
+        <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+          <div>{{ formError }}</div>
+        </sc-if>
+
+        {{ formBody }}
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- ============ FILTER DRAWER ============ -->
+  <sc-if value="{{ filterOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; z-index:90; background:rgba(42,61,74,0.45); display:flex; justify-content:flex-end;">
+      <div style="position:absolute; inset:0;">{{ drawerScrim }}</div>
+      <div style="position:relative; width:380px; height:100%; background:var(--color-bg-secondary); display:flex; flex-direction:column; box-shadow:var(--shadow-modal); animation:am-slide-in .18s ease; box-sizing:border-box;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--color-border-subtle);">
+          <span style="font-family:var(--font-display); font-weight:700; font-size:18px; line-height:26px; color:var(--neutral-950);">Filter</span>
+          {{ drawerClose }}
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:18px;">{{ drawerFields }}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; border-top:1px solid var(--color-border-subtle);">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerResetProps }}" hint-size="80px,36px">Hapus</x-import>
+          <div style="display:flex; gap:12px;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerCancelProps }}" hint-size="80px,36px">Batal</x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerApplyProps }}" hint-size="96px,36px">Terapkan</x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ MODAL ============ -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Modal" dc-props="{{ modalProps }}" hint-size="0,0"></x-import>
+  </sc-if>
+
+  <!-- ============ TOASTS ============ -->
+  <div style="position:fixed; top:20px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px; pointer-events:none;">{{ toastRegion }}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;startModule&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;roles&quot;,&quot;users&quot;],&quot;default&quot;:&quot;roles&quot;,&quot;tsType&quot;:&quot;\&quot;roles\&quot;|\&quot;users\&quot;&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;tableDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;xs&quot;,&quot;s&quot;,&quot;m&quot;],&quot;default&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;\&quot;xs\&quot;|\&quot;s\&quot;|\&quot;m\&quot;&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;defaultPermExpanded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const ROLE_SEED = [
+  { id: 1, name: "Admin", users: 12, desc: "Full akses sistem termasuk manajemen user", active: true, at: "15 Apr 2026 08:00", by: "Admin User" },
+  { id: 2, name: "Supervisor", users: 24, desc: "Akses pengawasan dan persetujuan transaksi", active: true, at: "14 Apr 2026 14:30", by: "Super Admin" },
+  { id: 3, name: "Operator", users: 86, desc: "Akses operasional harian dan input data", active: true, at: "14 Apr 2026 11:00", by: "Budi Santoso" },
+  { id: 4, name: "Viewer", users: 41, desc: "Hanya dapat melihat data tanpa edit", active: true, at: "13 Apr 2026 09:15", by: "Supervisor A" },
+  { id: 5, name: "Finance", users: 9, desc: "Akses laporan keuangan dan transaksi", active: true, at: "12 Apr 2026 16:45", by: "Supervisor A" },
+  { id: 6, name: "HR Manager", users: 5, desc: "Manajemen data karyawan dan absensi", active: true, at: "12 Apr 2026 10:00", by: "Super Admin" },
+  { id: 7, name: "IT Support", users: 7, desc: "Akses teknis dan manajemen sistem", active: true, at: "11 Apr 2026 13:20", by: "Admin User" },
+  { id: 8, name: "Marketing", users: 18, desc: "Akses data pemasaran dan laporan kampanye", active: false, at: "10 Apr 2026 08:30", by: "Budi Santoso" },
+  { id: 9, name: "Sales", users: 132, desc: "Akses data penjualan dan target", active: true, at: "09 Apr 2026 15:00", by: "Admin User" },
+  { id: 10, name: "Auditor", users: 3, desc: "Akses read-only untuk keperluan audit", active: false, at: "08 Apr 2026 11:45", by: "Admin User" },
+  { id: 11, name: "Kepala Div. Sales", users: 6, desc: "Pengelolaan tim sales di wilayah divisi", active: true, at: "07 Apr 2026 09:40", by: "Super Admin" },
+  { id: 12, name: "Sales Representative", users: 214, desc: "Eksekusi kunjungan dan order di lapangan", active: true, at: "07 Apr 2026 08:10", by: "Super Admin" },
+  { id: 13, name: "Area Manager", users: 34, desc: "Pengawasan target dan performa area", active: true, at: "06 Apr 2026 16:20", by: "Admin User" },
+  { id: 14, name: "Regional Manager", users: 11, desc: "Pengawasan target dan performa regional", active: true, at: "06 Apr 2026 10:05", by: "Admin User" },
+];
+
+const USER_SEED = [
+  { id: 1, name: "Budi Santoso", role: "Kepala Div. Sales", org: "Paragon Corp", dc: "DC Sumatera Utara", area: "Area Rantauprapat", active: true, at: "20 Apr 2026 08:00", by: "Super Admin" },
+  { id: 2, name: "Rina Wijaya", role: "Sales Representative", org: "Paragon Corp", dc: "DC Jawa Tengah", area: "Area Semarang", active: true, at: "19 Apr 2026 08:00", by: "Super Admin" },
+  { id: 3, name: "Dani Pratama", role: "Area Manager", org: "Paragon Corp", dc: "DC Jakarta", area: "Area Jkt Selatan", active: true, at: "18 Apr 2026 08:00", by: "Super Admin" },
+  { id: 4, name: "Siti Dewi", role: "Sales Representative", org: "Paragon Corp", dc: "DC Jawa Timur", area: "Area Surabaya", active: false, at: "17 Apr 2026 08:00", by: "Super Admin" },
+  { id: 5, name: "Hendra Susanto", role: "Regional Manager", org: "Paragon Corp", dc: "DC Sumatera", area: "Area Medan", active: true, at: "16 Apr 2026 08:00", by: "Super Admin" },
+  { id: 6, name: "Lia Permata", role: "Sales Representative", org: "Paragon Corp", dc: "DC Kalimantan", area: "Area Balikpapan", active: true, at: "15 Apr 2026 08:00", by: "Super Admin" },
+  { id: 7, name: "Agus Widodo", role: "Area Manager", org: "Paragon Corp", dc: "DC Jawa Barat", area: "Area Cirebon", active: true, at: "14 Apr 2026 08:00", by: "Super Admin" },
+  { id: 8, name: "Nita Kusuma", role: "Sales Representative", org: "Paragon Corp", dc: "DC Bali", area: "Area Denpasar", active: true, at: "13 Apr 2026 08:00", by: "Super Admin" },
+  { id: 9, name: "Ferry Halim", role: "Kepala Div. Sales", org: "Paragon Corp", dc: "DC Sulawesi", area: "Area Makassar", active: false, at: "12 Apr 2026 08:00", by: "Super Admin" },
+  { id: 10, name: "Dewi Anggraeni", role: "Sales Representative", org: "Paragon Corp", dc: "DC Jawa Tengah", area: "Area Yogyakarta", active: true, at: "11 Apr 2026 08:00", by: "Super Admin" },
+  { id: 11, name: "Rizky Ananda", role: "Sales Representative", org: "Paragon Corp", dc: "DC Jakarta", area: "Area Jkt Barat", active: true, at: "10 Apr 2026 08:00", by: "Admin User" },
+  { id: 12, name: "Maya Sari", role: "Finance", org: "Paragon Corp", dc: "DC Jakarta", area: "Area Jkt Pusat", active: true, at: "09 Apr 2026 08:00", by: "Admin User" },
+];
+
+const PERM_TREE = [
+  { key: "account-management", label: "Account Management", children: [
+    { key: "manage-roles", label: "Manage Roles", actions: [
+      { key: "add-role", label: "Add Role" }, { key: "edit-role", label: "Edit Role" }, { key: "deact-role", label: "Non-Aktifkan/Aktifkan Role" } ] },
+    { key: "manage-users", label: "Manage Users", actions: [
+      { key: "add-user", label: "Add User" }, { key: "edit-user", label: "Edit User" }, { key: "deact-user", label: "Non-Aktifkan/Aktifkan User" } ] },
+  ] },
+  { key: "master-data", label: "Master Data", children: [
+    { key: "md-bp", label: "Business Partner", actions: [ { key: "bp-add", label: "Add Business Partner" }, { key: "bp-edit", label: "Edit Business Partner" } ] },
+    { key: "md-product", label: "Product", actions: [ { key: "pr-add", label: "Add Product" }, { key: "pr-edit", label: "Edit Product" } ] },
+    { key: "md-employee", label: "Employee", actions: [ { key: "em-edit", label: "Edit Employee" } ] },
+    { key: "md-holiday", label: "Holiday", actions: [ { key: "ho-edit", label: "Edit Holiday" } ] },
+  ] },
+  { key: "project", label: "Project", children: [] },
+  { key: "sales-planning", label: "Sales Planning", children: [
+    { key: "sp-standar-stok", label: "Standar Stok", actions: [ { key: "ss-edit", label: "Edit Standar Stok" }, { key: "ss-import", label: "Impor Standar Stok" } ] },
+  ] },
+  { key: "sales-execution", label: "Sales Execution", children: [
+    { key: "se-order", label: "Order", actions: [ { key: "or-approve", label: "Approve Order" } ] },
+    { key: "se-retur", label: "Retur", actions: [ { key: "re-approve", label: "Approve Retur" } ] },
+  ] },
+  { key: "bp-management", label: "BP Management", children: [
+    { key: "bp-submission", label: "Pengajuan BP", actions: [
+      { key: "bp-create", label: "Buat & Ajukan Pengajuan" }, { key: "bp-draft", label: "Kelola Draft Sendiri" } ] },
+    { key: "bp-approval", label: "Approval Pengajuan BP", actions: [
+      { key: "bp-appr-j1", label: "Tahap 1 — Review Profil & Channel Toko" },
+      { key: "bp-appr-j2", label: "Tahap 2 — Review Operasional & Pengiriman" },
+      { key: "bp-appr-j3", label: "Tahap 3 — Review Pajak & Komersial" },
+      { key: "bp-appr-j4", label: "Tahap 4 — Finalisasi Data Master (final ke ERP)" },
+      { key: "bp-appr-edit", label: "Edit Data Pengajuan saat Review" } ] },
+  ] },
+];
+
+const OPT = {
+  company: ["PT Paragon Technology and Innovation", "PT Parama Global Inspira", "PT Pesona Cipta Rasa"],
+  org: ["Paragon Corp", "Paragon Modern Trade", "Paragon Export"],
+  dc: ["DC Jakarta", "DC Jawa Barat", "DC Jawa Tengah", "DC Jawa Timur", "DC Sumatera", "DC Sumatera Utara", "DC Kalimantan", "DC Sulawesi", "DC Bali"],
+  area: ["Area Jkt Pusat", "Area Jkt Selatan", "Area Jkt Barat", "Area Cirebon", "Area Semarang", "Area Yogyakarta", "Area Surabaya", "Area Medan", "Area Rantauprapat", "Area Balikpapan", "Area Denpasar", "Area Makassar"],
+  channel: ["General Trade", "Modern Trade", "Beauty Advisor", "E-Commerce"],
+  brand: ["Wardah", "Make Over", "Emina", "Kahf", "Instaperfect", "Putri"],
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this._tid = 0;
+    this.state = {
+      module: (String(window.location.hash).indexOf("users") >= 0 || props.startModule === "users") ? "users" : "roles", view: "list",
+      roles: ROLE_SEED.map(r => ({ ...r, perms: this.seedPerms(r.name), acts: this.seedActs(r.name) })),
+      users: USER_SEED.map(u => ({ ...u, email: this.emailOf(u.name), company: [OPT.company[0]], org: [u.org], dcs: [u.dc], areas: [u.area], channels: ["General Trade"], brands: ["Wardah", "Make Over"] })),
+      search: "", page: 1, perPage: "10", sortKey: null, sortDir: null,
+      filters: { role: [], org: [], dc: [], area: [], status: "" },
+      filterOpen: false, filterDraft: null,
+      detailId: null,
+      form: null, formMode: null,
+      expanded: props.defaultPermExpanded === false ? [] : ["account-management", "manage-roles", "manage-users"],
+      saving: false, modal: null, toasts: [],
+    };
+  }
+
+  /* ---------- seeds ---------- */
+  emailOf(n) { return n.toLowerCase().replace(/[^a-z ]/g, "").split(" ").filter(Boolean).join(".") + "@paracorpgroup.com"; }
+  seedPerms(name) {
+    const p = {};
+    const walk = (nodes, lvl) => nodes.forEach(n => { p[n.key] = lvl; if (n.children) walk(n.children, lvl); });
+    if (name === "Admin") walk(PERM_TREE, "edit");
+    else if (name === "Viewer" || name === "Auditor") walk(PERM_TREE, "view");
+    else { walk(PERM_TREE, "none"); p["master-data"] = "view"; p["bp-management"] = "view"; p["bp-submission"] = "edit"; p["bp-approval"] = (name === "Supervisor" || name === "Kepala Div. Sales") ? "edit" : "view"; (PERM_TREE[1].children || []).forEach(c => p[c.key] = "view"); p["sales-execution"] = "edit"; (PERM_TREE[4].children || []).forEach(c => p[c.key] = "edit"); }
+    return p;
+  }
+  seedActs(name) {
+    const a = {};
+    const walk = (nodes) => nodes.forEach(n => { (n.actions || []).forEach(x => a[x.key] = name === "Admin"); if (n.children) walk(n.children); });
+    walk(PERM_TREE);
+    if (name === "Supervisor") { a["bp-appr-j1"] = true; a["bp-appr-edit"] = true; }
+    if (name === "Kepala Div. Sales") { a["bp-appr-j2"] = true; }
+    return a;
+  }
+
+  /* ---------- helpers ---------- */
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(name, size) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20 }) : null; }
+  iconC(name, size, color) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20, color }) : null; }
+  isUsers() { return this.state.module === "users"; }
+  data() { return this.isUsers() ? this.state.users : this.state.roles; }
+  setData(rows) { this.setState(this.isUsers() ? { users: rows } : { roles: rows }); }
+  roleNames() { return this.state.roles.filter(r => r.active).map(r => r.name); }
+  now() { return "20 Apr 2026 09:12"; }
+
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+  closeToast(id) { this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })); }
+  closeModal() { this.setState({ modal: null }); }
+
+  goModule(m) { this.setState({ module: m, view: "list", search: "", page: 1, detailId: null, form: null, sortKey: null, sortDir: null, filters: { role: [], org: [], dc: [], area: [], status: "" } }); }
+  backToList() { this.setState({ view: "list", detailId: null, form: null }); }
+
+  /* ---------- list data ---------- */
+  filtered() {
+    const s = this.state; const q = s.search.trim().toLowerCase();
+    let rows = this.data().slice();
+    if (q) rows = rows.filter(r => this.isUsers()
+      ? [r.name, r.role, r.org, r.dc, r.area, r.email].some(v => String(v).toLowerCase().includes(q))
+      : [r.name, r.desc].some(v => String(v).toLowerCase().includes(q)));
+    if (this.isUsers()) {
+      const f = s.filters;
+      if (f.role.length) rows = rows.filter(r => f.role.includes(r.role));
+      if (f.org.length) rows = rows.filter(r => f.org.includes(r.org));
+      if (f.dc.length) rows = rows.filter(r => f.dc.includes(r.dc));
+      if (f.area.length) rows = rows.filter(r => f.area.includes(r.area));
+      if (f.status) rows = rows.filter(r => (f.status === "Aktif") === r.active);
+    }
+    if (s.sortKey) {
+      const dir = s.sortDir === "desc" ? -1 : 1;
+      rows.sort((a, b) => {
+        const va = a[s.sortKey], vb = b[s.sortKey];
+        if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
+        return String(va).localeCompare(String(vb)) * dir;
+      });
+    }
+    return rows;
+  }
+  filterCount() { const f = this.state.filters; return f.role.length + f.org.length + f.dc.length + f.area.length + (f.status ? 1 : 0); }
+  cycleSort(key) {
+    this.setState(s => {
+      if (s.sortKey !== key) return { sortKey: key, sortDir: "asc" };
+      if (s.sortDir === "asc") return { sortKey: key, sortDir: "desc" };
+      return { sortKey: null, sortDir: null };
+    });
+  }
+
+  /* ---------- table ---------- */
+  statusTag(active) {
+    const { Tag } = this.ns();
+    return React.createElement(Tag, { colorScheme: active ? "green" : "neutral", size: "s", dot: true }, active ? "Aktif" : "Nonaktif");
+  }
+  stamp(at, by) {
+    return React.createElement("div", { style: { lineHeight: "18px" } },
+      React.createElement("div", { style: { fontSize: 13, color: "var(--color-text-primary)", whiteSpace: "nowrap" } }, at),
+      React.createElement("div", { style: { fontSize: 12, color: "var(--color-text-tertiary)", whiteSpace: "nowrap" } }, "oleh " + by));
+  }
+  buildTable(paged, filtered) {
+    const { Table, EmptyState, Button } = this.ns();
+    const s = this.state;
+    if (filtered.length === 0) {
+      const cleared = this.isUsers() && (this.filterCount() > 0);
+      return React.createElement("div", { style: { padding: "40px 0" } },
+        React.createElement(EmptyState, {
+          colour: "neutral", icon: "SearchOutlineIcon",
+          title: "Data tidak ditemukan",
+          description: "Tidak ada " + (this.isUsers() ? "user" : "role") + " yang cocok dengan pencarian" + (cleared ? " atau filter" : "") + " Anda.",
+          actions: React.createElement(Button, { variant: "secondary", size: "s", onClick: () => this.setState({ search: "", page: 1, filters: { role: [], org: [], dc: [], area: [], status: "" } }) }, "Reset pencarian") }));
+    }
+    const cols = this.isUsers() ? [
+      { key: "name", header: "Nama", sortable: true, render: (r) => React.createElement("div", null,
+        React.createElement("div", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, r.name),
+        React.createElement("div", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, r.email)) },
+      { key: "role", header: "Role", sortable: true },
+      { key: "org", header: "Sales Org.", sortable: true },
+      { key: "dc", header: "Distribution Center", sortable: true },
+      { key: "area", header: "Sales Area", sortable: true },
+      { key: "active", header: "Status", sortable: true, align: "center", render: (r) => this.statusTag(r.active) },
+      { key: "at", header: "Update Terakhir", sortable: true, render: (r) => this.stamp(r.at, r.by) },
+      { key: "action", header: "Action", width: 84, render: (r) => React.createElement(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r) }, "Detail") },
+    ] : [
+      { key: "no", header: "No", width: 56, render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)", fontVariantNumeric: "tabular-nums" } }, this.data().findIndex(x => x.id === r.id) + 1) },
+      { key: "name", header: "Nama Role", sortable: true, render: (r) => React.createElement("span", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, r.name) },
+      { key: "users", header: "Jml User", sortable: true, align: "right", width: 96, render: (r) => React.createElement("span", { style: { fontVariantNumeric: "tabular-nums", fontWeight: 600 } }, r.users) },
+      { key: "desc", header: "Deskripsi", render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)" } }, r.desc) },
+      { key: "active", header: "Status", sortable: true, align: "center", width: 116, render: (r) => this.statusTag(r.active) },
+      { key: "at", header: "Update Terakhir", sortable: true, render: (r) => this.stamp(r.at, r.by) },
+      { key: "action", header: "Action", width: 84, render: (r) => React.createElement(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r) }, "Detail") },
+    ];
+    return React.createElement("div", { style: { animation: "am-fade .2s ease" } },
+      React.createElement(Table, { columns: cols, data: paged, size: this.props.tableDensity || "s", rowKey: "id", sortKey: s.sortKey, sortDir: s.sortDir, onSort: (k) => this.cycleSort(k) }));
+  }
+
+  /* ---------- filter drawer ---------- */
+  openFilter() { this.setState({ filterOpen: true, filterDraft: JSON.parse(JSON.stringify(this.state.filters)) }); }
+  closeFilter() { this.setState({ filterOpen: false, filterDraft: null }); }
+  applyFilter() { this.setState({ filters: this.state.filterDraft, filterOpen: false, filterDraft: null, page: 1 }); this.toast("info", "Filter diterapkan", "Daftar user disaring sesuai pilihan Anda."); }
+  resetFilter() { this.setState({ filterDraft: { role: [], org: [], dc: [], area: [], status: "" } }); }
+  buildFilterBar() {
+    if (!this.isUsers()) return null;
+    const f = this.state.filters;
+    const chips = [];
+    const push = (label, onX) => chips.push({ label, onX });
+    f.role.forEach(v => push("Role: " + v, () => this.setState({ filters: { ...f, role: f.role.filter(x => x !== v) }, page: 1 })));
+    f.org.forEach(v => push("Sales Org: " + v, () => this.setState({ filters: { ...f, org: f.org.filter(x => x !== v) }, page: 1 })));
+    f.dc.forEach(v => push("DC: " + v, () => this.setState({ filters: { ...f, dc: f.dc.filter(x => x !== v) }, page: 1 })));
+    f.area.forEach(v => push("Area: " + v, () => this.setState({ filters: { ...f, area: f.area.filter(x => x !== v) }, page: 1 })));
+    if (f.status) push("Status: " + f.status, () => this.setState({ filters: { ...f, status: "" }, page: 1 }));
+    if (!chips.length) return null;
+    return React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 } },
+      React.createElement("span", { style: { fontSize: 13, color: "var(--color-text-tertiary)" } }, "Filter aktif:"),
+      ...chips.map((c, i) => React.createElement("span", { key: i, style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 8px", borderRadius: "var(--radius-base)", background: "var(--primary-100)", border: "1px solid var(--primary-200)", color: "var(--primary-500)", fontSize: 13, fontWeight: 600 } },
+        c.label,
+        React.createElement("button", { type: "button", "aria-label": "Hapus filter", onClick: c.onX, style: { background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", color: "inherit" } }, this.iconC("CloseIcon", 14, "var(--primary-500)")))),
+      React.createElement("button", { type: "button", onClick: () => this.setState({ filters: { role: [], org: [], dc: [], area: [], status: "" }, page: 1 }), style: { background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--color-text-tertiary)", textDecoration: "underline" } }, "Hapus semua"));
+  }
+  drawerField(label, key, options) {
+    const { Select } = this.ns();
+    const d = this.state.filterDraft || {};
+    return React.createElement("div", { key, style: { display: "flex", flexDirection: "column", gap: 6 } },
+      React.createElement("span", { style: { fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" } }, label),
+      React.createElement(Select, { options, multi: true, value: d[key] || [], placeholder: "Semua " + label.toLowerCase(), size: "s", onChange: (v) => this.setState({ filterDraft: { ...d, [key]: v } }) }));
+  }
+
+  /* ---------- detail ---------- */
+  openDetail(r) { this.setState({ view: "detail", detailId: r.id }); }
+  detailRow() { return this.data().find(r => r.id === this.state.detailId); }
+  infoGrid(pairs) {
+    return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px 32px" } },
+      ...pairs.map(([k, v], i) => React.createElement("div", { key: i, style: { display: "flex", flexDirection: "column", gap: 4, minWidth: 0 } },
+        React.createElement("span", { style: { fontSize: 12, letterSpacing: "0.2px", textTransform: "uppercase", color: "var(--color-text-tertiary)", fontWeight: 700 } }, k),
+        React.createElement("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, v))));
+  }
+  card(title, body, extra) {
+    return React.createElement("div", { style: { background: "var(--color-bg-secondary)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", padding: 24, display: "flex", flexDirection: "column", gap: 20, boxSizing: "border-box" } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, paddingBottom: 14, borderBottom: "1px solid var(--color-border-subtle)" } },
+        React.createElement("span", { style: { fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, lineHeight: "26px", color: "var(--neutral-950)" } }, title),
+        extra || null),
+      body);
+  }
+  tagList(items) {
+    const { Tag } = this.ns();
+    return React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+      ...(items || []).map((v, i) => React.createElement(Tag, { key: i, colorScheme: "blue", size: "s" }, v)));
+  }
+  buildDetail() {
+    const r = this.detailRow();
+    if (!r) return null;
+    if (this.isUsers()) {
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+        this.card("Informasi User", this.infoGrid([
+          ["Nama Lengkap", r.name], ["Email", r.email], ["Role", r.role],
+          ["Status", this.statusTag(r.active)], ["Update Terakhir", r.at + " \u00B7 oleh " + r.by] ]), null),
+        this.card("Data Access", this.infoGrid([
+          ["Company ID", this.tagList(r.company)], ["Sales Organization", this.tagList(r.org)],
+          ["Distribution Center", this.tagList(r.dcs)], ["Sales Area", this.tagList(r.areas)],
+          ["Channel", this.tagList(r.channels)], ["Brand", this.tagList(r.brands)] ]), null));
+    }
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+      this.card("Informasi Role", React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+        this.infoGrid([
+          ["Nama Role", React.createElement("span", { style: { fontWeight: 700 } }, r.name)],
+          ["Status", this.statusTag(r.active)],
+          ["Jumlah User", r.users + " user"],
+          ["Update Terakhir", r.at + " · oleh " + r.by] ]),
+        React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+          React.createElement("span", { style: { fontSize: 12, letterSpacing: "0.2px", textTransform: "uppercase", color: "var(--color-text-tertiary)", fontWeight: 700 } }, "Deskripsi"),
+          React.createElement("p", { style: { margin: 0, fontSize: 14, lineHeight: "22px", color: "var(--color-text-primary)", maxWidth: 900, textWrap: "pretty" } }, r.desc))), null),
+      this.card("Permissions", this.permMatrix(r.perms, r.acts, true), null));
+  }
+
+  /* ---------- permission matrix ---------- */
+  toggleExpand(k) { this.setState(s => ({ expanded: s.expanded.includes(k) ? s.expanded.filter(x => x !== k) : [...s.expanded, k] })); }
+  setPerm(node, level) {
+    const f = { ...this.state.form };
+    const perms = { ...f.perms }; const acts = { ...f.acts };
+    const apply = (n) => {
+      perms[n.key] = level;
+      (n.actions || []).forEach(a => { if (level !== "edit") acts[a.key] = false; });
+      (n.children || []).forEach(apply);
+    };
+    apply(node);
+    this.setState({ form: { ...f, perms, acts, dirty: true } });
+  }
+  setAct(key, on) {
+    const f = this.state.form;
+    this.setState({ form: { ...f, acts: { ...f.acts, [key]: on }, dirty: true } });
+  }
+  permMatrix(perms, acts, readOnly) {
+    const { RadioButton, Toggle } = this.ns();
+    const exp = this.state.expanded;
+    const COLW = 168;
+    const rows = [];
+    const chevron = (open) => React.createElement("span", { style: { display: "inline-flex", transform: open ? "rotate(90deg)" : "none", transition: "transform .15s ease" } }, this.iconC("ChevronRightIcon", 16, "var(--color-text-secondary)"));
+
+    const cellRadio = (node, level, lvl) => React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", width: COLW, flexShrink: 0, borderLeft: "1px solid var(--color-border-subtle)", alignSelf: "stretch" } },
+      readOnly
+        ? (level === lvl ? this.iconC("CheckFilledIcon", 18, "var(--success-600)") : React.createElement("span", { style: { width: 18, height: 18, borderRadius: 9, border: "1px solid var(--neutral-300)" } }))
+        : React.createElement(RadioButton, { checked: level === lvl, size: "s", onChange: () => this.setPerm(node, lvl) }));
+
+    const line = (node, depth, isGroup) => {
+      const level = perms[node.key] || "none";
+      const open = exp.includes(node.key);
+      const hasKids = (node.children && node.children.length) || (node.actions && node.actions.length);
+      rows.push(React.createElement("div", { key: node.key, style: { display: "flex", alignItems: "stretch", minHeight: 46, background: depth === 0 ? "var(--neutral-100)" : "var(--color-bg-secondary)", borderTop: "1px solid var(--color-border-subtle)" } },
+        React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", paddingLeft: 14 + depth * 24, boxSizing: "border-box" } },
+          hasKids
+            ? React.createElement("button", { type: "button", onClick: () => this.toggleExpand(node.key), "aria-label": "Buka", style: { background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex" } }, chevron(open))
+            : React.createElement("span", { style: { width: 16, display: "inline-block" } }),
+          React.createElement("span", { style: { fontSize: 14, fontWeight: depth === 0 ? 700 : 600, color: "var(--color-text-primary)" } }, node.label)),
+        cellRadio(node, level, "none"), cellRadio(node, level, "view"), cellRadio(node, level, "edit")));
+      if (!open) return;
+      (node.actions || []).forEach(a => {
+        const on = !!acts[a.key];
+        const disabled = level !== "edit";
+        rows.push(React.createElement("div", { key: a.key, style: { display: "flex", alignItems: "stretch", minHeight: 44, borderTop: "1px solid var(--color-border-subtle)", background: "var(--color-bg-secondary)" } },
+          React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", paddingLeft: 14 + (depth + 1) * 24 + 16, boxSizing: "border-box" } },
+            React.createElement("span", { style: { fontSize: 14, color: disabled ? "var(--color-text-disabled)" : "var(--color-text-secondary)" } }, a.label)),
+          React.createElement("div", { style: { width: COLW, flexShrink: 0, borderLeft: "1px solid var(--color-border-subtle)" } }),
+          React.createElement("div", { style: { width: COLW, flexShrink: 0, borderLeft: "1px solid var(--color-border-subtle)" } }),
+          React.createElement("div", { style: { width: COLW, flexShrink: 0, borderLeft: "1px solid var(--color-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center" } },
+            readOnly
+              ? (on ? this.iconC("CheckFilledIcon", 18, "var(--success-600)") : React.createElement("span", { style: { fontSize: 13, color: "var(--color-text-disabled)" } }, "—"))
+              : React.createElement(Toggle, { checked: on, disabled, size: "s", onChange: (v) => this.setAct(a.key, v) }))));
+      });
+      (node.children || []).forEach(c => line(c, depth + 1, false));
+    };
+    PERM_TREE.forEach(n => line(n, 0, true));
+
+    const head = React.createElement("div", { style: { display: "flex", alignItems: "stretch", background: "var(--neutral-200)", minHeight: 48 } },
+      React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "12px 14px", fontSize: 13, fontWeight: 700, letterSpacing: "0.4px", color: "var(--color-text-primary)" } }, "AKSES ROLE"),
+      ...["TANPA AKSES", "AKSES LIHAT", "AKSES EDIT"].map(t => React.createElement("div", { key: t, style: { width: COLW, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid var(--neutral-300)", fontSize: 13, fontWeight: 700, letterSpacing: "0.4px", color: "var(--color-text-primary)", textAlign: "center" } }, t)));
+
+    return React.createElement("div", { style: { border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)", overflow: "hidden" } }, head, ...rows);
+  }
+
+  /* ---------- forms ---------- */
+  openAdd() {
+    if (this.isUsers()) {
+      this.setState({ view: "form", formMode: "add", form: { name: "", email: "", role: "", company: [], org: [], dcs: [], areas: [], channels: [], brands: [], errors: {}, dirty: false } });
+    } else {
+      this.setState({ view: "form", formMode: "add", form: { name: "", desc: "", template: "", perms: this.seedPerms("__blank"), acts: this.seedActs("__blank"), errors: {}, dirty: false } });
+    }
+  }
+  openEdit() {
+    const r = this.detailRow();
+    if (!r) return;
+    if (this.isUsers()) this.setState({ view: "form", formMode: "edit", form: { id: r.id, name: r.name, email: r.email, role: r.role, company: r.company, org: r.org, dcs: r.dcs, areas: r.areas, channels: r.channels, brands: r.brands, errors: {}, dirty: false } });
+    else this.setState({ view: "form", formMode: "edit", form: { id: r.id, name: r.name, desc: r.desc, template: "", perms: { ...r.perms }, acts: { ...r.acts }, errors: {}, dirty: false } });
+  }
+  setF(patch) { this.setState({ form: { ...this.state.form, ...patch, dirty: true } }); }
+  applyTemplate(name) {
+    const src = this.state.roles.find(r => r.name === name);
+    if (!src) { this.setF({ template: "" }); return; }
+    this.setState({ form: { ...this.state.form, template: name, perms: { ...src.perms }, acts: { ...src.acts }, dirty: true } });
+    this.toast("success", "Template diterapkan", "Permissions disalin dari role " + name + ". Anda masih dapat menyesuaikannya.");
+  }
+  askCancel() {
+    if (!this.state.form || !this.state.form.dirty) { this.backToList(); return; }
+    this.setState({ modal: { type: "cancel" } });
+  }
+  validate() {
+    const f = this.state.form; const e = {};
+    if (!f.name || !f.name.trim()) e.name = this.isUsers() ? "Nama lengkap wajib diisi." : "Nama role wajib diisi.";
+    if (this.isUsers()) {
+      if (!f.email || !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(f.email)) e.email = "Format email tidak valid.";
+      if (!f.role) e.role = "Role wajib dipilih.";
+      if (!f.company.length) e.company = "Company ID wajib dipilih.";
+      if (!f.org.length) e.org = "Sales Organization wajib dipilih.";
+      if (!f.dcs.length) e.dcs = "Distribution Center wajib dipilih.";
+      if (!f.areas.length) e.areas = "Sales Area wajib dipilih.";
+    } else {
+      if (!f.desc || !f.desc.trim()) e.desc = "Deskripsi wajib diisi.";
+      const dup = this.state.roles.some(r => r.name.toLowerCase() === (f.name || "").trim().toLowerCase() && r.id !== f.id);
+      if (dup) e.name = "Nama role sudah digunakan.";
+      const any = Object.values(f.perms).some(v => v !== "none");
+      if (!any) e.perms = "Pilih minimal satu akses pada permissions.";
+    }
+    this.setState({ form: { ...f, errors: e } });
+    return Object.keys(e).length === 0;
+  }
+  save() {
+    if (!this.validate()) { this.toast("error", "Lengkapi data", "Ada isian yang belum valid. Periksa kembali form."); return; }
+    this.setState({ saving: true });
+    setTimeout(() => {
+      const f = this.state.form; const edit = this.state.formMode === "edit";
+      if (this.isUsers()) {
+        const base = { name: f.name.trim(), email: f.email.trim(), role: f.role, org: f.org[0] || "Paragon Corp", dc: f.dcs[0] || "", area: f.areas[0] || "", company: f.company, orgs: f.org, dcs: f.dcs, areas: f.areas, channels: f.channels, brands: f.brands, at: this.now(), by: "M. Lutfi Maulana" };
+        base.org = f.org[0] || "Paragon Corp";
+        const rows = edit ? this.state.users.map(u => u.id === f.id ? { ...u, ...base, org: base.org } : u)
+          : [{ id: Math.max(0, ...this.state.users.map(u => u.id)) + 1, active: true, ...base }, ...this.state.users];
+        this.setState({ users: rows, saving: false, view: edit ? "detail" : "list", form: null });
+      } else {
+        const base = { name: f.name.trim(), desc: f.desc.trim(), perms: f.perms, acts: f.acts, at: this.now(), by: "M. Lutfi Maulana" };
+        const rows = edit ? this.state.roles.map(r => r.id === f.id ? { ...r, ...base } : r)
+          : [{ id: Math.max(0, ...this.state.roles.map(r => r.id)) + 1, users: 0, active: true, ...base }, ...this.state.roles];
+        this.setState({ roles: rows, saving: false, view: edit ? "detail" : "list", form: null });
+      }
+      const label = this.isUsers() ? "User" : "Role";
+      this.toast("success", edit ? label + " berhasil diperbarui" : label + " berhasil ditambahkan", "\"" + f.name.trim() + "\" telah disimpan.");
+    }, 1200);
+  }
+  askDeactivate() { this.setState({ modal: { type: "deactivate" } }); }
+  commitDeactivate() {
+    const r = this.detailRow(); const to = !r.active;
+    const rows = this.data().map(x => x.id === r.id ? { ...x, active: to, at: this.now(), by: "M. Lutfi Maulana" } : x);
+    this.setData(rows);
+    this.closeModal();
+    const label = this.isUsers() ? "User" : "Role";
+    this.toast(to ? "success" : "warning", to ? label + " diaktifkan" : label + " dinonaktifkan", "\"" + r.name + "\" kini " + (to ? "aktif" : "nonaktif") + ".");
+  }
+
+  /* ---------- form body ---------- */
+  fieldLabel(text, required, counter) {
+    return React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 } },
+      React.createElement("span", { style: { fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" } }, text,
+        required ? React.createElement("span", { style: { color: "var(--color-text-error)" } }, " *") : null),
+      counter != null ? React.createElement("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, "(" + counter + "/100)") : null);
+  }
+  errText(msg) {
+    if (!msg) return null;
+    return React.createElement("span", { style: { fontSize: 12, color: "var(--color-text-error)" } }, msg);
+  }
+  fieldWrap(label, required, counter, control, error, help) {
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, minWidth: 0 } },
+      this.fieldLabel(label, required, counter), control,
+      error ? this.errText(error) : (help ? React.createElement("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, help) : null));
+  }
+  buildForm() {
+    const { Input, TextArea, Select } = this.ns();
+    const f = this.state.form;
+    if (!f) return null;
+    const e = f.errors || {};
+    if (this.isUsers()) {
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+        this.card("Informasi User", React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px 24px" } },
+          this.fieldWrap("Nama Lengkap", true, (f.name || "").length, React.createElement(Input, { value: f.name, size: "s", error: !!e.name, placeholder: "Contoh: Budi Santoso", onChange: (ev) => this.setF({ name: ev.target.value.slice(0, 100) }) }), e.name),
+          this.fieldWrap("Email", true, (f.email || "").length, React.createElement(Input, { value: f.email, size: "s", error: !!e.email, placeholder: "nama@paracorpgroup.com", onChange: (ev) => this.setF({ email: ev.target.value.slice(0, 100) }) }), e.email, "Email SSO Microsoft yang dipakai untuk login."),
+          this.fieldWrap("Role", true, null, React.createElement(Select, { options: this.roleNames(), value: f.role, size: "s", error: !!e.role, placeholder: "Pilih role...", onChange: (v) => this.setF({ role: v }) }), e.role))),
+        this.card("Data Access", React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px 24px" } },
+          this.fieldWrap("Company ID (dapat lebih dari satu)", true, null, React.createElement(Select, { options: OPT.company, multi: true, value: f.company, size: "s", error: !!e.company, placeholder: "Pilih company...", onChange: (v) => this.setF({ company: v }) }), e.company),
+          this.fieldWrap("Sales Organization (dapat lebih dari satu)", true, null, React.createElement(Select, { options: OPT.org, multi: true, value: f.org, size: "s", error: !!e.org, placeholder: "Pilih sales org...", onChange: (v) => this.setF({ org: v }) }), e.org),
+          this.fieldWrap("Distribution Center (dapat lebih dari satu)", true, null, React.createElement(Select, { options: OPT.dc, multi: true, value: f.dcs, size: "s", error: !!e.dcs, placeholder: "Pilih distribution center...", onChange: (v) => this.setF({ dcs: v }) }), e.dcs),
+          this.fieldWrap("Sales Area (dapat lebih dari satu)", true, null, React.createElement(Select, { options: OPT.area, multi: true, value: f.areas, size: "s", error: !!e.areas, placeholder: "Pilih sales area...", onChange: (v) => this.setF({ areas: v }) }), e.areas),
+          this.fieldWrap("Channel", false, null, React.createElement(Select, { options: OPT.channel, multi: true, value: f.channels, size: "s", placeholder: "Pilih channel...", onChange: (v) => this.setF({ channels: v }) }), null, "Kosongkan untuk mengakses seluruh channel."),
+          this.fieldWrap("Brand", false, null, React.createElement(Select, { options: OPT.brand, multi: true, value: f.brands, size: "s", placeholder: "Pilih brand...", onChange: (v) => this.setF({ brands: v }) }), null, "Kosongkan untuk mengakses seluruh brand."))));
+    }
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+      this.card("Informasi Role", React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+        this.fieldWrap("Nama Role", true, (f.name || "").length, React.createElement(Input, { value: f.name, size: "s", error: !!e.name, placeholder: "Contoh: Kepala Divisi Sales", onChange: (ev) => this.setF({ name: ev.target.value.slice(0, 100) }) }), e.name),
+        this.fieldWrap("Deskripsi", true, (f.desc || "").length, React.createElement(TextArea, { value: f.desc, size: "s", rows: 3, error: !!e.desc, placeholder: "Jelaskan cakupan tanggung jawab role ini", onChange: (ev) => this.setF({ desc: ev.target.value.slice(0, 100) }) }), e.desc))),
+      this.card("Permissions", React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } },
+        this.fieldWrap("Salin permissions dari role lain (opsional)", false, null,
+          React.createElement("div", { style: { maxWidth: 420 } }, React.createElement(Select, { options: this.state.roles.map(r => r.name), value: f.template, size: "s", clearable: true, placeholder: "Pilih role sebagai template...", onChange: (v) => this.applyTemplate(v) })), null,
+          "Permissions akan tersalin ke matriks di bawah dan tetap dapat diubah."),
+        e.perms ? this.errText(e.perms) : null,
+        this.permMatrix(f.perms, f.acts, false))));
+  }
+
+  /* ---------- modal ---------- */
+  modalProps() {
+    const { Button, Illustration } = this.ns();
+    const m = this.state.modal;
+    if (!m) return { open: false };
+    const r = this.detailRow();
+    if (m.type === "cancel") {
+      return { open: true, size: "s", title: "Batalkan Pengisian " + (this.isUsers() ? "User" : "Role") + "?", onClose: () => this.closeModal(),
+        children: React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "8px 0 4px", textAlign: "center" } },
+          Illustration ? React.createElement(Illustration, { name: "MessageInfoBlue", size: 96 }) : null,
+          React.createElement("p", { style: { margin: 0, fontSize: 14, lineHeight: "22px", color: "var(--color-text-secondary)", maxWidth: 360 } }, "Semua data yang sudah diisi akan dihapus. Apakah Anda yakin ingin membatalkan?")),
+        footer: React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12 } },
+          React.createElement(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, "Kembali"),
+          React.createElement(Button, { variant: "primary", size: "s", style: { background: "var(--error-600)", borderColor: "var(--error-600)" }, onClick: () => { this.closeModal(); this.backToList(); } }, "Ya, Batalkan")) };
+    }
+    if (m.type === "deactivate" && r) {
+      const to = !r.active;
+      const label = this.isUsers() ? "User" : "Role";
+      return { open: true, size: "s", title: (to ? "Aktifkan " : "Non-Aktifkan ") + label + " \u201C" + r.name + "\u201D?", onClose: () => this.closeModal(),
+        children: React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: "4px 0" } },
+          React.createElement("p", { style: { margin: 0, fontSize: 14, lineHeight: "22px", color: "var(--color-text-secondary)" } },
+            to ? "Akses akan dipulihkan seperti pengaturan terakhir." : (this.isUsers()
+              ? "User tidak akan dapat login ke COMPASS sampai diaktifkan kembali."
+              : "Role tidak dapat dipilih pada user baru. User yang sedang memakai role ini akan kehilangan aksesnya.")),
+          (!to && !this.isUsers() && r.users > 0) ? React.createElement("div", { style: { display: "flex", gap: 10, padding: "12px 14px", borderRadius: "var(--radius-base)", background: "var(--warning-100)", border: "1px solid var(--warning-300)" } },
+            this.iconC("HazardFilledIcon", 18, "var(--warning-700)"),
+            React.createElement("span", { style: { fontSize: 13, lineHeight: "20px", color: "var(--neutral-950)" } }, "Role ini sedang dipakai oleh ", React.createElement("b", null, r.users + " user"), ". Pastikan mereka sudah dipindahkan ke role lain.")) : null),
+        footer: React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12 } },
+          React.createElement(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, "Batal"),
+          React.createElement(Button, { variant: "primary", size: "s", style: to ? null : { background: "var(--error-600)", borderColor: "var(--error-600)" }, onClick: () => this.commitDeactivate() }, to ? "Ya, Aktifkan" : "Ya, Non-Aktifkan")) };
+    }
+    return { open: false };
+  }
+
+  /* ---------- render ---------- */
+  navDateText() {
+    const d = new Date(), D = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"], M = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return D[d.getDay()] + ", " + d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  navClock() {
+    if (!this._NavClock) {
+      this._NavClock = function NavClock() {
+        const fmt = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Jakarta", hour12: false }) + " WIB";
+        const [t, setT] = React.useState(fmt());
+        React.useEffect(() => { const i = setInterval(() => setT(fmt()), 1000); return () => clearInterval(i); }, []);
+        return React.createElement("span", null, t);
+      };
+    }
+    return React.createElement(this._NavClock, null);
+  }
+  renderVals() {
+    const s = this.state;
+    const { Button, Select, Toast, Pagination } = this.ns();
+    const filtered = this.filtered();
+    const per = parseInt(s.perPage, 10);
+    const pageCount = Math.max(1, Math.ceil(filtered.length / per));
+    const page = Math.min(s.page, pageCount);
+    const paged = filtered.slice((page - 1) * per, page * per);
+    const fcount = this.filterCount();
+    const users = this.isUsers();
+    const detail = this.detailRow();
+    const f = s.form;
+
+    return {
+      isList: s.view === "list", isDetail: s.view === "detail", isForm: s.view === "form",
+      isUsers: users,
+      pageTitle: users ? "Manage Users" : "Manage Roles",
+      addBtnLabel: users ? "Tambah User" : "Tambah Role",
+
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: this.icon("SearchOutlineIcon") },
+      sideClass: "cmp-side" + (this.state.sideCollapsed ? " is-collapsed" : ""),
+      sideCollapsed: !!this.state.sideCollapsed,
+      sideExpanded: !this.state.sideCollapsed,
+      sideToggleLabel: this.state.sideCollapsed ? "Perluas menu" : "Tutup menu",
+      toggleSidebar: () => this.setState(s => ({ sideCollapsed: !s.sideCollapsed })),
+      sidebarProps: {
+        collapsed: !!this.state.sideCollapsed, activeKey: users ? "manage-users" : "manage-roles",
+        defaultExpanded: ["account-management"],
+        onSelect: (k) => {
+          if (k === "manage-content") window.location.href = "Manage Content.dc.html";
+          if (k === "content-type") window.location.href = "Content Type.dc.html";
+          if (k === "manage-roles") this.goModule("roles");
+          if (k === "manage-users") this.goModule("users");
+          if (k === "parameter") window.location.href = "Parameter.dc.html";
+          if (k === "manage-project") window.location.href = "Manage Project.dc.html";
+          if (k === "target-management") window.location.href = "Target Management.dc.html";
+          if (k === "npd-setting") window.location.href = "NPD Setting.dc.html";
+          if (k === "mhs-setting") window.location.href = "MHS Setting.dc.html";
+          if (k === "target-sku-setting") window.location.href = "Target SKU Setting.dc.html";
+          if (k === "target-mvp") window.location.href = "Target Mngmt MVP.dc.html";
+          if (k === "md-bp") window.location.href = "Master Data.dc.html#bp";
+          if (k === "product-list") window.location.href = "Master Data.dc.html#product";
+          if (k === "product-rule") window.location.href = "Master Data.dc.html#rule";
+          if (k === "standar-stok") window.location.href = "Standard Stock Management.dc.html";
+          if (k === "order") window.location.href = "Order.dc.html";
+          if (k === "retur") window.location.href = "Retur.dc.html";
+          if (k === "bp") window.location.href = "Business Partner Management.dc.html";
+        },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [
+            { key: "manage-roles", label: "Manage Roles" }, { key: "manage-users", label: "Manage Users" } ] },
+          { key: "project", label: "Project", icon: "project-plus", children: [ { key: "project-list", label: "Coming Soon" } ] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [
+            { key: "md-bp", label: "Business Partner" },
+            { key: "product", label: "Product", children: [ { key: "product-list", label: "Product List" }, { key: "product-rule", label: "Product Rule" } ] },
+            { key: "employee", label: "Employee" }, { key: "holiday", label: "Holiday" }, { key: "consumer-data", label: "Consumer Data" } ] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [
+            { key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" } ] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [
+            { key: "product-configuration", label: "Product Configuration", children: [ { key: "standar-stok", label: "Standar Stok" }, { key: "npd-setting", label: "NPD Setting" }, { key: "mhs-setting", label: "MHS Setting" }, { key: "target-sku-setting", label: "Target SKU Setting" } ] } ] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [
+            { key: "order", label: "Order" }, { key: "retur", label: "Retur" } ] },
+          { key: "bp", label: "BP Management", icon: "account-mgmt" },
+          { key: "parameter", label: "Parameter", icon: "note-list" },
+          { key: "manage-project", label: "Manage Project", icon: "project-plus" },
+          { key: "target-management", label: "Target Management", icon: "visit-list" },
+          { key: "target-management-sl", label: "Target Management MVP", icon: "visit-list" },
+          { key: "target-mvp", label: "Target Mngmt MVP", icon: "visit-list" },
+          { key: "content-management", label: "Content Management", icon: "note-list", children: [ { key: "manage-content", label: "Manage Content" }, { key: "content-type", label: "Content Type" } ] },
+        ],
+      },
+      navProps: {
+        left: React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, React.createElement("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, this.navDateText()), React.createElement("span", { style: { fontWeight: 400, fontSize: 12, lineHeight: "18px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, this.navClock())),
+        user: { name: "Muchamad Lutfi Maulana", role: "Super Admin", status: "active" },
+      },
+
+      searchProps: { placeholder: users ? "Cari user..." : "Cari role...", size: "s", value: s.search, leftIcon: this.icon("SearchOutlineIcon"), onChange: (e) => this.setState({ search: e.target.value, page: 1 }) },
+      filterProps: fcount
+        ? { variant: "secondary", size: "s", style: { gap: 8, background: "var(--primary-100)", borderColor: "var(--primary-500)", color: "var(--primary-500)" },
+            leftIcon: React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "var(--primary-500)", color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, fcount),
+            onClick: () => this.openFilter() }
+        : { variant: "tertiary", size: "s", leftIcon: this.icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.openFilter() },
+      addBtnProps: { variant: "primary", size: "s", leftIcon: this.icon("plus-thin", 16), onClick: () => this.openAdd() },
+      filterBar: this.buildFilterBar(),
+      tableRegion: this.buildTable(paged, filtered),
+      showPagination: filtered.length > 0,
+      perPageProps: { options: ["10", "25", "50"], value: s.perPage, size: "s", onChange: (v) => this.setState({ perPage: v, page: 1 }) },
+      totalLabel: "dari total " + filtered.length + " Data",
+      pagerProps: { page, pageCount, showPageSize: false, onPageChange: (p) => this.setState({ page: p }) },
+
+      backProps: { variant: "ghost", size: "s", leftIcon: this.iconC("arrow-left", 18, "var(--primary-500)"), onClick: () => (s.view === "form" ? this.askCancel() : this.backToList()) },
+      detailTitle: detail ? (users ? "Detail User: " : "Detail Role: ") + detail.name : "",
+      detailBody: this.buildDetail(),
+      deactivateLabel: detail && detail.active ? (users ? "Non-Aktifkan User" : "Non-Aktifkan Role") : (users ? "Aktifkan User" : "Aktifkan Role"),
+      deactivateProps: { variant: "secondary", size: "s", style: detail && detail.active ? { color: "var(--color-text-error)", borderColor: "var(--error-300)" } : null, onClick: () => this.askDeactivate() },
+      editLabel: users ? "Edit User" : "Edit Role",
+      editProps: { variant: "primary", size: "s", leftIcon: this.icon("EditOutlineIcon", 16), onClick: () => this.openEdit() },
+
+      formTitle: (s.formMode === "edit" ? (users ? "Edit User: " : "Edit Role: ") + (f ? f.name : "") : (users ? "Tambah User" : "Tambah Role")),
+      formSubtitle: s.formMode === "edit" ? "Terdapat perubahan yang belum disimpan" : null,
+      formBody: this.buildForm(),
+      formError: (f && Object.keys(f.errors || {}).length)
+        ? React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: "var(--radius-base)", background: "var(--error-100)", border: "1px solid var(--error-300)" } },
+            this.iconC("HazardFilledIcon", 18, "var(--error-600)"),
+            React.createElement("span", { style: { fontSize: 14, color: "var(--neutral-950)" } }, "Lengkapi ", React.createElement("b", null, Object.keys(f.errors).length + " isian"), " yang ditandai sebelum menyimpan."))
+        : null,
+      cancelProps: { variant: "secondary", size: "s", disabled: s.saving, onClick: () => this.askCancel() },
+      saveLabel: s.saving ? "Menyimpan..." : "Simpan",
+      saveProps: { variant: "primary", size: "s", disabled: s.saving, leftIcon: s.saving ? React.createElement("span", { style: { width: 14, height: 14, borderRadius: 7, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", display: "inline-block", animation: "am-spin .7s linear infinite" } }) : null, onClick: () => this.save() },
+
+      filterOpen: s.filterOpen,
+      drawerScrim: React.createElement("div", { onClick: () => this.closeFilter(), style: { position: "absolute", inset: 0 } }),
+      drawerClose: React.createElement("button", { type: "button", "aria-label": "Tutup filter", onClick: () => this.closeFilter(), style: { background: "none", border: "none", cursor: "pointer", padding: 4, display: "inline-flex" } }, this.iconC("CloseIcon", 20, "var(--color-text-secondary)")),
+      drawerFields: React.createElement(React.Fragment, null,
+        this.drawerField("Role", "role", this.state.roles.map(r => r.name)),
+        this.drawerField("Sales Organization", "org", OPT.org),
+        this.drawerField("Distribution Center", "dc", OPT.dc),
+        this.drawerField("Sales Area", "area", OPT.area),
+        React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+          React.createElement("span", { style: { fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" } }, "Status"),
+          React.createElement(Select, { options: ["Aktif", "Nonaktif"], value: (s.filterDraft || {}).status || "", size: "s", clearable: true, placeholder: "Semua status", onChange: (v) => this.setState({ filterDraft: { ...s.filterDraft, status: v } }) }))),
+      drawerResetProps: { variant: "ghost", size: "s", onClick: () => this.resetFilter() },
+      drawerCancelProps: { variant: "secondary", size: "s", onClick: () => this.closeFilter() },
+      drawerApplyProps: { variant: "primary", size: "s", onClick: () => this.applyFilter() },
+
+      modalOpen: !!s.modal,
+      modalProps: this.modalProps(),
+
+      toastRegion: s.toasts.map(t => React.createElement("div", { key: t.id, style: { pointerEvents: "auto", animation: "am-fade .18s ease", minWidth: 320, maxWidth: 420 } },
+        React.createElement(Toast, { state: t.state, title: t.title, onClose: () => this.closeToast(t.id) }, t.msg))),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -21,7 +21,7 @@
   route('/payout', ({}, q, { year }) => {
     const programs = DB.where('programs', (p) => p.year === year && p.status !== 'DRAFT').map((p) => E.loadProgram(p.id));
     return {
-      title: 'Payout', html: `<div class="page-head"><div><h1>Payout ${year}</h1><div class="sub">Conditional & Fix dibayar terpisah, masing-masing dengan jadwal & record sendiri.</div></div></div>
+      title: 'Payout', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Payout ${year}</h1><div class="sub">Conditional & Fix dibayar terpisah, masing-masing dengan jadwal & record sendiri.</div></div></div>
       ${programs.map((p) => `<div class="card mb-3"><div class="card-header d-flex justify-content-between"><span>${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)}</span></span>
         <a href="#/payout/program/${p.id}" class="btn btn-sm btn-brand">Buka</a></div><div class="table-responsive"><table class="table table-sm mb-0">
         <thead><tr><th>Channel</th><th>Komponen</th><th>Jadwal</th><th class="num">Diproses</th><th class="num">Dibayar</th><th class="num">Total dibayar</th></tr></thead><tbody>
@@ -31,7 +31,7 @@
           return `<tr><td>${esc(ch.channel_name)}</td><td>${COMP[comp]}</td><td>${C.FREQUENCIES[ch.payoutSchedule[comp]] || '-'}</td>
             <td class="num">${ps.filter((x) => x.status === 'in_review').length}</td><td class="num">${ps.filter((x) => x.status === 'paid').length}</td>
             <td class="num">${h.rp(ps.filter((x) => x.status === 'paid').reduce((s, x) => s + x.amount, 0))}</td></tr>`;
-        })).join('')}</tbody></table></div></div>`).join('') || '<div class="card"><div class="card-body text-muted">Belum ada program PUBLISHED.</div></div>'}`,
+        })).join('')}</tbody></table></div></div>`).join('') || '<div class="card"><div class="card-body text-muted">Belum ada program PUBLISHED.</div></div>'}</div></div>`,
     };
   });
 
@@ -50,20 +50,22 @@
     });
     const link = (o) => `#/payout/program/${program.id}?ch=${o.ch || ch.id}&c=${o.c || comp}&per=${o.per || ''}`;
     return {
-      title: `Payout ${program.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/payout">Payout</a> / ${esc(program.name)}</div>
-        <h1>${COMP[comp]} · ${esc(per.label)}</h1><div class="sub">${esc(ch.channel_name)} · ${h.date(per.start)} – ${h.date(per.end)} · jadwal ${C.FREQUENCIES[ch.payoutSchedule[comp]]}</div></div>
-        <button class="btn btn-outline-brand" data-click="payout.export" data-p="${program.id}" data-ch="${ch.id}"><i class="bi bi-download"></i> Export CSV (per komponen)</button></div>
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        ${program.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="${link({ ch: c.id })}">${esc(c.channel_name)}</a>`).join('')}
-        <span class="mx-2 border-left"></span>
-        ${Object.entries(COMP).map(([k, l]) => `<a class="btn btn-sm ${k === comp ? 'btn-dark' : 'btn-outline-secondary'}" href="${link({ c: k })}">${l}</a>`).join('')}
-        <span class="mx-2 border-left"></span>
-        ${pers.map((x) => `<a class="btn btn-sm ${x.key === per.key ? 'btn-info' : 'btn-outline-info'}" href="${link({ per: x.key })}">${esc(x.label)}</a>`).join('')}</div>
+      title: `Payout ${program.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: '/payout', crumb: `<a href="#/payout">Payout</a> / ${esc(program.name)}`, title: `${COMP[comp]} · ${esc(per.label)}`,
+        sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Periode', `${h.date(per.start)} – ${h.date(per.end)}`], ['Jadwal', `${C.FREQUENCIES[ch.payoutSchedule[comp]]}`], ['Peserta', `${regs.length}`]],
+        actions: `<button class="btn btn-outline-brand" data-click="payout.export" data-p="${program.id}" data-ch="${ch.id}"><i class="bi bi-download"></i> Export CSV (per komponen)</button>` })}
+      <div class="cps-work">
+      <div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-diagram-3"></i> Channel</div>
+        <div class="d-flex flex-wrap gap-2">${program.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="${link({ ch: c.id })}">${esc(c.channel_name)}</a>`).join('')}</div>
+        <div class="loop-label"><i class="bi bi-cash-coin"></i> Komponen</div>
+        <div class="d-flex flex-wrap gap-2">${Object.entries(COMP).map(([k, l]) => `<a class="btn btn-sm ${k === comp ? 'btn-dark' : 'btn-outline-secondary'}" href="${link({ c: k })}">${l}</a>`).join('')}</div></div>
+      <div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-calendar3"></i> Periode</div>
+        <div class="d-flex flex-wrap gap-2">${pers.map((x) => `<a class="btn btn-sm ${x.key === per.key ? 'btn-info' : 'btn-outline-info'}" href="${link({ per: x.key })}">${esc(x.label)}</a>`).join('')}</div></div>
       ${ready ? '' : '<div class="alert alert-secondary py-2 small">Data penjualan periode ini belum lengkap. Pengajuan dibuka setelah data semua bulan masuk.</div>'}
       <div class="alert alert-light py-2 small">${comp === 'CONDITIONAL' ? 'Conditional = conditional % tier tercapai (dari achievement periode) × dasar rebate. Growth di bawah tier 1 → 0.'
         : `Fix = fix maks kelas × skor ${esc(ch.pillar_framework_name || 'Vision Compass')} (porsi periode Monitoring yang disetujui) × dasar rebate. Tidak bergantung pada growth.`} Syarat semua termin: rasio SO:SI ${ch.elig_ratio_min ?? 0}–${ch.elig_ratio_max ?? '∞'}%; di luar rentang → tidak dibayar.</div>
-      <div class="card"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
+      <div class="card"><div class="card-header">Peserta</div><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
         <thead><tr><th>Toko</th><th>Brand: ${comp === 'CONDITIONAL' ? 'achievement → tier' : 'skor pilar'}</th><th class="num">Nominal</th><th>Status</th><th></th></tr></thead>
         <tbody>${rows.map(({ r, pay, calc }) => { const s = store(r.customer_id); const lines = pay ? pay.lines : calc.lines; const l = pay && E.currentLayer(pay);
           return `<tr><td><span class="fw-semibold">${esc(s.name)}</span><div class="small text-muted">${r.customer_id}</div></td>
@@ -74,7 +76,7 @@
             <td>${pay ? h.badge(pay.status) + (l ? `<div class="small text-muted">${esc(C.APPROVAL_ROLES[l.role_code])}</div>` : '') : '<span class="badge badge-light">Belum diajukan</span>'}</td>
             <td class="text-right text-nowrap">${pay && pay.status !== 'returned' ? `<a href="#/payout/item/${pay.id}" class="btn btn-sm btn-outline-brand">Detail</a>`
               : canSubmit(user) ? `<a href="#/payout/form/${r.id}/${comp}/${per.key}" class="btn btn-sm btn-brand ${ready ? '' : 'disabled'}">${pay ? 'Revisi' : 'Ajukan'}</a>` : ''}</td></tr>`; }).join('')
-          || '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada peserta yang disetujui.</td></tr>'}</tbody></table></div></div>`,
+          || '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada peserta yang disetujui.</td></tr>'}</tbody></table></div></div></div></div>`,
     };
   });
 
@@ -123,11 +125,13 @@
     const objects = E.payoutObjects(ch, reg, calc, per);
     const ev = E.evaluateApproval(ch.phases.PAYOUT.layers, objects);
     return {
-      title: `Payout ${s.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/payout/program/${program.id}?ch=${ch.id}&c=${comp}&per=${per.key}">Payout ${esc(program.name)}</a></div>
-        <h1>${COMP[comp]} ${esc(per.label)} · ${esc(s.name)}</h1><div class="sub">${reg.customer_id} · ${esc(ch.channel_name)} · ${h.date(per.start)} – ${h.date(per.end)}</div></div></div>
+      title: `Payout ${s.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: `/payout/program/${program.id}?ch=${ch.id}&c=${comp}&per=${per.key}`, crumb: `<a href="#/payout/program/${program.id}?ch=${ch.id}&c=${comp}&per=${per.key}">Payout ${esc(program.name)}</a>`,
+        title: `${COMP[comp]} ${esc(per.label)} · ${esc(s.name)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Customer ID', reg.customer_id], ['Periode', `${h.date(per.start)} – ${h.date(per.end)}`], ['Nominal', h.rp(calc.amount)]] })}
       ${UI.errorsHtml(pend && pend.errors)}${calc.errors.length ? `<div class="alert alert-danger">${calc.errors.map(esc).join('<br>')}</div>` : ''}
       ${calc.blocked ? `<div class="alert alert-warning">${esc(calc.blocked)}</div>` : `<div class="alert alert-light py-2 small">Syarat payout SO:SI termin ini: ${calc.ratio.value === null ? '-' : h.pct(calc.ratio.value)} (rentang ${esc(calc.ratio.rule)}) <span class="text-success">memenuhi</span>.</div>`}
+      <div class="cps-work">
       <form data-action="payout.submit" data-reg="${reg.id}" data-comp="${comp}" data-per="${per.key}"><div class="row g-3"><div class="col-xl-8">
         <div class="card mb-3"><div class="card-header">Hitungan otomatis (dari setup)</div><div class="table-responsive">${linesHtml(calc.lines, comp)}</div></div>
         ${comp === 'FIX' ? `<div class="card mb-3"><div class="card-header">Monitoring termin ini</div><div class="card-body small">
@@ -141,7 +145,7 @@
         ${ex ? '<div class="mb-3"><label class="form-label">Catatan revisi</label><textarea name="note" class="form-control" rows="2"></textarea></div>' : ''}
         <div class="small mb-2">Jalur approval:</div><div class="sim-path mb-3">${ev.map((x) => `<span class="lp ${x.auto ? 'auto' : ''}">${x.layer.layer_order}. ${esc(C.APPROVAL_ROLES[x.layer.role_code])}${x.layer.is_final ? ' · final' : ''}<small>${x.auto ? 'auto' : 'manual'}</small></span>`).join('<i class="bi bi-chevron-right text-muted"></i>')}</div>
         <button class="btn btn-brand w-100" ${calc.errors.length ? 'disabled' : ''}><i class="bi bi-send"></i> ${ex ? 'Kirim ulang' : 'Ajukan payout'} ${h.rp(calc.amount)}</button>
-      </div></div></div></div></form>`,
+      </div></div></div></div></form></div></div>`,
     };
   });
 
@@ -183,20 +187,23 @@
     const s = store(reg.customer_id);
     const fields = ch.phases.PAYOUT.fields.filter((f) => f.is_visible);
     return {
-      title: `Payout ${s.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/payout/program/${program.id}?ch=${ch.id}&c=${pay.component}&per=${pay.period_key}">Payout ${esc(program.name)}</a> / <a href="#/registration/participant/${reg.id}">${esc(s.name)}</a></div>
-        <h1>${COMP[pay.component]} ${esc(pay.period_label)} ${h.badge(pay.status)}</h1><div class="sub">${reg.customer_id} · ${esc(ch.channel_name)} · diajukan ${esc((DB.byId('users', pay.submitted_by) || {}).name)} ${h.datetime(pay.created_at)}</div></div>
-        ${pay.status === 'returned' && canSubmit(user) ? `<a href="#/payout/form/${reg.id}/${pay.component}/${pay.period_key}" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi</a>` : ''}</div>
+      title: `Payout ${s.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: `/payout/program/${program.id}?ch=${ch.id}&c=${pay.component}&per=${pay.period_key}`,
+        crumb: `<a href="#/payout/program/${program.id}?ch=${ch.id}&c=${pay.component}&per=${pay.period_key}">Payout ${esc(program.name)}</a> / <a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`,
+        title: `${COMP[pay.component]} ${esc(pay.period_label)} ${h.badge(pay.status)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Toko', `<a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`], ['Customer ID', reg.customer_id], ['Nominal', h.rp(pay.amount)],
+          ['Diajukan', `${esc((DB.byId('users', pay.submitted_by) || {}).name)}<small>${h.datetime(pay.created_at)}</small>`]],
+        actions: pay.status === 'returned' && canSubmit(user) ? `<a href="#/payout/form/${reg.id}/${pay.component}/${pay.period_key}" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi</a>` : '' })}
       <div class="row g-3"><div class="col-lg-8">
         ${canAct ? UI.approvalBox('payout', pay.id, layer, `/payout/item/${pay.id}`) : ''}
         <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span>Rincian</span><span class="text-brand fw-bold">${h.rp(pay.amount)}</span></div><div class="table-responsive">${linesHtml(pay.lines, pay.component)}</div>
-          <div class="card-body py-2 small text-muted">Angka dibekukan saat pengajuan. Record ini hanya komponen ${COMP[pay.component]}; komponen lain punya record & status sendiri.</div></div>
+          <div class="card-body"><p class="small text-muted mb-0">Angka dibekukan saat pengajuan. Record ini hanya komponen ${COMP[pay.component]}; komponen lain punya record & status sendiri.</p></div></div>
         <div class="card mb-3"><div class="card-header">Data payout</div><div class="card-body"><dl class="row mb-0">
           ${fields.map((f) => `<dt class="col-sm-4">${esc(f.label)}</dt><dd class="col-sm-8">${f.data_type === 'RUPIAH' ? h.rp(pay.data[f.field_key]) : esc(pay.data[f.field_key] !== undefined && pay.data[f.field_key] !== '' ? pay.data[f.field_key] : '-')}</dd>`).join('')}</dl></div></div>
         <details class="card"><summary class="card-header">Trace rumus</summary><div class="card-body">${traceHtml(pay.lines)}</div></details>
       </div>
       <div class="col-lg-4"><div class="card mb-3"><div class="card-header">Jalur approval</div><div class="card-body">${UI.layerPath(ch.phases.PAYOUT.layers, 'payout', pay)}</div></div>
-        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('payout', pay.id)}</div></div></div></div>`,
+        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('payout', pay.id)}</div></div></div></div></div>`,
     };
   });
 })();

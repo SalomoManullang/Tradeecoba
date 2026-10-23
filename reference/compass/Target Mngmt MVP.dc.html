@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#304DDE">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#304DDE"/><g transform="translate(450,250)"><circle cx="150" cy="150" r="140" fill="none" stroke="#fff" stroke-width="26"/><circle cx="150" cy="150" r="60" fill="#C7D0F5"/></g></svg>
+</template>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:var(--color-border-default); border-radius:var(--radius-lg); border:2px solid transparent; background-clip:padding-box; }
+  @keyframes tmv-fade { from { opacity:0; } to { opacity:1; } }
+  input::placeholder { color:var(--color-text-disabled); opacity:1; }
+  [role="dialog"] > div:first-child { border-bottom:none !important; }
+  [role="dialog"] > div:last-child { border-top:none !important; }
+  a { color:var(--primary-500); }
+  a:hover { color:var(--primary-600); }
+  tbody td, tbody td * { font-size:12px !important; }
+  .tmv-seg { display:inline-flex; align-items:center; gap:8px; height:36px; padding:0 16px; background:transparent; border:none; border-radius:999px; cursor:pointer; font-family:var(--font-sans); font-size:14px; line-height:20px; font-weight:600; color:var(--color-text-primary); transition:background 120ms ease, color 120ms ease; }
+  .tmv-seg:hover { background:var(--neutral-variant-100); }
+  .tmv-seg.is-on { background:var(--primary-100); color:var(--primary-500); }
+  .cmp-side { transition:width 180ms ease; }
+  .cmp-side.is-collapsed { width:72px !important; }
+  .cmp-side.is-collapsed .cmp-side-full { display:none !important; }
+  .cmp-side.is-collapsed .cmp-side-head { justify-content:center !important; padding:20px 0 12px !important; }
+  .cmp-side-toggle { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-base,4px); cursor:pointer; flex-shrink:0; background:none; border:none; padding:0; }
+  .cmp-side-toggle:hover { background:var(--neutral-variant-100, #F0F2F5); }
+  .cmp-side.is-collapsed .cmp-side-menu { overflow:visible !important; }
+</style>
+</helmet>
+<div class="tmv-root" data-screen-label="COMPASS — Target Mngmt MVP" style="display:flex; height:100vh; font-family:var(--font-sans); background:var(--color-bg-primary); color:var(--color-text-primary); overflow:hidden;">
+
+  <div class="{{ sideClass }}" style="width:240px; flex-shrink:0; border-right:1px solid var(--color-border-default); background:var(--color-bg-secondary); display:flex; flex-direction:column; box-sizing:border-box;">
+    <div class="cmp-side-head" style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <span class="cmp-side-full" style="display:inline-flex;"><x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import></span>
+      <button type="button" class="cmp-side-toggle" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" onClick="{{ toggleSidebar }}">
+        <sc-if value="{{ sideCollapsed }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 8.5L13 13L8.5 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 8.5L17.5 13L13 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+        <sc-if value="{{ sideExpanded }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13.5L4.5 9L9 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.5 13.5L9 9L13.5 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </button>
+    </div>
+    <div class="cmp-side-full" style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div class="cmp-side-menu" style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex:1; overflow:auto; background:var(--color-bg-primary); padding:24px 24px 40px; box-sizing:border-box; width:100%;">
+
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}" style="width:100%">
+      <div style="width:100%; display:flex; flex-direction:column; gap:24px; animation:tmv-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+          <div style="font-family:var(--font-display); font-weight:700; font-size:24px; line-height:32px; color:var(--neutral-950);">Target Management</div>
+          <div style="width:400px; max-width:100%;">
+            <div style="font-size:12px; font-weight:600; line-height:16px; color:var(--color-text-primary); margin-bottom:6px;">Pilih Target</div>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ targetSelectProps }}" hint-size="400px,44px"></x-import>
+          </div>
+        </div>
+        <div>{{ listRegion }}</div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isSub }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="{{ subLabel }}" style="width:100%; display:flex; flex-direction:column; gap:24px; animation:tmv-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; align-items:center; justify-content:space-between; gap:20px 24px; flex-wrap:wrap; box-sizing:border-box;">
+          <div style="display:flex; align-items:center; gap:16px; min-width:0; flex:1 1 340px;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ backProps }}" hint-size="104px,36px">Kembali</x-import>
+            <div style="width:1px; align-self:stretch; flex-shrink:0; background:var(--color-border-default);"></div>
+            <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-family:var(--font-sans); font-weight:700; font-size:22px; line-height:28px; color:var(--color-text-primary);">{{ subTitle }}</span>
+                {{ subTags }}
+              </div>
+              <div style="font-family:var(--font-sans); font-weight:400; font-size:12px; line-height:16px; color:var(--color-text-disabled);">{{ subCaption }}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">{{ subActions }}</div>
+        </div>
+        <div>{{ subRegion }}</div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <div onClick="{{ closeFilter }}" style="{{ backdropStyle }}">
+    <div onClick="{{ stopProp }}" style="{{ drawerStyle }}">
+      <div style="flex:1; min-height:0; overflow:auto; padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+        <div style="height:28px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+          <span style="font-family:var(--font-sans); font-weight:700; font-size:22px; line-height:28px; color:var(--color-text-primary);">Filter</span>
+          <span onClick="{{ closeFilter }}" style="cursor:pointer; display:inline-flex;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Icon" name="CloseIcon" size="24" color="var(--color-text-primary)" hint-size="24px,24px"></x-import>
+          </span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:20px;">{{ drawerFields }}</div>
+      </div>
+      <div style="flex-shrink:0; padding:24px; display:flex; gap:12px; align-items:center; box-sizing:border-box;">
+        <sc-if value="{{ drawerAnyFilled }}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ hapusFilterProps }}" hint-size="120px,36px">Hapus Filter</x-import>
+        </sc-if>
+        <div style="flex:1;"></div>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ batalFilterProps }}" hint-size="64px,36px">Batal</x-import>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ terapkanFilterProps }}" hint-size="90px,36px">Terapkan</x-import>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Modal" dc-props="{{ modalProps }}" hint-size="0,0"></x-import>
+  </sc-if>
+
+  <div style="position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; align-items:center;">
+    {{ toastStack }}
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;tableDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;xs&quot;,&quot;s&quot;,&quot;m&quot;],&quot;default&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tabel&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      target: "", loading: false, view: "list",
+      asr: this.buildAssortment(), nom: this.buildNominal(),
+      search: { asr: "", nom: "" }, filters: { asr: {}, nom: {} },
+      page: { asr: 1, nom: 1 }, perPage: { asr: "10", nom: "10" },
+      sort: { asr: { key: "", dir: null }, nom: { key: "", dir: null } },
+      sel: { asr: [], nom: [] }, nomGroup: "toko",
+      edits: {}, filterOpen: false, filterDraft: {},
+      detailId: null, form: null, formOriginal: null, formErrors: {}, isEdit: false,
+      up: null, uploading: false, report: null,
+      sideCollapsed: false, modal: null, toasts: [],
+    };
+    this._tid = 0;
+  }
+
+  /* ---------- reference data ---------- */
+  months() { return ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]; }
+  years() { return ["2024", "2025", "2026"]; }
+  dcs() { return ["DC Jakarta Barat", "DC Jakarta Timur", "DC Bandung", "DC Surabaya", "DC Semarang", "DC Medan"]; }
+  outletTypes() { return ["Cosmetics Store", "Minimarket", "Supermarket", "Toko Kelontong", "Apotek"]; }
+  brands() { return ["Wardah", "Make Over", "Emina", "Kahf", "Instaperfect", "Putri"]; }
+  tokos() {
+    return [["CUST-60210", "Toko Berkah Jaya"], ["CUST-60211", "Guardian Grand Indonesia"], ["CUST-60212", "Watsons Central Park"], ["CUST-60213", "Toko Sinar Kosmetik"], ["CUST-60214", "Toko Cantik Selalu"], ["CUST-60215", "Toko Maju Bersama"], ["CUST-60216", "Alfamart Dago 88"], ["CUST-60217", "Toko Anugrah Beauty"], ["CUST-60218", "Indomaret Diponegoro"], ["CUST-60219", "Toko Sumber Wangi"], ["CUST-60220", "Toko Rejeki Makmur"], ["CUST-60221", "Apotek Sehat Sentosa"]];
+  }
+  sales() { return [["SLS-101", "Andi Prasetyo"], ["SLS-102", "Budi Santoso"], ["SLS-103", "Citra Lestari"], ["SLS-104", "Dewi Anggraini"], ["SLS-105", "Eko Nugroho"]]; }
+  buildAssortment() {
+    const T = this.tokos(), D = this.dcs(), O = this.outletTypes(), A = ["Jakarta", "Jakarta", "Bandung", "Surabaya", "Semarang", "Medan"];
+    return Array.from({ length: 24 }, (_, i) => {
+      const t = T[i % T.length], d = i % D.length;
+      const avgT = 18 + ((i * 7) % 22), avgO = 26 + ((i * 5) % 14), gap = Math.max(0, avgO - avgT), rec = avgT + Math.ceil(gap / 2);
+      const approved = i % 3 === 0;
+      return { id: String(5100 + i), dc: D[d], area: A[d], bulan: i < 16 ? 7 : 6, tahun: "2024", ref: t[0], toko: t[1], outlet: O[i % O.length], avgToko: avgT, avgOutlet: avgO, gap, rec, final: approved ? rec + (i % 2) : (i % 4 === 1 ? rec : null), state: approved ? "approved" : "draft", writeDate: (approved ? "25" : "27") + " Jun 2024 " + String(8 + (i % 9)).padStart(2, "0") + ":" + String((i * 7) % 60).padStart(2, "0") };
+    });
+  }
+  buildNominal() {
+    const T = this.tokos(), B = this.brands(), S = this.sales();
+    return Array.from({ length: 22 }, (_, i) => {
+      const t = T[i % T.length], s = S[i % S.length];
+      return { id: String(8800 + i), ref: t[0], toko: t[1], brand: B[i % B.length], month: i < 14 ? 7 : 6, year: "2024", nominal: (3 + (i * 7) % 18) * 1250000, salesId: s[0], salesName: s[1], writeDate: String(1 + (i % 27)).padStart(2, "0") + " Jun 2024 " + String(9 + (i % 8)).padStart(2, "0") + ":" + String((i * 11) % 60).padStart(2, "0") + ":00" };
+    });
+  }
+
+  /* ---------- helpers ---------- */
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  nsAll() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(n, s) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20 }) : null; }
+  iconColored(n, s, c) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20, color: c }) : null; }
+  fmtRp(n) { return "Rp " + Number(n || 0).toLocaleString("id-ID"); }
+  fmtNum(n) { return Number(n || 0).toLocaleString("id-ID"); }
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+  setK(field, k, v) { this.setState(s => ({ [field]: { ...s[field], [k]: v } })); }
+  importOpen() { return true; }
+  targetLabel(t) { return t === "asr" ? "Target Assortment Lines" : "Target Nominal Toko"; }
+
+  multiSelect(props) {
+    if (!this._MultiSelect) {
+      const self = this; const h = React.createElement;
+      this._MultiSelect = function MultiSelect(p) {
+        const [open, setOpen] = React.useState(false);
+        const [rect, setRect] = React.useState(null);
+        const [q, setQ] = React.useState("");
+        const ref = React.useRef(null); const panelRef = React.useRef(null); const searchRef = React.useRef(null);
+        const vals = p.values || [];
+        const measure = React.useCallback(() => {
+          if (!ref.current) return;
+          const r = ref.current.getBoundingClientRect();
+          const below = window.innerHeight - r.bottom - 12, above = r.top - 12;
+          const flip = below < 220 && above > below;
+          setRect({ left: r.left, width: r.width, top: flip ? undefined : r.bottom + 4, bottom: flip ? (window.innerHeight - r.top + 4) : undefined, avail: Math.max(160, flip ? above : below) });
+        }, []);
+        React.useEffect(() => {
+          const onDoc = (e) => {
+            const a = ref.current && ref.current.contains(e.target);
+            const b = panelRef.current && panelRef.current.contains(e.target);
+            if (!a && !b) { setOpen(false); setQ(""); }
+          };
+          document.addEventListener("mousedown", onDoc);
+          return () => document.removeEventListener("mousedown", onDoc);
+        }, []);
+        React.useEffect(() => {
+          if (!open) return;
+          measure();
+          const on = () => measure();
+          window.addEventListener("resize", on); window.addEventListener("scroll", on, true);
+          const onKey = (e) => { if (e.key === "Escape") { setOpen(false); setQ(""); } };
+          const ft = setTimeout(() => { if (searchRef.current) searchRef.current.focus(); }, 40);
+          document.addEventListener("keydown", onKey);
+          return () => { clearTimeout(ft); window.removeEventListener("resize", on); window.removeEventListener("scroll", on, true); document.removeEventListener("keydown", onKey); };
+        }, [open, measure]);
+        const toggle = (v) => p.onChange(vals.includes(v) ? vals.filter(x => x !== v) : [...vals, v]);
+        const filled = vals.length > 0;
+        const summary = !filled ? null : (vals.length <= 2 ? vals.join(", ") : vals.slice(0, 2).join(", ") + " +" + (vals.length - 2));
+        return h("div", { ref, style: { position: "relative", width: "100%", fontFamily: "var(--font-sans)" } },
+          h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, p.label),
+          h("div", { role: "button", tabIndex: 0, "aria-label": p.label, onClick: () => setOpen(o => { if (o) setQ(""); return !o; }), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => { if (o) setQ(""); return !o; }); } },
+            style: { display: "flex", alignItems: "center", gap: 8, height: 44, boxSizing: "border-box", padding: "0 8px 0 12px", background: "var(--color-bg-secondary)", border: "1px solid " + (open ? "var(--primary-500)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", cursor: "pointer", outline: "none", transition: "border-color 120ms ease" } },
+            h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: filled ? "var(--color-text-primary)" : "var(--color-text-disabled)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, filled ? summary : p.placeholder),
+            filled
+              ? h("button", { type: "button", "aria-label": "Kosongkan " + p.label, title: "Kosongkan", onClick: (e) => { e.stopPropagation(); p.onChange([]); setOpen(false); setQ(""); }, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, flexShrink: 0, background: "none", border: "none", borderRadius: "var(--radius-full)", cursor: "pointer", padding: 0 } }, self.iconColored("CloseIcon", 16, "var(--color-text-tertiary)"))
+              : h("span", { style: { display: "inline-flex", flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 140ms ease" } }, self.iconColored("ChevronDownIcon", 18, "var(--color-text-tertiary)"))),
+          open && rect && window.ReactDOM && window.ReactDOM.createPortal
+            ? window.ReactDOM.createPortal(h("div", { ref: panelRef, style: { position: "fixed", left: rect.left, width: rect.width, top: rect.top, bottom: rect.bottom, zIndex: 4000, background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", boxShadow: "0 16px 40px rgba(42,61,74,0.22), 0 2px 6px rgba(42,61,74,0.10)", overflow: "hidden", fontFamily: "var(--font-sans)" } },
+                (p.options || []).length > 4 ? h("div", { style: { padding: 8, borderBottom: "1px solid var(--color-border-subtle)" } },
+                  h("div", { style: { display: "flex", alignItems: "center", gap: 8, height: 36, boxSizing: "border-box", padding: "0 10px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)" } },
+                    self.iconColored("SearchOutlineIcon", 16, "var(--color-text-tertiary)"),
+                    h("input", { ref: searchRef, type: "text", value: q, placeholder: "Cari " + (p.label || "").toLowerCase() + "…",
+                      onChange: (e) => setQ(e.target.value),
+                      style: { flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }),
+                    q ? h("button", { type: "button", "aria-label": "Bersihkan pencarian", onClick: () => { setQ(""); if (searchRef.current) searchRef.current.focus(); },
+                      style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, flexShrink: 0 } }, self.iconColored("CloseIcon", 14, "var(--color-text-tertiary)")) : null)) : null,
+                h("div", { style: { maxHeight: Math.min(260, rect.avail - 20), overflowY: "auto", padding: 4 } },
+                  (function () {
+                    const list = (p.options || []).filter(o => o.toLowerCase().includes(q.trim().toLowerCase()));
+                    if (!list.length) return h("div", { style: { padding: "16px 10px", textAlign: "center", fontSize: 12, color: "var(--color-text-tertiary)" } }, "Tidak ada hasil untuk \u201C" + q + "\u201D");
+                    return list.map(o => {
+                      const on = vals.includes(o);
+                      return h("div", { key: o, role: "option", "aria-selected": on, onClick: () => toggle(o),
+                        style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: "var(--radius-base)", cursor: "pointer", background: "transparent" },
+                        onMouseEnter: (e) => { e.currentTarget.style.background = "var(--color-bg-primary)"; },
+                        onMouseLeave: (e) => { e.currentTarget.style.background = "transparent"; } },
+                        h(self.nsAll().Checkbox, { checked: on, size: "s", onChange: () => toggle(o), style: { flexShrink: 0, pointerEvents: "none" } }),
+                        h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, o));
+                    });
+                  })())), document.body)
+            : null);
+      };
+    }
+    return React.createElement(this._MultiSelect, props);
+  }
+
+  /* ---------- filters ---------- */
+  filterConfig(k) {
+    if (k === "asr") return [
+      { key: "dc", label: "DC", options: this.dcs(), val: r => r.dc },
+      { key: "area", label: "Sales Area", options: ["Jakarta", "Bandung", "Surabaya", "Semarang", "Medan"], val: r => r.area },
+      { key: "bulan", label: "Bulan", options: this.months(), val: r => this.months()[r.bulan - 1] },
+      { key: "tahun", label: "Tahun", options: this.years(), val: r => r.tahun },
+      { key: "outlet", label: "Outlet Type", options: this.outletTypes(), val: r => r.outlet },
+      { key: "state", label: "Status", options: ["Draft", "Approved"], val: r => r.state === "approved" ? "Approved" : "Draft" },
+    ];
+    return [
+      { key: "brand", label: "Brand", options: this.brands(), val: r => r.brand },
+      { key: "month", label: "Bulan", options: this.months(), val: r => this.months()[r.month - 1] },
+      { key: "year", label: "Tahun", options: this.years(), val: r => r.year },
+      { key: "sales", label: "Sales", options: this.sales().map(s => s[1]), val: r => r.salesName },
+    ];
+  }
+  rows(k) {
+    const s = this.state; let rows = s[k].slice();
+    const q = s.search[k].trim().toLowerCase();
+    if (q) rows = rows.filter(r => Object.values(r).join(" ").toLowerCase().includes(q));
+    const f = s.filters[k];
+    this.filterConfig(k).forEach(c => { const v = f[c.key] || []; if (v.length) rows = rows.filter(r => v.includes(c.val(r))); });
+    const so = s.sort[k];
+    if (so.key && so.dir) {
+      const dir = so.dir === "desc" ? -1 : 1;
+      rows.sort((a, b) => { let av = a[so.key], bv = b[so.key]; if (typeof av === "string") { av = av.toLowerCase(); bv = String(bv).toLowerCase(); } if (av == null) av = -1; if (bv == null) bv = -1; return av < bv ? -dir : av > bv ? dir : 0; });
+    }
+    return rows;
+  }
+  cycleSort(k, key) {
+    const c = this.state.sort[k];
+    const next = c.key !== key ? { key, dir: "asc" } : c.dir === "asc" ? { key, dir: "desc" } : c.dir === "desc" ? { key: "", dir: null } : { key, dir: "asc" };
+    this.setState(s => ({ sort: { ...s.sort, [k]: next }, page: { ...s.page, [k]: 1 } }));
+  }
+  fcount(k) { const f = this.state.filters[k]; return this.filterConfig(k).filter(c => (f[c.key] || []).length).length; }
+  openFilter() { const k = this.state.target; this.setState({ filterOpen: true, filterDraft: { ...this.state.filters[k] } }); }
+  applyFilter() { const k = this.state.target; this.setState(s => ({ filters: { ...s.filters, [k]: { ...s.filterDraft } }, page: { ...s.page, [k]: 1 }, filterOpen: false })); }
+  resetFilters(k) { this.setState(s => ({ filters: { ...s.filters, [k]: {} }, page: { ...s.page, [k]: 1 } })); }
+  removeFilter(k, key) { this.setState(s => ({ filters: { ...s.filters, [k]: { ...s.filters[k], [key]: [] } }, page: { ...s.page, [k]: 1 } })); }
+  filterBar(k) {
+    const h = React.createElement; const f = this.state.filters[k];
+    const chips = this.filterConfig(k).filter(c => (f[c.key] || []).length).map(c => {
+      const v = f[c.key]; const brief = v.length <= 2 ? v.join(", ") : v.slice(0, 2).join(", ") + " +" + (v.length - 2);
+      return h("div", { key: c.key, style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 8px 6px 12px", background: "var(--color-border-subtle)", borderRadius: "var(--radius-base)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } },
+        h("span", null, h("span", { style: { fontWeight: 700 } }, c.label), ": ", brief),
+        h("button", { type: "button", "aria-label": "Hapus filter " + c.label, onClick: () => this.removeFilter(k, c.key), style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--color-text-secondary)" } }, this.icon("CloseIcon", 16)));
+    });
+    if (!chips.length) return null;
+    return h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } },
+      h("span", { style: { fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" } }, "Filters by:"), chips,
+      h("button", { type: "button", onClick: () => this.resetFilters(k), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 14, fontWeight: 700, color: "var(--primary-500)" } }, this.iconColored("RefreshIcon", 18, "var(--primary-500)"), "Hapus Filter"));
+  }
+
+  /* ---------- selection & gate ---------- */
+  selectTarget(v) {
+    this.setState({ target: v, loading: true, view: "list" });
+    setTimeout(() => this.setState({ loading: false }), 600);
+  }
+
+  /* ---------- list region ---------- */
+  buildList() {
+    const h = React.createElement; const NS = this.ns(); const { Alert, Button, EmptyState, Loader, Input, Table, Select, PageNumbers } = NS;
+    const card = { background: "var(--color-bg-secondary)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-md)", padding: 24, boxSizing: "border-box" };
+    const k = this.state.target;
+    if (!k) return h("div", { style: card }, h(EmptyState, { colour: "neutral", illustration: this.emptyBoxIllustration(200), title: "Pilih Target Terlebih Dahulu", description: "Pilih Target Assortment Lines atau Target Nominal Toko untuk menampilkan data." }));
+    if (this.state.loading) return h("div", { style: { ...card, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "110px 0" } }, Loader ? h(Loader, { size: "l" }) : "Memuat…", h("div", { style: { fontSize: 14, color: "var(--color-text-tertiary)" } }, "Memuat data " + this.targetLabel(k) + "…"));
+
+    const rows = k === "nom" && this.state.nomGroup === "sales" ? this.groupBySales(this.rows("nom")) : this.rows(k);
+    const per = parseInt(this.state.perPage[k], 10);
+    const pageCount = Math.max(1, Math.ceil(rows.length / per));
+    const page = Math.min(this.state.page[k], pageCount);
+    const paged = rows.slice((page - 1) * per, page * per);
+    const fc = this.fcount(k);
+    const sel = this.state.sel[k];
+    const draftSel = k === "asr" ? sel.filter(id => (this.state.asr.find(r => r.id === id) || {}).state === "draft") : [];
+
+    const filterBtn = h(Button, fc
+      ? { variant: "secondary", size: "s", leftIcon: h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "var(--primary-500)", color: "var(--color-bg-secondary)", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, fc), style: { gap: 10, background: "var(--primary-100)", borderColor: "var(--primary-500)", color: "var(--primary-500)" }, onClick: () => this.openFilter() }
+      : { variant: "tertiary", size: "s", leftIcon: this.icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.openFilter() }, "Filters");
+    const left = h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } },
+      h("div", { style: { width: 300 } }, h(Input, { size: "s", placeholder: k === "asr" ? "Cari toko, DC, atau ID" : "Cari toko, brand, atau sales", value: this.state.search[k], leftIcon: this.icon("SearchOutlineIcon"), onChange: (e) => { this.setK("search", k, e.target.value); this.setK("page", k, 1); } })),
+      filterBtn,
+      h(Button, { variant: "tertiary", size: "s", leftIcon: this.icon("export-up", 16), onClick: () => this.toast("success", "Export dimulai", rows.length + " baris " + this.targetLabel(k) + " diekspor ke Excel.") }, "Export"));
+    const right = k === "asr"
+      ? h(Button, { variant: "primary", size: "s", leftIcon: this.icon("upload-doc", 16), onClick: () => this.openImport() }, "Import and Approve")
+      : h("div", { style: { display: "flex", gap: 12 } },
+          h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("upload-doc", 16), onClick: () => this.openImport() }, "Import"),
+          h(Button, { variant: "primary", size: "s", leftIcon: this.icon("plus-thin", 16), onClick: () => this.openForm(null) }, "Add Target"));
+    const toolbar = h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" } }, left, right);
+
+    const svgStore = (c) => h("svg", { width: 18, height: 18, viewBox: "0 0 48 48", fill: "none", "aria-hidden": true },
+      h("path", { d: "M40.0391 22V42H8.03906V22", stroke: c, strokeWidth: 4, strokeLinecap: "round", strokeLinejoin: "round" }),
+      h("path", { d: "M5.84231 13.7766C4.31276 17.7377 7.26307 22 11.5092 22C14.8229 22 17.5276 19.3137 17.5276 16C17.5276 19.3137 20.2139 22 23.5276 22H24.546C27.8597 22 30.546 19.3137 30.546 16C30.546 19.3137 33.2518 22 36.5655 22C40.8139 22 43.767 17.7352 42.2362 13.7723L39.2337 6H8.84523L5.84231 13.7766Z", stroke: c, strokeWidth: 4, strokeLinejoin: "round" }));
+    const svgBag = (c) => h("svg", { width: 18, height: 18, viewBox: "0 0 48 48", fill: "none", "aria-hidden": true },
+      h("rect", { x: 10, y: 12, width: 28, height: 30, rx: 3, stroke: c, strokeWidth: 4, strokeLinejoin: "round" }),
+      h("path", { d: "M30 18V10C30 6.68629 27.3137 4 24 4V4C20.6863 4 18 6.68629 18 10V18", stroke: c, strokeWidth: 4, strokeLinecap: "round", strokeLinejoin: "round" }));
+    const seg = (key, label, glyph) => {
+      const on = this.state.nomGroup === key;
+      const c = on ? "var(--primary-500)" : "var(--color-text-primary)";
+      return h("button", { type: "button", className: "tmv-seg" + (on ? " is-on" : ""), "aria-pressed": on, onClick: () => this.setState(s => ({ nomGroup: key, page: { ...s.page, nom: 1 } })) }, glyph(c), label);
+    };
+    const groupToggle = k === "nom" ? h("div", { role: "group", "aria-label": "Tampilan", style: { display: "inline-flex", alignItems: "center", gap: 4 } },
+      seg("toko", "Per Toko", svgStore),
+      seg("sales", "Group by Sales", svgBag)) : null;
+
+    const bulk = sel.length ? h("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--primary-100)", border: "1px solid var(--primary-200)", borderRadius: "var(--radius-lg)", flexWrap: "wrap" } },
+      h("span", { style: { fontSize: 14, fontWeight: 700, color: "var(--primary-500)" } }, sel.length + " dipilih"),
+      k === "asr" ? h(Button, { variant: "primary", size: "s", disabled: !draftSel.length, onClick: () => this.setState({ modal: { type: "approve", ids: draftSel } }) }, "Approve Terpilih (" + draftSel.length + ")") : null,
+      h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("export-up", 16), onClick: () => { this.toast("success", "Export dimulai", sel.length + " baris terpilih diekspor ke Excel."); this.setK("sel", k, []); } }, "Export Terpilih"),
+      h("div", { style: { flex: 1 } }),
+      h(Button, { variant: "ghost", size: "s", onClick: () => this.setK("sel", k, []) }, "Batalkan Pilihan")) : null;
+
+    let body;
+    if (!this.state[k].length) body = h(EmptyState, { colour: "neutral", illustration: this.emptyBoxIllustration(180), title: "Belum Ada Data", description: "Belum ada " + this.targetLabel(k) + ". Import file untuk menambahkan data." });
+    else if (!rows.length) body = h(EmptyState, { colour: "neutral", icon: "SearchOutlineIcon", title: "Tidak Ada Hasil", description: "Tidak ada data yang cocok dengan pencarian atau filter Anda.", actions: h(Button, { variant: "tertiary", size: "s", onClick: () => { this.setK("search", k, ""); this.resetFilters(k); } }, "Bersihkan Filter") });
+    else {
+      const grouped = k === "nom" && this.state.nomGroup === "sales";
+      body = h("div", null,
+        h("div", { style: { overflowX: "auto" } },
+          h(Table, { columns: grouped ? this.salesColumns() : (k === "asr" ? this.asrColumns() : this.nomColumns()), data: paged, size: this.props.tableDensity || "s", rowKey: "id", selectable: !grouped, selectedKeys: sel, onSelectionChange: (keys) => this.setK("sel", k, keys), sortKey: this.state.sort[k].key, sortDir: this.state.sort[k].dir, onSort: (key) => this.cycleSort(k, key), hoverable: true, style: { border: "none", borderRadius: 0 } })),
+        h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap", marginTop: 20 } },
+          h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+            h("span", { style: { fontSize: 14, color: "var(--color-text-primary)" } }, "Item per halaman"),
+            h("div", { style: { width: 84 } }, h(Select, { options: ["10", "25", "50"], value: this.state.perPage[k], size: "s", onChange: (v) => { this.setK("perPage", k, v); this.setK("page", k, 1); } })),
+            h("span", { style: { fontSize: 14, letterSpacing: "0.25px", color: "var(--color-text-primary)" } }, "dari total " + rows.length + (grouped ? " sales" : " data"))),
+          h(PageNumbers, { page, pageCount, onPageChange: (p) => this.setK("page", k, p) })));
+    }
+
+    const draftCount = k === "asr" ? this.state.asr.filter(r => r.state === "draft").length : 0;
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+      k === "asr" ? h(Alert, { state: "info" }, "Import and Approve hanya tersedia pada tanggal 25 hingga akhir bulan. Approved Target dapat diubah selama status masih Draft.") : null,
+      h("div", { style: { ...card, display: "flex", flexDirection: "column", gap: 20 } },
+        h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" } },
+          h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } },
+            h("span", { style: { fontSize: 16, lineHeight: "24px", fontWeight: 700, color: "var(--color-text-primary)" } }, this.targetLabel(k)),
+            k === "asr" ? h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, draftCount + " baris masih Draft dan menunggu approval") : null)),
+        toolbar, groupToggle, this.filterBar(k), bulk, body));
+  }
+
+  asrColumns() {
+    const h = React.createElement; const { Tag, Button, Input } = this.ns();
+    const txt = (v) => h("span", { style: { color: "var(--color-text-secondary)" } }, v);
+    const num = (v) => h("span", { style: { fontWeight: 700, color: "var(--neutral-950)", fontVariantNumeric: "tabular-nums" } }, v == null ? "—" : v);
+    return [
+      { key: "id", header: "ID", sortable: true, width: 72, render: (r) => txt(r.id) },
+      { key: "toko", header: "Toko", sortable: true, width: 220, render: (r) => h("div", null, h("div", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, r.toko), h("div", { style: { color: "var(--color-text-tertiary)" } }, r.ref)) },
+      { key: "dc", header: "DC / Sales Area", sortable: true, width: 170, render: (r) => h("div", null, h("div", { style: { color: "var(--color-text-primary)" } }, r.dc), h("div", { style: { color: "var(--color-text-tertiary)" } }, r.area)) },
+      { key: "bulan", header: "Periode", sortable: true, width: 120, render: (r) => txt(this.months()[r.bulan - 1] + " " + r.tahun) },
+      { key: "outlet", header: "Outlet Type", sortable: true, width: 140, render: (r) => txt(r.outlet) },
+      { key: "avgToko", header: "Avg Toko", sortable: true, align: "right", width: 100, render: (r) => num(r.avgToko) },
+      { key: "avgOutlet", header: "Avg Outlet Type", sortable: true, align: "right", width: 140, render: (r) => num(r.avgOutlet) },
+      { key: "gap", header: "Gap", sortable: true, align: "right", width: 80, render: (r) => num(r.gap) },
+      { key: "rec", header: "Rekomendasi", sortable: true, align: "right", width: 120, render: (r) => num(r.rec) },
+      { key: "final", header: "Approved Target", sortable: true, align: "right", width: 150, render: (r) => r.state === "approved"
+          ? num(r.final)
+          : h("div", { style: { width: 110, marginLeft: "auto" } }, h(Input, { size: "s", type: "number", value: r.final == null ? "" : String(r.final), placeholder: String(r.rec), onChange: (e) => this.editFinal(r.id, e.target.value) })) },
+      { key: "state", header: "Status", sortable: true, align: "center", width: 110, render: (r) => h(Tag, { colorScheme: r.state === "approved" ? "green" : "neutral", size: "s", dot: true }, r.state === "approved" ? "Approved" : "Draft") },
+      { key: "writeDate", header: "Write Date", sortable: true, width: 150, render: (r) => txt(r.writeDate) },
+      { key: "act", header: "Action", width: 150, render: (r) => h("div", { style: { display: "flex", gap: 6 } },
+          h(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r.id) }, "Detail"),
+          r.state === "draft" ? h(Button, { variant: "primary", size: "xs", onClick: () => this.setState({ modal: { type: "approve", ids: [r.id] } }) }, "Approve") : null) },
+    ];
+  }
+  nomColumns() {
+    const h = React.createElement; const { Button } = this.ns();
+    const txt = (v) => h("span", { style: { color: "var(--color-text-secondary)" } }, v);
+    return [
+      { key: "id", header: "ID", sortable: true, width: 72, render: (r) => txt(r.id) },
+      { key: "toko", header: "Toko", sortable: true, render: (r) => h("div", null, h("div", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, r.toko), h("div", { style: { color: "var(--color-text-tertiary)" } }, r.ref)) },
+      { key: "brand", header: "Brand", sortable: true, width: 130, render: (r) => txt(r.brand) },
+      { key: "month", header: "Periode", sortable: true, width: 130, render: (r) => txt(this.months()[r.month - 1] + " " + r.year) },
+      { key: "nominal", header: "Target", sortable: true, align: "right", width: 150, render: (r) => h("span", { style: { fontWeight: 700, color: "var(--neutral-950)", fontVariantNumeric: "tabular-nums" } }, this.fmtRp(r.nominal)) },
+      { key: "salesName", header: "Sales", sortable: true, width: 170, render: (r) => h("div", null, h("div", { style: { color: "var(--color-text-primary)" } }, r.salesName), h("div", { style: { color: "var(--color-text-tertiary)" } }, r.salesId)) },
+      { key: "writeDate", header: "Write Date", sortable: true, width: 160, render: (r) => txt(r.writeDate) },
+      { key: "act", header: "Action", width: 75, render: (r) => h(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r.id) }, "Detail") },
+    ];
+  }
+  groupBySales(rows) {
+    const m = {};
+    rows.forEach(r => { const g = m[r.salesId] || (m[r.salesId] = { id: r.salesId, salesName: r.salesName, toko: new Set(), brands: new Set(), nominal: 0 }); g.toko.add(r.ref); g.brands.add(r.brand); g.nominal += r.nominal; });
+    return Object.values(m).map(g => ({ id: g.id, salesName: g.salesName, tokoCount: g.toko.size, brandCount: g.brands.size, nominal: g.nominal }));
+  }
+  salesColumns() {
+    const h = React.createElement;
+    const num = (v) => h("span", { style: { fontWeight: 700, color: "var(--neutral-950)", fontVariantNumeric: "tabular-nums" } }, v);
+    return [
+      { key: "salesName", header: "Sales", sortable: true, render: (r) => h("div", null, h("div", { style: { fontWeight: 700, color: "var(--color-text-primary)" } }, r.salesName), h("div", { style: { color: "var(--color-text-tertiary)" } }, r.id)) },
+      { key: "tokoCount", header: "Jumlah Toko", sortable: true, align: "right", width: 140, render: (r) => num(r.tokoCount) },
+      { key: "brandCount", header: "Jumlah Brand", sortable: true, align: "right", width: 140, render: (r) => num(r.brandCount) },
+      { key: "nominal", header: "Total Target", sortable: true, align: "right", width: 180, render: (r) => num(this.fmtRp(r.nominal)) },
+    ];
+  }
+
+  /* ---------- assortment actions ---------- */
+  editFinal(id, v) { this.setState(s => ({ asr: s.asr.map(r => r.id === id ? { ...r, final: v === "" ? null : Math.max(0, Math.min(5000, parseInt(v, 10) || 0)) } : r) })); }
+  commitApprove(ids) {
+    this.setState(s => ({ asr: s.asr.map(r => ids.includes(r.id) ? { ...r, state: "approved", final: r.final == null ? r.rec : r.final, writeDate: "02 Jul 2024 14:20" } : r), sel: { ...s.sel, asr: [] }, modal: null }));
+    this.toast("success", "Berhasil approve target", ids.length + " target assortment telah di-approve.");
+  }
+
+  /* ---------- detail / form ---------- */
+  openDetail(id) { this.setState({ view: "detail", detailId: id, isEdit: false, form: null, formOriginal: null, formErrors: {} }); }
+  openForm(r) {
+    const f = r ? { ref: r.ref, brand: r.brand, month: this.months()[r.month - 1], year: r.year, nominal: String(r.nominal) } : { ref: "", brand: "", month: "", year: "", nominal: "" };
+    this.setState({ view: r ? "detail" : "form", isEdit: !!r, form: f, formOriginal: { ...f }, formErrors: {} });
+  }
+  setForm(p) { this.setState({ form: { ...this.state.form, ...p }, formErrors: {} }); }
+  dirty() { return JSON.stringify(this.state.form) !== JSON.stringify(this.state.formOriginal); }
+  leave(force) {
+    if (!force && this.state.form && this.dirty()) { this.setState({ modal: { type: "discard", to: "list" } }); return; }
+    this.setState({ view: "list", detailId: null, form: null, formOriginal: null, isEdit: false, modal: null });
+  }
+  cancelEdit(force) {
+    if (!force && this.dirty()) { this.setState({ modal: { type: "discard", to: "view" } }); return; }
+    this.setState({ isEdit: false, form: null, formOriginal: null, modal: null });
+  }
+  validate() {
+    const f = this.state.form, e = {};
+    if (!f.ref) e.ref = "Toko wajib dipilih";
+    if (!f.brand) e.brand = "Brand wajib dipilih";
+    if (!f.month) e.month = "Bulan wajib dipilih";
+    if (!f.year) e.year = "Tahun wajib dipilih";
+    if (!f.nominal || +f.nominal <= 0) e.nominal = "Nominal wajib diisi dan lebih dari 0";
+    return e;
+  }
+  submitForm() { const e = this.validate(); if (Object.keys(e).length) { this.setState({ formErrors: e }); return; } this.setState({ modal: { type: "save" } }); }
+  commitForm() {
+    const f = this.state.form; const t = this.tokos().find(x => x[0] === f.ref); const mi = this.months().indexOf(f.month) + 1;
+    if (this.state.view === "form") {
+      const S = this.sales()[0];
+      const row = { id: String(Math.max(...this.state.nom.map(r => +r.id)) + 1), ref: f.ref, toko: t ? t[1] : f.ref, brand: f.brand, month: mi, year: f.year, nominal: +f.nominal, salesId: S[0], salesName: S[1], writeDate: "02 Jul 2024 14:20:00" };
+      this.setState(s => ({ nom: [row, ...s.nom], view: "detail", detailId: row.id, form: null, formOriginal: null, isEdit: false, modal: null }));
+      this.toast("success", "Target berhasil dibuat", "Target " + row.toko + " · " + row.brand + " telah ditambahkan.");
+    } else {
+      const id = this.state.detailId;
+      this.setState(s => ({ nom: s.nom.map(r => r.id === id ? { ...r, ref: f.ref, toko: t ? t[1] : f.ref, brand: f.brand, month: mi, year: f.year, nominal: +f.nominal, writeDate: "02 Jul 2024 14:20:00" } : r), isEdit: false, form: null, formOriginal: null, modal: null }));
+      this.toast("success", "Berhasil menyimpan data", "Perubahan target telah disimpan.");
+    }
+  }
+  commitDelete() {
+    const id = this.state.detailId;
+    this.setState(s => ({ nom: s.nom.filter(r => r.id !== id), view: "list", detailId: null, modal: null }));
+    this.toast("success", "Target berhasil dihapus", "Data target nominal toko telah dihapus.");
+  }
+
+  roRow(label, value, color) {
+    const h = React.createElement;
+    return h("div", { key: label, style: { minWidth: 0, display: "grid", gridTemplateColumns: "minmax(130px, 38%) 1fr", alignItems: "baseline", gap: 16 } },
+      h("span", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-secondary)" } }, label),
+      h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: color || "var(--color-text-primary)", wordBreak: "break-word" } }, value));
+  }
+  secHead(title, note) {
+    const h = React.createElement;
+    return h("div", { style: { paddingBottom: 10, borderBottom: "1px solid var(--color-border-subtle)", marginBottom: 20, display: "flex", flexDirection: "column", gap: 2 } },
+      h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)" } }, title),
+      note ? h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, note) : null);
+  }
+  buildFormFields() {
+    const h = React.createElement; const { Select, Input } = this.ns();
+    const f = this.state.form, e = this.state.formErrors;
+    const lab = (label, node, err) => h("div", { key: label, style: { minWidth: 0 } },
+      h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, label, h("span", { style: { color: "var(--error-500)" } }, " *")),
+      node, err ? h("div", { style: { fontSize: 12, color: "var(--error-500)", marginTop: 4 } }, err) : null);
+    return h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px 48px" } },
+      lab("Toko", h(Select, { size: "m", placeholder: "Pilih Toko", options: this.tokos().map(t => ({ value: t[0], label: t[1] + " (" + t[0] + ")" })), value: f.ref, error: !!e.ref, onChange: (v) => this.setForm({ ref: v }) }), e.ref),
+      lab("Brand", h(Select, { size: "m", placeholder: "Pilih Brand", options: this.brands(), value: f.brand, error: !!e.brand, onChange: (v) => this.setForm({ brand: v }) }), e.brand),
+      lab("Bulan", h(Select, { size: "m", placeholder: "Pilih Bulan", options: this.months(), value: f.month, error: !!e.month, onChange: (v) => this.setForm({ month: v }) }), e.month),
+      lab("Tahun", h(Select, { size: "m", placeholder: "Pilih Tahun", options: this.years(), value: f.year, error: !!e.year, onChange: (v) => this.setForm({ year: v }) }), e.year),
+      lab("Nominal Target (Rp)", h(Input, { size: "m", type: "number", placeholder: "0", value: f.nominal, error: !!e.nominal, onChange: (ev) => this.setForm({ nominal: ev.target.value }) }), e.nominal));
+  }
+  buildSub() {
+    const h = React.createElement; const { Tag, Button, Input, Alert } = this.ns();
+    const card = { background: "var(--color-bg-secondary)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-md)", padding: 24, boxSizing: "border-box" };
+    const k = this.state.target, s = this.state;
+    const back = { variant: "ghost", size: "s", leftIcon: this.iconColored("arrow-left", 18, "var(--primary-500)"), onClick: () => this.leave(false) };
+    if (s.view === "form") {
+      return { label: "Add Target Nominal Toko", title: "Add Target", tags: null, caption: "Target Nominal Toko · Write Date terisi otomatis saat disimpan", back,
+        actions: h("div", { style: { display: "flex", gap: 12 } }, h(Button, { variant: "secondary", size: "s", onClick: () => this.leave(false) }, "Batal"), h(Button, { variant: "primary", size: "s", leftIcon: this.icon("save", 16), onClick: () => this.submitForm() }, "Simpan")),
+        region: h("div", { style: card }, this.secHead("Informasi Target"), this.buildFormFields()) };
+    }
+    if (k === "asr") {
+      const r = s.asr.find(x => x.id === s.detailId); if (!r) return null;
+      const draft = r.state === "draft";
+      return { label: "Detail Target Assortment", title: r.toko, back,
+        tags: h("span", { style: { display: "inline-flex", gap: 8 } }, h(Tag, { colorScheme: "neutral", size: "s" }, r.ref), h(Tag, { colorScheme: draft ? "neutral" : "green", size: "s", dot: true }, draft ? "Draft" : "Approved")),
+        caption: "ID " + r.id + " · " + r.dc + " · " + this.months()[r.bulan - 1] + " " + r.tahun,
+        actions: draft ? h(Button, { variant: "primary", size: "s", onClick: () => this.setState({ modal: { type: "approve", ids: [r.id] } }) }, "Approve") : null,
+        region: h("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+          h("div", { style: card }, this.secHead("Informasi Toko"),
+            h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px 48px" } },
+              this.roRow("Toko", r.toko + " (" + r.ref + ")"), this.roRow("DC", r.dc), this.roRow("Sales Area", r.area), this.roRow("Outlet Type", r.outlet),
+              this.roRow("Periode", this.months()[r.bulan - 1] + " " + r.tahun), this.roRow("Write Date", r.writeDate))),
+          h("div", { style: card }, this.secHead("Perhitungan Target", "Rekomendasi = Avg Toko + setengah Gap terhadap rata-rata Outlet Type"),
+            h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 24 } },
+              [["Avg Line Toko", r.avgToko], ["Avg Line Outlet Type", r.avgOutlet], ["Gap", r.gap], ["Rekomendasi", r.rec]].map(x => h("div", { key: x[0], style: { padding: 16, background: "var(--color-bg-primary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-lg)" } },
+                h("div", { style: { fontSize: 12, color: "var(--color-text-secondary)" } }, x[0]),
+                h("div", { style: { fontSize: 22, lineHeight: "28px", fontWeight: 700, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums", marginTop: 4 } }, x[1])))),
+            draft
+              ? h("div", { style: { maxWidth: 360 } },
+                  h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, "Approved Target"),
+                  h(Input, { size: "m", type: "number", value: r.final == null ? "" : String(r.final), placeholder: String(r.rec), onChange: (e) => this.editFinal(r.id, e.target.value) }),
+                  h("div", { style: { fontSize: 12, color: "var(--color-text-tertiary)", marginTop: 4 } }, "Kosongkan untuk memakai nilai rekomendasi. Rentang 0 – 5.000."))
+              : this.roRow("Approved Target", String(r.final), "var(--success-600)"))) };
+    }
+    const r = s.nom.find(x => x.id === s.detailId); if (!r) return null;
+    return { label: "Detail Target Nominal Toko", title: r.toko, back,
+      tags: h("span", { style: { display: "inline-flex", gap: 8 } }, h(Tag, { colorScheme: "neutral", size: "s" }, r.ref), h(Tag, { colorScheme: "blue", size: "s" }, r.brand)),
+      caption: "ID " + r.id + " · " + this.months()[r.month - 1] + " " + r.year + " · Sales " + r.salesName,
+      actions: s.isEdit
+        ? h("div", { style: { display: "flex", gap: 12 } }, h(Button, { variant: "secondary", size: "s", onClick: () => this.cancelEdit(false) }, "Batal"), h(Button, { variant: "primary", size: "s", disabled: !this.dirty(), leftIcon: this.icon("save", 16), onClick: () => this.submitForm() }, "Simpan"))
+        : h("div", { style: { display: "flex", gap: 12 } },
+            h(Button, { variant: "tertiary", size: "s", style: { color: "var(--error-500)" }, leftIcon: this.iconColored("DeleteOutlineIcon", 16, "var(--error-500)"), onClick: () => this.setState({ modal: { type: "delete" } }) }, "Hapus"),
+            h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("pencil", 16), onClick: () => this.openForm(r) }, "Edit")),
+      region: h("div", { style: card }, this.secHead("Informasi Target", s.isEdit ? "Sales mengikuti Master Call Plan toko dan tidak dapat diubah" : null),
+        s.isEdit ? this.buildFormFields()
+          : h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px 48px" } },
+              this.roRow("ID", r.id), this.roRow("Toko", r.toko + " (" + r.ref + ")"), this.roRow("Brand", r.brand), this.roRow("Periode", this.months()[r.month - 1] + " " + r.year),
+              this.roRow("Target", this.fmtRp(r.nominal)), this.roRow("Sales", r.salesName + " (" + r.salesId + ")"), this.roRow("Write Date", r.writeDate))) };
+  }
+
+  /* ---------- import ---------- */
+  openImport() { this.setState({ up: { dc: "", file: null }, uploading: false, modal: { type: "import" } }); }
+  runImport() {
+    const k = this.state.target;
+    this.setState({ uploading: true });
+    setTimeout(() => {
+      if (k === "asr") {
+        const ids = this.state.asr.filter(r => r.state === "draft").slice(0, 5).map(r => r.id);
+        this.setState(s => ({ asr: s.asr.map(r => ids.includes(r.id) ? { ...r, state: "approved", final: r.final == null ? r.rec : r.final, writeDate: "02 Jul 2024 14:20" } : r), uploading: false, up: null, modal: null }));
+        this.toast("success", "Import berhasil", ids.length + " target assortment ter-import dan di-approve.");
+      } else {
+        const report = { notInMcp: ["CUST-60299", "CUST-60304"], notInTarget: ["Wardah — CUST-60216"] };
+        this.setState({ uploading: false, up: null, report, modal: { type: "report" } });
+        this.toast("warning", "Import selesai dengan peringatan", "Sebagian baris tidak diproses. Periksa laporan import.");
+      }
+    }, 1000);
+  }
+
+  emptyBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="var(--color-border-subtle)"/><path d="M73.6599 211.452V157.942H205.86V212.162L138.68 224L73.6599 211.452Z" fill="white" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M74.1399 211.162V153.713L138.78 162.671V223.43L74.1399 211.162Z" fill="var(--color-border-subtle)"/><path d="M74.1399 153.713L138.78 162.671V223.43" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M139.23 161.561L119.96 182.267L54.9399 162.011L72.4299 144.514L54.9899 127.067L120.02 112L139.27 124.988L160.92 112L224.93 129.417L206.53 144.514L225.02 159.682L165.72 182.267L139.23 161.561Z" fill="white" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M74.5801 144.484L139.28 124.918L204.45 144.484L139.28 161.721L74.5801 144.484Z" fill="#C2C2C2" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M74.5801 144.484L138.78 125.068V161.591L74.5801 144.484Z" fill="var(--color-border-subtle)" stroke="var(--color-text-disabled)" stroke-width="2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M191.71 128C210.648 128 226 112.648 226 93.7099C226 74.7721 210.648 59.4199 191.71 59.4199C172.772 59.4199 157.42 74.7721 157.42 93.7099C157.42 112.648 172.772 128 191.71 128Z" fill="#7A7A7A"/></g><path d="M188.29 124.58C207.228 124.58 222.58 109.228 222.58 90.29C222.58 71.3522 207.228 56 188.29 56C169.352 56 154 71.3522 154 90.29C154 109.228 169.352 124.58 188.29 124.58Z" fill="#7A7A7A"/><path d="M188.29 105.16C190.66 105.16 192.58 107.08 192.58 109.45V109.5C192.58 111.87 190.66 113.79 188.29 113.79C185.92 113.79 184 111.87 184 109.5V109.45C184 107.08 185.92 105.16 188.29 105.16ZM188.29 66.7803C190.66 66.7803 192.58 68.7003 192.58 71.0703V96.1797C192.58 98.5497 190.66 100.47 188.29 100.47C185.92 100.47 184 98.5497 184 96.1797V71.0703C184 68.7003 185.92 66.7803 188.29 66.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  errorBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="var(--color-border-subtle)"/><path d="M84.1078 218L44.4178 107.689C43.6478 105.549 43.9578 103.11 45.2178 101.3C46.2478 99.8399 47.7678 99 49.3978 99H94.5078C96.6278 99 98.6478 99.9199 100.208 101.6L107.838 109.849H163.068C166.478 109.849 169.518 112.219 170.798 115.879L205.978 216.14C206.128 216.57 206.068 217.03 205.798 217.41C205.538 217.78 205.118 218 204.668 218H84.1078Z" fill="#C2C2C2" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M84.1778 218L64.6078 115.509C64.5178 115.089 64.6078 114.669 64.8578 114.369C65.0378 114.139 65.2878 114.019 65.5478 114.019H186.848L206.418 216.34C206.498 216.75 206.388 217.17 206.128 217.49C205.868 217.81 205.468 217.99 205.058 217.99L84.1878 216.99L84.1778 218Z" fill="white" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M81.9377 106.809C81.9177 106.419 82.0477 106.069 82.2777 105.819C82.4577 105.629 82.6777 105.529 82.9077 105.529H203.528C204.048 105.529 204.468 106.019 204.498 106.649L206.818 209.241L84.2377 216.95L81.9277 106.789L81.9377 106.809Z" fill="white" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M101.568 112.669C101.758 111.249 102.778 110.219 103.988 110.219L227.698 109.669C227.938 109.669 228.178 109.779 228.358 109.989C228.598 110.259 228.708 110.659 228.658 111.049L208.498 209.171L84.3477 216.96L101.558 112.669H101.568Z" fill="white" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M84.998 218L112.628 125.578C113.758 121.588 116.948 118.908 120.568 118.908H229.598C231.168 118.908 232.608 119.658 233.648 121.038C234.928 122.728 235.328 124.998 234.728 127.128L207.678 215.67C207.258 217.06 205.988 218 204.538 218H84.998Z" fill="var(--color-border-subtle)" stroke="var(--color-text-disabled)" stroke-width="2"/><path d="M200.378 203.861H161.288C160.148 203.861 159.538 202.941 159.928 201.801L167.668 179.023C168.058 177.883 169.288 176.963 170.428 176.963H209.518C210.658 176.963 211.268 177.883 210.878 179.023L203.138 201.801C202.748 202.941 201.518 203.861 200.378 203.861Z" fill="#C2C2C2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M193.71 134C212.648 134 228 118.648 228 99.7099C228 80.7721 212.648 65.4199 193.71 65.4199C174.772 65.4199 159.42 80.7721 159.42 99.7099C159.42 118.648 174.772 134 193.71 134Z" fill="#7A7A7A"/></g><path d="M190.29 130.58C209.228 130.58 224.58 115.228 224.58 96.29C224.58 77.3522 209.228 62 190.29 62C171.352 62 156 77.3522 156 96.29C156 115.228 171.352 130.58 190.29 130.58Z" fill="#7A7A7A"/><path d="M190.29 111.16C192.66 111.16 194.58 113.08 194.58 115.45V115.5C194.58 117.87 192.66 119.79 190.29 119.79C187.92 119.79 186 117.87 186 115.5V115.45C186 113.08 187.92 111.16 190.29 111.16ZM190.29 72.7803C192.66 72.7803 194.58 74.7003 194.58 77.0703V102.18C194.58 104.55 192.66 106.47 190.29 106.47C187.92 106.47 186 104.55 186 102.18V77.0703C186 74.7003 187.92 72.7803 190.29 72.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+
+  /* ---------- modal ---------- */
+  buildModal() {
+    const h = React.createElement; const { Button, Alert, Select } = this.ns();
+    const m = this.state.modal; if (!m) return { open: false };
+    const close = () => this.setState({ modal: null });
+    const foot = (...btns) => h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } }, ...btns);
+    const k = this.state.target;
+    if (m.type === "approve") {
+      return { open: true, onClose: close, closeOnOverlay: true, title: "Approve Target", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } },
+          h("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, "Approve ", h("b", null, m.ids.length + " target assortment"), "?"),
+          h(Alert, { state: "warning" }, "Target yang sudah di-approve tidak dapat diubah lagi. Baris tanpa Approved Target akan memakai nilai rekomendasi.")),
+        footer: foot(h(Button, { variant: "secondary", size: "s", onClick: close }, "Batal"), h(Button, { variant: "primary", size: "s", onClick: () => this.commitApprove(m.ids) }, "Approve")) };
+    }
+    if (m.type === "import") {
+      const u = this.state.up || {}, busy = this.state.uploading;
+      return { open: true, onClose: () => { if (!busy) this.setState({ modal: null, up: null }); }, closeOnOverlay: !busy, title: k === "asr" ? "Import and Approve Target Assortment" : "Import Target Toko", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 20, width: "100%" } },
+          k === "nom" ? h("div", null,
+            h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, "DC (untuk template)"),
+            h(Select, { size: "m", placeholder: "Pilih DC", options: this.dcs(), value: u.dc, disabled: busy, onChange: (v) => this.setState({ up: { ...u, dc: v } }) })) : null,
+          h("button", { type: "button", disabled: busy || (k === "nom" && !u.dc), onClick: () => this.toast("success", "Template diunduh", (k === "asr" ? "template_import_target_assortment" : "template_import_target_toko_" + String(u.dc).replace(/\s+/g, "_").toLowerCase()) + ".xlsx siap diisi."),
+            style: { display: "inline-flex", alignItems: "center", gap: 8, alignSelf: "flex-start", background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, color: (busy || (k === "nom" && !u.dc)) ? "var(--color-text-disabled)" : "var(--info-500)" } },
+            this.iconColored("export-up", 18, (busy || (k === "nom" && !u.dc)) ? "var(--color-text-disabled)" : "var(--info-500)"), "Download Template"),
+          u.file
+            ? h("div", { style: { border: "1px solid var(--color-border-default)", background: "var(--color-bg-primary)", borderRadius: "var(--radius-base)", padding: "20px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } },
+                h("span", { style: { display: "inline-flex", alignItems: "center", gap: 8, minWidth: 0, fontSize: 14, color: "var(--info-500)" } }, this.iconColored("upload-doc", 20, "var(--info-500)"), u.file),
+                h("button", { type: "button", "aria-label": "Hapus file", disabled: busy, onClick: () => this.setState({ up: { ...u, file: null } }), style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2 } }, this.iconColored("CloseIcon", 16, "var(--error-500)")))
+            : h("div", { role: "button", tabIndex: 0, onClick: () => this.setState({ up: { ...u, file: k === "asr" ? "target_assortment_juli_2024.xlsx" : "target_toko_juli_2024.xlsx" } }),
+                style: { border: "1px dashed var(--color-border-default)", background: "var(--color-bg-primary)", borderRadius: "var(--radius-base)", padding: "28px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer" } },
+                this.iconColored("upload-doc", 32, "var(--color-text-secondary)"),
+                h("span", { style: { fontSize: 14, color: "var(--color-text-primary)" } }, "Klik atau Drag file ke area ini"),
+                h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "Format .xlsx, .csv, atau .ods · Maks. 2,8 MB")),
+          k === "asr" ? h(Alert, { state: "info" }, "Seluruh baris pada file akan langsung di-approve setelah import berhasil.") : null),
+        footer: foot(h(Button, { variant: "secondary", size: "s", disabled: busy, onClick: () => this.setState({ modal: null, up: null }) }, "Batal"),
+          h(Button, { variant: "primary", size: "s", disabled: !u.file || busy, leftIcon: this.icon("upload-doc", 16), onClick: () => this.runImport() }, busy ? "Mengimport…" : (k === "asr" ? "Import & Approve" : "Import"))) };
+    }
+    if (m.type === "report") {
+      const r = this.state.report || { notInMcp: [], notInTarget: [] };
+      const list = (title, desc, items) => h("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+        h("div", { style: { fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" } }, title + " (" + items.length + ")"),
+        h("div", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, desc),
+        h("div", { style: { border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4 } }, items.map(x => h("span", { key: x, style: { fontSize: 14, color: "var(--color-text-primary)", fontVariantNumeric: "tabular-nums" } }, x))));
+      return { open: true, onClose: close, closeOnOverlay: true, title: "Laporan Import", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 18, width: "100%" } },
+          h(Alert, { state: "warning", title: "Sebagian data tidak diproses" }, "Perbaiki baris berikut pada file, lalu import ulang."),
+          list("Toko tidak ada di Master Call Plan", "Toko belum dijadwalkan pada MCP sales mana pun.", r.notInMcp),
+          list("Target tidak dikenali", "Kombinasi brand dan toko tidak ada pada master target.", r.notInTarget)),
+        footer: foot(h(Button, { variant: "primary", size: "s", onClick: close }, "Mengerti")) };
+    }
+    if (m.type === "save") {
+      return { open: true, onClose: close, closeOnOverlay: true, title: "Simpan", size: "m",
+        children: h("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, "Simpan data target yang kamu masukkan?"),
+        footer: foot(h(Button, { variant: "secondary", size: "s", onClick: close }, "Batalkan"), h(Button, { variant: "primary", size: "s", onClick: () => this.commitForm() }, "Simpan")) };
+    }
+    if (m.type === "delete") {
+      const r = this.state.nom.find(x => x.id === this.state.detailId);
+      return { open: true, onClose: close, closeOnOverlay: true, title: "Hapus Target", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } },
+          h("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, "Hapus target ", h("b", null, r ? r.toko + " · " + r.brand : ""), "?"),
+          h(Alert, { state: "warning" }, "Data yang sudah dihapus tidak dapat dikembalikan.")),
+        footer: foot(h(Button, { variant: "secondary", size: "s", onClick: close }, "Batalkan"), h(Button, { variant: "primary", size: "s", style: { background: "var(--error-500)", borderColor: "var(--error-500)" }, onClick: () => this.commitDelete() }, "Hapus")) };
+    }
+    if (m.type === "discard") {
+      const go = m.to === "list" ? () => this.leave(true) : () => this.cancelEdit(true);
+      return { open: true, onClose: close, closeOnOverlay: true, title: "Batalkan Perubahan?", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } },
+          h("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, "Yakin ingin keluar tanpa menyimpan?"),
+          h(Alert, { state: "warning", title: "Perubahan belum disimpan" }, "Perubahan yang sudah Anda buat akan hilang jika keluar sekarang.")),
+        footer: foot(h(Button, { variant: "secondary", size: "s", onClick: close }, "Lanjut Edit"), h(Button, { variant: "primary", size: "s", style: { background: "var(--error-500)", borderColor: "var(--error-500)" }, onClick: go }, "Ya, Batalkan")) };
+    }
+    return { open: false };
+  }
+
+  normalizeType() { const root = document.querySelector(".tmv-root"); if (!root) return; root.querySelectorAll('[style*="13px"]').forEach(el => { if (el.style.fontSize === "13px") el.style.fontSize = "12px"; }); }
+  componentDidMount() { this.normalizeType(); }
+  componentDidUpdate() { this.normalizeType(); }
+
+  navDateText() {
+    const d = new Date(), D = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"], M = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return D[d.getDay()] + ", " + d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  navClock() {
+    if (!this._NavClock) {
+      this._NavClock = function NavClock() {
+        const fmt = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Jakarta", hour12: false }) + " WIB";
+        const [t, setT] = React.useState(fmt());
+        React.useEffect(() => { const i = setInterval(() => setT(fmt()), 1000); return () => clearInterval(i); }, []);
+        return React.createElement("span", null, t);
+      };
+    }
+    return React.createElement(this._NavClock, null);
+  }
+  renderVals() {
+    const h = React.createElement; const icon = (n, s) => this.icon(n, s); const s = this.state;
+    const FILLED = {
+      info: { bg: "var(--info-100)", accent: "var(--info-500)", title: "var(--info-800)", msg: "var(--info-500)", icon: "InfoFilledIcon" },
+      success: { bg: "var(--success-100)", accent: "var(--success-600)", title: "var(--success-800)", msg: "var(--success-600)", icon: "CheckFilledIcon" },
+      warning: { bg: "var(--warning-100)", accent: "var(--warning-700)", title: "var(--warning-800)", msg: "var(--warning-700)", icon: "HazardFilledIcon" },
+      error: { bg: "var(--error-100)", accent: "var(--error-500)", title: "var(--error-800)", msg: "var(--error-700)", icon: "close-circle-filled" },
+    };
+    const toastStack = h(React.Fragment, null, s.toasts.map(t => {
+      const f = FILLED[t.state] || FILLED.info;
+      return h("div", { key: t.id, role: "status", style: { display: "flex", gap: 10, alignItems: "center", minWidth: 340, maxWidth: 560, padding: "10px 14px", background: f.bg, border: "1px solid " + f.accent, borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-md)", boxSizing: "border-box" } },
+        h("span", { style: { display: "inline-flex", flexShrink: 0 } }, this.iconColored(f.icon, 20, f.accent)),
+        h("div", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px" } }, h("span", { style: { fontWeight: 700, color: f.title } }, t.title + " "), h("span", { style: { color: f.msg } }, t.msg)),
+        h("button", { type: "button", "aria-label": "Tutup", onClick: () => this.setState(st => ({ toasts: st.toasts.filter(x => x.id !== t.id) })), style: { background: "none", border: "none", cursor: "pointer", padding: 2, display: "inline-flex" } }, this.iconColored("CloseIcon", 18, f.accent)));
+    }));
+    const dfCfg = s.target ? this.filterConfig(s.target) : [];
+    const vals = {
+      isList: s.view === "list", isSub: s.view !== "list",
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: icon("SearchOutlineIcon") },
+      sideClass: "cmp-side" + (s.sideCollapsed ? " is-collapsed" : ""), sideCollapsed: !!s.sideCollapsed, sideExpanded: !s.sideCollapsed,
+      sideToggleLabel: s.sideCollapsed ? "Perluas menu" : "Tutup menu",
+      toggleSidebar: () => this.setState(st => ({ sideCollapsed: !st.sideCollapsed })),
+      sidebarProps: {
+        collapsed: !!s.sideCollapsed, activeKey: "target-mvp", defaultExpanded: [],
+        onSelect: (k) => { const go = { "manage-roles": "Account Management.dc.html#roles", "manage-users": "Account Management.dc.html#users", "md-bp": "Master Data.dc.html#bp", "product-list": "Master Data.dc.html#product", "product-rule": "Master Data.dc.html#rule", "standar-stok": "Standard Stock Management.dc.html", "npd-setting": "NPD Setting.dc.html", "mhs-setting": "MHS Setting.dc.html", "target-sku-setting": "Target SKU Setting.dc.html", "order": "Order.dc.html", "retur": "Retur.dc.html", "bp": "Business Partner Management.dc.html", "parameter": "Parameter.dc.html", "manage-project": "Manage Project.dc.html", "target-management": "Target Management.dc.html", "target-management-sl": "Target Management SL.dc.html", "target-mvp": "Target Mngmt MVP.dc.html", "manage-content": "Manage Content.dc.html", "content-type": "Content Type.dc.html" }[k]; if (go) window.location.href = go; },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [{ key: "manage-roles", label: "Manage Roles" }, { key: "manage-users", label: "Manage Users" }] },
+          { key: "project", label: "Project", icon: "project-plus", children: [{ key: "project-list", label: "Coming Soon" }] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [{ key: "md-bp", label: "Business Partner" }, { key: "product", label: "Product", children: [{ key: "product-list", label: "Product List" }, { key: "product-rule", label: "Product Rule" }] }, { key: "employee", label: "Employee" }, { key: "holiday", label: "Holiday" }, { key: "consumer-data", label: "Consumer Data" }] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [{ key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" }] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [{ key: "product-configuration", label: "Product Configuration", children: [{ key: "standar-stok", label: "Standar Stok" }, { key: "npd-setting", label: "NPD Setting" }, { key: "mhs-setting", label: "MHS Setting" }, { key: "target-sku-setting", label: "Target SKU Setting" }] }] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [{ key: "order", label: "Order" }, { key: "retur", label: "Retur" }] },
+          { key: "bp", label: "BP Management", icon: "account-mgmt" },
+          { key: "parameter", label: "Parameter", icon: "note-list" },
+          { key: "manage-project", label: "Manage Project", icon: "project-plus" },
+          { key: "target-management", label: "Target Management", icon: "visit-list" },
+          { key: "target-management-sl", label: "Target Management MVP", icon: "visit-list" },
+          { key: "target-mvp", label: "Target Mngmt MVP", icon: "visit-list" },
+          { key: "content-management", label: "Content Management", icon: "note-list", children: [ { key: "manage-content", label: "Manage Content" }, { key: "content-type", label: "Content Type" } ] },
+        ],
+      },
+      navProps: {
+        left: h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, h("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, this.navDateText()), h("span", { style: { fontWeight: 400, fontSize: 12, lineHeight: "18px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, this.navClock())),
+        user: { name: "M. Lutfi Maulana", role: "Technology Solution", status: "active" },
+      },
+      targetSelectProps: { size: "m", placeholder: "Pilih Target", options: [{ value: "asr", label: "Target Assortment Lines" }, { value: "nom", label: "Target Nominal Toko" }], value: s.target, onChange: (v) => this.selectTarget(v) },
+      listRegion: s.view === "list" ? this.buildList() : null,
+      backdropStyle: { position: "fixed", inset: 0, background: "rgba(42,61,74,0.45)", display: "flex", justifyContent: "flex-end", zIndex: 50, opacity: s.filterOpen ? 1 : 0, pointerEvents: s.filterOpen ? "auto" : "none", transition: "opacity 260ms ease" },
+      drawerStyle: { width: 440, height: "100%", background: "var(--color-bg-secondary)", display: "flex", flexDirection: "column", boxSizing: "border-box", fontFamily: "var(--font-sans)", transform: s.filterOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 280ms cubic-bezier(0.4,0,0.2,1)" },
+      closeFilter: () => this.setState({ filterOpen: false }), stopProp: (e) => e.stopPropagation(),
+      drawerFields: h(React.Fragment, null, dfCfg.map(c => h("div", { key: c.key }, this.multiSelect({ label: c.label, placeholder: "Pilih " + c.label, options: c.options, values: s.filterDraft[c.key] || [], onChange: (v) => this.setState({ filterDraft: { ...this.state.filterDraft, [c.key]: v } }) })))),
+      drawerAnyFilled: dfCfg.some(c => (s.filterDraft[c.key] || []).length),
+      hapusFilterProps: { variant: "ghost", size: "s", leftIcon: icon("RefreshIcon", 16), onClick: () => this.setState({ filterDraft: {} }) },
+      batalFilterProps: { variant: "secondary", size: "s", onClick: () => this.setState({ filterOpen: false }) },
+      terapkanFilterProps: { variant: "primary", size: "s", onClick: () => this.applyFilter() },
+      modalOpen: !!s.modal, modalProps: this.buildModal(), toastStack,
+    };
+    if (s.view !== "list") {
+      const sub = this.buildSub() || {};
+      vals.subLabel = sub.label || ""; vals.subTitle = sub.title || ""; vals.subTags = sub.tags || null; vals.subCaption = sub.caption || "";
+      vals.subActions = sub.actions || null; vals.subRegion = sub.region || null; vals.backProps = sub.back || { variant: "ghost", size: "s", onClick: () => this.leave(true) };
+    }
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

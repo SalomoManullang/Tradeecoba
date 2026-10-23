@@ -1,0 +1,225 @@
+Sales Execution: Retur
+[LO-normal] Description: 
+[heading30] Objective: 
+[heading30] Requirements:
+Task/Story
+Short Desc
+User Story
+Acceptance Criteria
+Return menu access in BackOffice 
+Access to the Return module in BackOffice is role-restricted. 
+As an authorized BackOffice user, I want to access the Return module from the sidebar so that I can view and manage return submissions.
+Menu Visibility
+[ListParagraph] • The 'Retur' menu must be visible in the BackOffice.
+[ListParagraph] • The Return menu access in BackOffice must be restricted based on role permission.
+[ListParagraph] • Users without access must receive an unauthorized error on direct URL access.
+Return list 
+As an Admin KDC, I want to see all return submissions in a paginated table.
+Table Columns
+[ListParagraph] • The table must display at minimum: 
+[ListParagraph] • ID, 
+[ListParagraph] • DC, 
+[ListParagraph] • Sales Area, 
+[ListParagraph] • Reference, 
+[ListParagraph] • Partner Ref, 
+[ListParagraph] • Partner Name (Store Name)
+[ListParagraph] • Brand, 
+[ListParagraph] • Total SKU, 
+[ListParagraph] • In Consignment (Yes/No), 
+[ListParagraph] • Ratio Pengajuan (%), 
+[ListParagraph] • Status, 
+[ListParagraph] • Write Date,
+[ListParagraph] • Actions.
+Pagination
+[ListParagraph] • The table must support pagination. 
+[ListParagraph] • Total record count must be visible (e.g., 'Showing 1–30 of 318 items').
+[ListParagraph] • Page navigation controls (first, prev, next, last) must be available.
+Default Sort
+[ListParagraph] • Default sort: Action Date, most recent first.
+Empty State
+[ListParagraph] • If no records are found after filtering, the table must display an empty state message.
+Search Return list by reference or store name
+As an Admin KDC, I want to search by reference number or store name to find a specific submission quickly.
+Search Field
+[ListParagraph] • Search must support: 
+[ListParagraph] • Return Reference Number (full or partial)
+[ListParagraph] • Partner Name / Store Name (partial match). 
+[ListParagraph] • Results update on submission (enter key or search button).
+[ListParagraph] • A clear action must reset the search and show the full list.
+Filter and sort Return list
+As an Admin KDC, I want to filter by status, brand, DC, sales area, and date, and sort by relevant columns, so I can isolate my pending approval queue efficiently.
+Filter Options
+[ListParagraph] • Filter must support: Status, Brand, DC, Sales Area.
+[ListParagraph] • Filters and search work in combination. Record count updates based on active filters.
+Filter State Persistence
+[ListParagraph] • Filter state must persist when navigating from the list to a detail page and back. 
+[ListParagraph] • Returning via the 'Back' button or via the detail page's navigation must not reset active filters or scroll position.
+Sort
+[ListParagraph] • The list must support ascending/descending sort on: Action Date, Submission Ratio, and Total SKU. 
+Record Count
+[ListParagraph] • 'Showing X of Y records' must be displayed and update based on active filters.
+Export Return list data
+As an Admin KDC, I want to export the return list to a spreadsheet file.
+Export
+[ListParagraph] • An Export button must be available on the Return list page. The export applies the current active search, filter, and sort state.
+[ListParagraph] • Exported file must be .xlsx or .csv, containing all visible table columns with readable values. File downloads automatically to the user's device.
+Bulk select  return submissions
+As an Admin KDC, I want to select multiple return submissions at once from the list, so that I can approve or reject them in a single action.
+Provide a “Bulk Approve” button next to the Export button.
+[ListParagraph] • When the user clicks Bulk Approve, checkboxes must appear for each row with status “Waiting for Approval KDC.”
+[ListParagraph] • Only KDC and authorized users are allowed to perform bulk approval.
+[ListParagraph] • A “Select All” checkbox in the table header must select all records on the current page.
+[ListParagraph] • The number of selected records must be displayed dynamically (e.g., “7 returns selected”).
+[ListParagraph] • Bulk selection is only applicable to records with status “Waiting for Approval KDC.” Records with other statuses cannot be selected.
+[ListParagraph] • If filters are changed after selecting records, the selection must be cleared, and a warning displayed:“Selection cleared due to filter change.”
+Bulk Approval Summary
+Before the Admin KDC confirms bulk approval, the system displays a summary page containing data visualizations of all selected submissions, including flagging stores that have exceeded the SOA ratio threshold. Stores that exceed the threshold can be excluded from the bulk approval before processing.
+As an Admin KDC, I want to see a comprehensive summary of all selected return submissions before confirming bulk approval, so that I can make an informed decision and exclude non-compliant submissions before approving.
+Bulk Action Bar
+[ListParagraph] • When at least 1 record is selected, a bulk action bar must appear (fixed at the top or bottom of the table) with the options: 'Approve All' and 'Reject All'.
+Bulk Approve Summary
+[ListParagraph] • After the Admin KDC taps "Approve All" from the bulk action bar, the system must navigate to a modal before any approval is processed.
+[ListParagraph] • The Summary Page must be dismissible, Admin KDC can tap "Cancel" to return to the return list with selections intact.
+Summary Metrics
+[ListParagraph] • The Summary Page must display: 
+[ListParagraph] • Total Stores: number of unique stores involved
+[ListParagraph] • Provide a counter of "Stores Exceeding Threshold ([N])" (if any) and followed by list of each exceeding store that includes: Store Name, Submission Ratio (%), Accumulated Ratio Before (%), Accumulated Ratio After (%), SOA Threshold (%), and an "Exclude from Bulk" action button per row. 
+[ListParagraph] • Tapping the expand toggle on an exceeding store row reveals a nested product list of all submitted SKUs for that store. 
+[ListParagraph] • If an SKU has multiple return reasons, it must expand further into sub-rows (per-quantity reason level).
+[ListParagraph] • Admin KDC can directly modify the quantity product for each reason.
+[ListParagraph] • If no stores exceed the threshold, this section must display: "All stores are within the permitted SOA limit." 
+Recalculate Action
+[ListParagraph] • Recalculate button must appear in the Stores Exceeding Threshold section once to recalculate Submission Ratio and Accumulation Ratio After.
+[ListParagraph] • Tapping "Recalculate" button triggers the system to check that performs:
+[ListParagraph] • Recalculates the Submission Ratio (%) and Accumulated Ratio After (%) for the specific store based on the newly edited quantities.
+[ListParagraph] • Updates the main Summary Page metrics.
+[ListParagraph] • If after recalculating the new Accumulated Ratio After (%) drops below or equals the SOA Threshold, the store is flagged as an eligible return product.
+[ListParagraph] • Tapping the final "Confirm Bulk Approval" button will process the bulk action using the newly adjusted quantities for the modified stores, and original quantities for the untouched stores.
+[ListParagraph] • All manual quantity adjustments made during this summary phase must be preserved and accurately written into each submission's final approval log.
+Bulk Approval Confirmation
+As an Admin KDC, I want to approve multiple return submissions in one action, so that I can clear the approval queue significantly faster.
+Bulk Approve Processing
+[ListParagraph] • After the Admin KDC has reviewed the summary and optionally excluded stores, a "Confirm Bulk Approval ([N] submissions)" action button must be visible.
+[ListParagraph] • Tapping Confirm triggers the bulk approval processing for the remaining included submissions only.
+[ListParagraph] • Upon confirmation, the system must process approval for all selected records as a batch.
+[ListParagraph] • The status of each successfully approved record must change from 'Waiting for Approval KDC' to 'Approved - Waiting for Pick Up'.
+[ListParagraph] • A success notification must display: '[N] return(s) successfully approved.'
+Partial Failure Handling
+[ListParagraph] • If some records fail (e.g., status already changed by another user), the system must display a result summary: '[X] approved, [Y] failed.' Failed records must be listed with their reason.
+[ListParagraph] • Successfully processed records must not be affected by failures of other records in the same batch.
+Approval Log
+[ListParagraph] • Each bulk-approved record must have a Detail Status log entry recording: KDC approver username, 'Approved via bulk action', ratio before, ratio after, and timestamp.
+Sequential review navigation on Return Detail page
+As an Admin KDC, I want to navigate directly to the next or previous submission from the detail page, so I can review and approve submissions sequentially without returning to the list each time.
+Navigation Bar
+[ListParagraph] • The Return Detail page must display a navigation bar showing: a Previous button, a counter in the format 'N / total pending' (e.g., '3 / 12 pending'), and a Next button.
+[ListParagraph] • 'Pending approval KDC' reflects the number of records in the ‘KDC's currently active filtered queue, not all records in the system.
+[ListParagraph] • The counter must update after each approval or rejection action.
+[ListParagraph] • When the counter reaches '0 / 0 pending', a completion state must display: 'All pending submissions have been reviewed.' with a button to return to the list.
+Navigation Behavior
+[ListParagraph] • Tapping 'Next' opens the next submission in the queue without returning to the list.
+[ListParagraph] • Tapping 'Prev' opens the previously reviewed submission.
+[ListParagraph] • 'Prev' is disabled on the first submission in the queue. 'Next' is disabled and replaced with 'All submissions reviewed.' on the last.
+Filter Dependency
+[ListParagraph] • The navigation queue is built from the currently active filter on the list page. If no filter is active, the queue covers all records.
+[ListParagraph] • If the KDC opens a detail page directly (e.g., from a notification link) without a filtered queue, the navigation bar shows ' pending' and both Prev/Next buttons are disabled. -&gt; ada notifikasi ga ke KDC ketika request masuk?
+Auto-next page after action
+[ListParagraph] • After an approval or rejection is confirmed, the system must automatically advance to the next submission in the queue, the KDC does not need to manually tap 'Next'.
+[ListParagraph] • Auto-advance only triggers after the confirmation dialog is confirmed, not when the action button is first tapped.
+Sequential navigation and auto-next page are new capabilities introduced in the revamp to replace the need for bulk approval.
+Open Return Detail from the list
+As an Admin KDC, I want to open the full detail of a return to review all submitted data before deciding.
+Navigation
+[ListParagraph] • Each row in the Return list must have an action button (e.g., 'Lihat' / View) that opens the Return Detail page.
+[ListParagraph] • A back button navigates back to the Return list, preserving the active search, filter, and sort state.
+Return Detail information section
+As an Admin KDC, I want to see all key return information in the detail page.
+Information Fields
+[ListParagraph] • The Return Detail page must display: 
+[ListParagraph] • No. Reference, 
+[ListParagraph] • Create Date, 
+[ListParagraph] • DC (Area), 
+[ListParagraph] • Salesman (name + ID), 
+[ListParagraph] • Store Name, 
+[ListParagraph] • Nominal Pengajuan (Rp), 
+[ListParagraph] • Nominal Approved (Rp, post-approval), 
+[ListParagraph] • Ratio Pengajuan (%), 
+[ListParagraph] • Ratio Akumulasi (%), and 
+[ListParagraph] • Status .
+[ListParagraph] • Ratio Pengajuan and Ratio Akumulasi must auto-load when the page opens.
+Return Detail Product table
+As an Admin KDC, I want to see the full list of products in the submission.
+Produc1t Table
+[ListParagraph] • The product table must display at minimum:
+[ListParagraph] • Product Code), 
+[ListParagraph] • Item name
+[ListParagraph] • Total Quantity retur
+[ListParagraph] • Total Quantity approve
+[ListParagraph] • Quantity LFD
+[ListParagraph] • Return reason
+Per-Quantity Reason Expandable Rows
+[ListParagraph] • For returnable SKUs where SL assigned more than one reason, the parent row must display a "View Reason Details" expand toggle.
+[ListParagraph] • Tapping the toggle expands the row to reveal nested sub-rows detailing the breakdown.
+[ListParagraph] • Sub-row Structure:
+[ListParagraph] • Quantity Retur: Displays the specific quantity unit split for that reason.
+[ListParagraph] • Return Reason: Displays the specific reason code.
+[ListParagraph] • Admin KDC can add or reduce quantity product for each reason.
+Return Detail Approve / Reject individual submission
+As an Admin KDC, I want to approve or reject an individual return submission directly from the detail page.
+SOA Ratio Check Before Action
+[ListParagraph] • If the projected Ratio Akumulasi after approval exceeds the SOA threshold, a warning indicator (red badge or colored text) must be displayed.
+[ListParagraph] • The approver may still approve despite the warning but must confirm an additional prompt: 'This SL's cumulative ratio exceeds the limit of [X]%. Proceed with approval?'
+Approve Action
+[ListParagraph] • 'Approve' button is available for submissions with status 'Waiting for Approval KDC'. 
+[ListParagraph] • Tapping triggers: 'Approve this return submission?' with 'Confirm' and 'Cancel'.
+[ListParagraph] •  Upon confirmation, status changes to 'Approved - Waiting for Pick Up'.
+Reject Action
+[ListParagraph] • 'Reject' button is available alongside 'Approve'. Tapping opens a dialog requiring a mandatory rejection reason. Upon confirmation, status changes to 'Rejected' and the reason is stored.
+Post-Action
+[ListParagraph] • After approval or rejection, the status badge on the detail page updates immediately. The updated status is reflected when navigating back to the list.
+Return Detail Detail Status approval log
+As an Admin KDC, I want to see the full approval timeline log for complete audit trail. 
+Detail Status Section
+[ListParagraph] • A 'Detail Status' section below the product table must display a chronological timeline of all status change events.
+Log Entry Content
+[ListParagraph] • Each entry must display: 
+[ListParagraph] • actor username and role, 
+[ListParagraph] • action status, 
+[ListParagraph] • ratio before and ratio after,
+[ListParagraph] • message/note (if any), 
+[ListParagraph] • Timestamp
+Log Order &amp; Completeness
+[ListParagraph] • Entries in reverse chronological order (most recent at top). 
+[ListParagraph] • All events must be captured: initial submission, each approval/rejection, and any resubmission after rejection.
+Return status lifecycle and transition rules
+As a system, I want to enforce correct status transitions throughout the return lifecycle.
+Status 
+[ListParagraph] • Menunggu Approval: Perlu Action KDC.
+[ListParagraph] • Menunggu Pengambilan Barang: triggered when Admin KDC approves.
+[ListParagraph] • Ditolak: triggered when Admin KDC rejects.
+[ListParagraph] • Ditolak → Menunggu Approval: triggered when SL revises and resubmits.
+[ListParagraph] • Menunggu Pengambilan Barang → Barang sudah diambil: triggered by pickup confirmation 
+[ListParagraph] • Barang sudah diambil → Barang Diterima di Gudang: triggered when warehouse receives the items.
+[ListParagraph] • Barang Diterima di Gudang → Barang Diterima di Gudang (Selesai): triggered when warehouse completes processing.
+[ListParagraph] • Any active status → Dibatalkan: triggered by admin or system cancellation action.
+Invalid Transitions
+[ListParagraph] • The system must prevent any transition not defined above. Unauthorized attempts return an appropriate error.
+Role Enforcement
+[ListParagraph] • Only Admin KDC may perform Approve and Reject actions on 'Waiting for Approval KDC' submissions. Attempts without the KDC role return an unauthorized error.
+SOA ratio threshold configuration
+As a system administrator, I want to configure SOA ratio thresholds in BackOffice without code changes.
+Threshold Configuration
+[ListParagraph] • BackOffice must provide a configuration interface for: Hard limit threshold (blocks submission on mobile; triggers mandatory warning in BackOffice) and Soft warning threshold (dismissible warning on mobile; visual indicator in BackOffice).
+[ListParagraph] • Threshold values may differ per return type (Direct vs Consignment).
+Access Control
+[ListParagraph] • Only users with system administrator or designated configuration access may modify thresholds. Changes must be logged with actor username and timestamp.
+Loading states and error handling for BackOffice Return pages
+As an Admin KDC, I want clear loading indicators and error feedback when pages load or actions fail.
+Loading States
+[ListParagraph] • Loading indicators during: Return list loading/refreshing, Return Detail page loading, and any approval/rejection processing.
+Action Feedback
+[ListParagraph] • All approval and rejection actions must display a success notification on completion and a clear error message with retry option on failure.
+Stale Data Warning
+[ListParagraph] • If the Return Detail page has been open for an extended period and the underlying record has changed (e.g., another approver acted on it), the system must display: 'This record has been updated. Please refresh to see the latest data.'
+Unauthorized Access
+[ListParagraph] • Unauthorized access attempts must return a clear unauthorized error page — not a blank or broken page.

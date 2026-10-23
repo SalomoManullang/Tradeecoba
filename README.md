@@ -47,6 +47,8 @@ semua data dummy dibuat dan disimpan di browser (`localStorage`, kunci `tradee20
 ```
 index.html            buka file ini
 css/app.css           tambahan di atas tema Metronic (stepper, lane berulang, editor)
+css/compass-tokens.css token design language COMPASS (warna, tipe, spacing, radius, shadow)
+css/compass-skin.css  reskin COMPASS: kerangka aplikasi (sidebar, top bar) + konten Program Setup (.cps)
 js/formula.js         evaluator rumus aman (whitelist MIN MAX AVG SUM ROUND IF, array per elemen, tanpa eval)
 js/catalog.js         katalog developer: slot rumus, variabel, field katalog, role approval, objek auto-approve, placeholder
 js/store.js           "database" di browser (tabel program* sesuai arsitektur §4.1)
@@ -55,6 +57,7 @@ js/seed.js            data dummy
 js/ui.js              router hash, layout, helper, field fase, jalur approval
 js/pages/setup.js     Program Setup step 0–3d
 js/pages/setup2.js    Program Setup step 3a (eligibility & jadwal), 3f–8 + audit
+js/pages/setup-view.js Program Setup: mode lihat/edit, catatan dilipat, ringkasan kelas & layer (lapisan tampilan, tanpa logika data)
 js/pages/registration.js · monitoring.js · payout.js · inbox.js · auth.js · master.js
 _backup_v1/           versi prototype sebelum revisi PRD v0.4
 backend-node/         versi lama (Node.js + PostgreSQL), tidak dipakai prototype ini

@@ -28,7 +28,7 @@
     const layers = cfg.layers.map((l) => ({ role_code: l.role_code, is_final: l.is_final, conditions: (l.conditions || []).map((c) => ({ ...c })) }));
     const objects = Object.entries(C.AUTO_APPROVE_OBJECTS).filter(([, o]) => o.phases.includes(phase));
     return {
-      title: `${ph.label} · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'phases')}
+      title: `${ph.label} · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'phases')}
       <div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap fase: Registration · Monitoring · Payout</div>
         <ul class="nav nav-pills">${C.PHASES.map((x) => `<li class="nav-item"><a class="nav-link ${x.code === phase ? 'active' : ''}" href="#/setup/${p.id}/ch/${ch.id}/phases/${x.code}">${x.label}</a></li>`).join('')}</ul>
         <div class="small text-muted mt-2"><strong>Contoh ${ph.label}:</strong> form — ${PHASE_EXAMPLE[phase].form}; approval — ${PHASE_EXAMPLE[phase].approval}.</div></div>
@@ -53,7 +53,7 @@
             Objek per brand harus lolos untuk setiap brand. Layer tanpa kondisi selalu butuh orang. Nilai objek kosong = kondisi tidak terpenuhi.</p>
           <div id="layers"></div>
           <button class="btn btn-brand mt-2"><i class="bi bi-save"></i> Simpan approval ${ph.label}</button>
-        </div></div></fieldset></form>`,
+        </div></div></fieldset></form></div></div>`,
       after(root) {
         const ro = !editable(p);
         const fr = root.querySelector('#fRows');
@@ -230,7 +230,7 @@
     const notElig = elig.filter((x) => !x.eligible && !exceptions.some((e) => e.customer_id === x.s.customer_id));
     const sec = (t) => `<div class="col-12"><div class="elig-sec">${t}</div></div>`;
     return {
-      title: `Eligibility · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'eligibility')}
+      title: `Eligibility · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'eligibility')}
       <div class="row g-3"><div class="col-xl-8">
       <form data-action="setup.saveEligibility" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
       <div class="card mb-3"><div class="card-header"><span class="step-chip">3a</span>&nbsp;Eligibility & jadwal — ${esc(ch.channel_name)}</div><div class="card-body row g-3">
@@ -282,7 +282,7 @@
         ${ch.brands.map((b) => `<div>${esc(b.brand_name)}: ${elig.filter((x) => x.eligible && x.brands.find((y) => y.brand_code === b.brand_code && y.eligible)).length} toko</div>`).join('') || '<div class="text-muted">Brand belum dipilih (3b).</div>'}
         <div class="text-muted mt-2">Alasan tidak eligible terbanyak: ${esc(Object.entries(elig.filter((x) => !x.eligible).flatMap((x) => x.reasons.map((r) => r.replace(/[\d.,]+%?/g, '#'))).reduce((m, r) => { m[r] = (m[r] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([r, n]) => `${r} (${n})`).join('; ') || '-')}</div>
         <div class="text-muted mt-2">Saran baseline = total sell in ${E.baselineMonths(p)[0].slice(0, 4)} ÷ bulan aktif sejak first DO.</div>
-      </div></div></div></div>`,
+      </div></div></div></div></div></div>`,
     };
   });
   actions['setup.saveEligibility'] = (f, form) => {
@@ -365,7 +365,7 @@
     const canEdit = p.status !== 'CLOSED';
     const generated = DB.where('generatedDocuments', (g) => g.doc_type === doc && d.revisions.some((r) => r.id === g.revision_id));
     return {
-      title: `${doc} · ${ch.channel_name}`, html: `${nav(p, p.status === 'DRAFT' ? 'config' : 'docs', ch, 'documents')}
+      title: `${doc} · ${ch.channel_name}`, html: `<div class="cps">${nav(p, p.status === 'DRAFT' ? 'config' : 'docs', ch, 'documents')}
       <ul class="nav nav-pills mb-3">${Object.keys(C.DOC_TYPES).map((k) => `<li class="nav-item"><a class="nav-link ${k === doc ? 'active' : ''}" href="#/setup/${p.id}/ch/${ch.id}/documents/${k}">${k}</a></li>`).join('')}</ul>
       ${p.status === 'PUBLISHED' ? `<div class="alert alert-info py-2 small"><span class="step-chip">7</span>&nbsp;Setelah publish: template ini tetap bisa diubah. Simpan = revisi baru; dokumen yang sudah dibuat tetap memakai revisinya.</div>` : ''}
       <div class="row g-3"><div class="col-xl-7">
@@ -386,7 +386,7 @@
           <thead><tr><th>Rev</th><th>Dibuat</th><th>Oleh</th><th class="num">Dokumen dibuat</th></tr></thead>
           <tbody>${d.revisions.slice().reverse().map((r) => `<tr><td>${r.revision}${d.latest && r.id === d.latest.id ? ' <span class="badge badge-success">terbaru</span>' : ''}</td><td class="small">${h.datetime(r.created_at)}</td>
             <td class="small">${esc((DB.byId('users', r.created_by) || {}).name || '-')}</td><td class="num">${generated.filter((g) => g.revision_id === r.id).length}</td></tr>`).join('')}</tbody></table></div></div>
-      </div></div>`,
+      </div></div></div></div>`,
       after(root) {
         const el = root.querySelector('#secs');
         let active = null;
@@ -446,10 +446,10 @@
   // ---------------------------------------------------------------- 4 · simulasi (sandbox, tidak menyimpan apa pun)
   route('/setup/:id/simulate', ({ id }, q) => {
     const p = getProgram(id);
-    if (!p.channels.length) return { title: 'Simulasi', html: `${nav(p, 'simulate')}<div class="card"><div class="card-body text-muted">Tambahkan channel dulu.</div></div>` };
+    if (!p.channels.length) return { title: 'Simulasi', html: `<div class="cps">${nav(p, 'simulate')}<div class="card"><div class="card-body text-muted">Tambahkan channel dulu.</div></div></div>` };
     const ch0 = p.channels.find((c) => c.id === Number(q.ch)) || p.channels[0];
     return {
-      title: 'Simulasi', html: `${nav(p, 'simulate')}
+      title: 'Simulasi', html: `<div class="cps">${nav(p, 'simulate')}
       <div class="row g-3"><div class="col-xl-4"><div class="card sticky-summary"><div class="card-header"><span class="step-chip">4</span>&nbsp;Input contoh</div><div class="card-body">
         <div class="row g-2">
           <div class="col-6"><label class="form-label small">Channel <span class="text-danger">*</span></label><select id="sCh" class="form-control form-control-sm">${p.channels.map((c) => `<option value="${c.id}" ${sel(c.id === ch0.id)}>${esc(c.channel_name)}</option>`).join('')}</select></div>
@@ -465,7 +465,7 @@
         </div>
         <div class="small text-muted mt-2">Tidak ada data yang disimpan. Memakai rumus & konfigurasi saat ini, jadi di sinilah rumus dicoba.</div>
       </div></div></div>
-      <div class="col-xl-8"><div id="sOut"></div></div></div>`,
+      <div class="col-xl-8"><div id="sOut"></div></div></div></div>`,
       after(root) {
         const $ = (s) => root.querySelector(s);
         const chOf = () => p.channels.find((c) => c.id === Number($('#sCh').value));
@@ -532,7 +532,7 @@
     const { errors, warnings } = E.validateProgram(p);
     const li = (x, sev) => `<li class="${sev}"><span class="sev">${sev === 'error' ? 'Error' : 'Warning'}</span><span>${x.channel ? `<strong>${esc(x.channel)}</strong> · ` : ''}${esc(x.text)}</span></li>`;
     return {
-      title: 'Validasi & publish', html: `${nav(p, 'validate')}
+      title: 'Validasi & publish', html: `<div class="cps">${nav(p, 'validate')}
       <div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-header"><span class="step-chip">5</span>&nbsp;Validasi sistem</div><div class="card-body">
         ${!errors.length && !warnings.length ? '<div class="text-success"><i class="bi bi-check-circle-fill"></i> Semua aturan lolos.</div>' : ''}
         <ul class="checks">${errors.map((x) => li(x, 'error')).join('')}${warnings.map((x) => li(x, 'warning')).join('')}</ul>
@@ -552,7 +552,7 @@
           <p>Dipublish ${h.datetime(p.published_at)} oleh ${esc((DB.byId('users', p.published_by) || {}).name || '-')}.</p>
           <button class="btn btn-outline-dark" data-click="setup.close" data-id="${p.id}" data-confirm="Close program ${esc(p.name)}? Tindakan ini membuat program read-only sepenuhnya."><i class="bi bi-archive"></i> Close program</button></div></div>` : ''}
         ${p.status === 'CLOSED' ? '<div class="card"><div class="card-body small text-muted"><i class="bi bi-archive"></i> Program sudah CLOSED.</div></div>' : ''}
-      </div></div>`,
+      </div></div></div>`,
     };
   });
   actions['setup.publish'] = (f, form) => {
@@ -581,12 +581,12 @@
     const logs = DB.where('programAuditLogs', (x) => x.program_id === p.id).sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id);
     const short = (v) => { if (v === null || v === undefined) return '-'; const s = JSON.stringify(v); return esc(s.length > 140 ? s.slice(0, 140) + '…' : s); };
     return {
-      title: 'Audit log', html: `${nav(p, 'audit')}
+      title: 'Audit log', html: `<div class="cps">${nav(p, 'audit')}
       <div class="card"><div class="card-header">Audit log <span class="small text-muted fw-normal">&nbsp;— siapa, kapan, apa (sebelum → sesudah)</span></div><div class="table-responsive"><table class="table table-sm mb-0">
         <thead><tr><th>Waktu</th><th>User</th><th>Entitas</th><th>Aksi</th><th>Sebelum</th><th>Sesudah</th></tr></thead>
         <tbody>${logs.map((l) => `<tr><td class="small text-nowrap">${h.datetime(l.created_at)}</td><td class="small">${esc((DB.byId('users', l.actor_id) || {}).name || 'Sistem')}</td>
           <td class="small"><code>${esc(l.entity)}</code></td><td><span class="badge badge-light">${esc(l.action)}</span></td>
-          <td class="small text-muted audit-json">${short(l.before_data)}</td><td class="small audit-json">${short(l.after_data)}</td></tr>`).join('') || '<tr><td colspan="6" class="text-muted p-3">Belum ada perubahan.</td></tr>'}</tbody></table></div></div>`,
+          <td class="small text-muted audit-json">${short(l.before_data)}</td><td class="small audit-json">${short(l.after_data)}</td></tr>`).join('') || '<tr><td colspan="6" class="text-muted p-3">Belum ada perubahan.</td></tr>'}</tbody></table></div></div></div>`,
     };
   });
 })();

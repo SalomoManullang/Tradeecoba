@@ -1,0 +1,15 @@
+{
+  "name": "tradee-reskin-verify",
+  "private": true,
+  "description": "Tooling verifikasi reskin Program Setup: ekstraksi hook DOM, screenshot, skenario inti, diff.",
+  "type": "module",
+  "scripts": {
+    "setup": "playwright install chromium",
+    "before": "node capture.mjs --label before",
+    "after": "node capture.mjs --label after",
+    "diff": "node diff.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.48.2"
+  }
+}

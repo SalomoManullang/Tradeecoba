@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:var(--color-border-default); border-radius:var(--radius-lg); border:2px solid transparent; background-clip:padding-box; }
+  @keyframes md-fade { from { opacity:0; } to { opacity:1; } }
+  @keyframes md-slide-in { from { transform:translateX(24px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+  input::placeholder { color:var(--color-text-disabled); opacity:1; }
+  [role="dialog"] > div:first-child { border-bottom:none !important; }
+  [role="dialog"] > div:last-child { border-top:none !important; }
+  a { color:var(--primary-500); }
+  a:hover { color:var(--primary-600); }
+  tbody td, tbody td * { font-size:12px !important; }
+  .cmp-side { transition:width 180ms ease; }
+  .cmp-side.is-collapsed { width:72px !important; }
+  .cmp-side.is-collapsed .cmp-side-full { display:none !important; }
+  .cmp-side.is-collapsed .cmp-side-head { justify-content:center !important; padding:20px 0 12px !important; }
+  .cmp-side-toggle { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-base,4px); cursor:pointer; flex-shrink:0; background:none; border:none; padding:0; }
+  .cmp-side-toggle:hover { background:var(--neutral-variant-100, #F0F2F5); }
+  .cmp-side.is-collapsed .cmp-side-menu { overflow:visible !important; }
+</style>
+</helmet>
+<div data-screen-label="COMPASS — Master Data" style="display:flex; height:100vh; font-family:var(--font-sans); background:var(--color-bg-primary); color:var(--color-text-primary); overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="{{ sideClass }}" style="width:240px; flex-shrink:0; border-right:1px solid var(--color-border-default); background:var(--color-bg-secondary); display:flex; flex-direction:column; box-sizing:border-box;">
+    <div class="cmp-side-head" style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <span class="cmp-side-full" style="display:inline-flex;"><x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import></span>
+      <button type="button" class="cmp-side-toggle" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" onClick="{{ toggleSidebar }}">
+        <sc-if value="{{ sideCollapsed }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 8.5L13 13L8.5 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 8.5L17.5 13L13 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+        <sc-if value="{{ sideExpanded }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13.5L4.5 9L9 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.5 13.5L9 9L13.5 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </button>
+    </div>
+    <div class="cmp-side-full" style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div class="cmp-side-menu" style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex:1; overflow:auto; background:var(--color-bg-primary); padding:24px 24px 40px; box-sizing:border-box; width:100%;">
+
+      <!-- ==================== LIST ==================== -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+      <div style="width:100%; animation:md-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+
+          <div style="font-family:var(--font-display); font-weight:700; font-size:22px; line-height:28px; color:var(--neutral-950);">{{ pageTitle }}</div>
+
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ searchProps }}" style="width:360px" hint-size="360px,36px"></x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ filterProps }}" hint-size="92px,36px">Filter</x-import>
+            <sc-if value="{{ hasExport }}" hint-placeholder-val="{{ true }}">
+              <div style="position:relative;">
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ exportProps }}" hint-size="140px,36px">Export Data</x-import>
+                {{ exportMenu }}
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ hasTabs }}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Tab" dc-props="{{ tabProps }}" hint-size="100%,44px"></x-import>
+          </sc-if>
+
+          <sc-if value="{{ filterBar }}" hint-placeholder-val="{{ false }}">
+            <div>{{ filterBar }}</div>
+          </sc-if>
+
+          <div style="min-height:380px; overflow-x:auto;">{{ tableRegion }}</div>
+
+          <sc-if value="{{ showPagination }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:14px; line-height:20px; color:var(--color-text-primary);">Menampilkan</span>
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ perPageProps }}" style="width:84px" hint-size="84px,38px"></x-import>
+                <span style="font-size:14px; line-height:20px; letter-spacing:0.25px; color:var(--color-text-primary);">{{ totalLabel }}</span>
+              </div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Pagination" dc-props="{{ pagerProps }}" hint-size="246px,34px"></x-import>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ==================== DETAIL ==================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="width:100%; display:flex; flex-direction:column; gap:20px; animation:md-fade .2s ease;">
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:16px 24px; display:flex; align-items:center; gap:16px; box-sizing:border-box;">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ backProps }}" hint-size="96px,36px">Kembali</x-import>
+          <div style="width:1px; height:40px; background:var(--color-border-default);"></div>
+          <div style="min-width:0; display:flex; flex-direction:column; gap:2px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="font-family:var(--font-display); font-weight:700; font-size:22px; line-height:28px; color:var(--neutral-950);">{{ detailTitle }}</span>
+              {{ detailBadges }}
+            </div>
+            <span style="font-size:13px; line-height:18px; color:var(--color-text-secondary);">{{ detailSub }}</span>
+            <span style="font-size:12px; line-height:16px; color:var(--color-text-tertiary);">{{ detailMeta }}</span>
+          </div>
+        </div>
+
+        <div style="background:var(--color-bg-secondary); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+          <sc-if value="{{ hasDetailTabs }}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Tab" dc-props="{{ detailTabProps }}" hint-size="100%,44px"></x-import>
+          </sc-if>
+          {{ detailBody }}
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- ============ FILTER DRAWER ============ -->
+  <sc-if value="{{ filterOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; z-index:90; background:rgba(42,61,74,0.45); display:flex; justify-content:flex-end;">
+      <div style="position:absolute; inset:0;">{{ drawerScrim }}</div>
+      <div style="position:relative; width:400px; height:100%; background:var(--color-bg-secondary); display:flex; flex-direction:column; box-shadow:var(--shadow-modal); animation:md-slide-in .18s ease; box-sizing:border-box;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--color-border-subtle);">
+          <span style="font-family:var(--font-display); font-weight:700; font-size:18px; line-height:26px; color:var(--neutral-950);">Filter</span>
+          {{ drawerClose }}
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:18px;">{{ drawerFields }}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; border-top:1px solid var(--color-border-subtle);">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerResetProps }}" hint-size="80px,36px">Hapus</x-import>
+          <div style="display:flex; gap:12px;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerCancelProps }}" hint-size="80px,36px">Batal</x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ drawerApplyProps }}" hint-size="96px,36px">Terapkan</x-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ MODAL ============ -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Modal" dc-props="{{ modalProps }}" hint-size="0,0"></x-import>
+  </sc-if>
+
+  <!-- ============ TOASTS ============ -->
+  <div style="position:fixed; top:20px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px; pointer-events:none;">{{ toastRegion }}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;startModule&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;bp&quot;,&quot;product&quot;,&quot;rule&quot;],&quot;default&quot;:&quot;bp&quot;,&quot;tsType&quot;:&quot;\&quot;bp\&quot;|\&quot;product\&quot;|\&quot;rule\&quot;&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const BP_CUSTOMERS = [
+  { id: "C0001001", name: "PT Indomaret Group", holding: "Indomaret", selling: "Direct", channel: "MT Chain", channelReport: "Minimarket Chain", salesOrg: "1000", company: "123-456-789", dc: "DC Jakarta", area: "Area Jakarta Pusat", lifecycle: "Active", pricelist: "Pricelist Distributor", active: true, multi: true, city: "Bekasi" },
+  { id: "C0001002", name: "CV Maju Bersama Jaya", holding: "—", selling: "Consignment", channel: "GT Traditional", channelReport: "Grosir", salesOrg: "1100", company: "123-456-780", dc: "DC Bandung", area: "Area Bandung", lifecycle: "Active", pricelist: "Pricelist Wholesaler", active: true, multi: false, city: "Bandung" },
+  { id: "C0001003", name: "PT Sumber Alfaria Tbk", holding: "Alfamart", selling: "Direct", channel: "MT Chain", channelReport: "Minimarket Chain", salesOrg: "1000", company: "123-456-781", dc: "DC Jakarta", area: "Area Jakarta Barat", lifecycle: "Active", pricelist: "Pricelist Distributor", active: true, multi: true, city: "Tangerang" },
+  { id: "C0001004", name: "UD Sejahtera Jaya", holding: "—", selling: "Direct", channel: "GT Traditional", channelReport: "Semi Grosir", salesOrg: "1200", company: "123-456-782", dc: "DC Semarang", area: "Area Semarang", lifecycle: "Active", pricelist: "Pricelist Retail", active: true, multi: false, city: "Semarang" },
+  { id: "C0001005", name: "PT Trans Retail Ind.", holding: "Transmart", selling: "Consignment", channel: "MT Chain", channelReport: "Hypermarket", salesOrg: "1000", company: "123-456-783", dc: "DC Jakarta", area: "Area Jakarta Selatan", lifecycle: "Active", pricelist: "Pricelist Distributor", active: true, multi: true, city: "Jakarta" },
+  { id: "C0001006", name: "CV Berkah Mandiri", holding: "—", selling: "Direct", channel: "GT Traditional", channelReport: "Grosir", salesOrg: "1100", company: "123-456-784", dc: "DC Surabaya", area: "Area Surabaya", lifecycle: "Blocked", pricelist: "Pricelist Wholesaler", active: false, multi: false, city: "Surabaya" },
+  { id: "C0001007", name: "PT Hero Supermarket Tbk", holding: "Hero Group", selling: "Direct", channel: "MT Chain", channelReport: "Supermarket", salesOrg: "1000", company: "123-456-785", dc: "DC Jakarta", area: "Area Jakarta Timur", lifecycle: "Active", pricelist: "Pricelist Distributor", active: true, multi: true, city: "Jakarta" },
+  { id: "C0001008", name: "Toko Sumber Rejeki", holding: "—", selling: "Direct", channel: "GT Traditional", channelReport: "Retail", salesOrg: "1200", company: "123-456-786", dc: "DC Yogyakarta", area: "Area Yogyakarta", lifecycle: "Active", pricelist: "Pricelist Retail", active: true, multi: false, city: "Yogyakarta" },
+  { id: "C0001009", name: "PT Carrefour Indonesia", holding: "Transmart", selling: "Consignment", channel: "MT Chain", channelReport: "Hypermarket", salesOrg: "1000", company: "123-456-787", dc: "DC Jakarta", area: "Area Jakarta Pusat", lifecycle: "Active", pricelist: "Pricelist Distributor", active: true, multi: true, city: "Jakarta" },
+  { id: "C0001010", name: "CV Harapan Jaya Abadi", holding: "—", selling: "Direct", channel: "GT Minimarket", channelReport: "Minimarket Lokal", salesOrg: "1100", company: "123-456-788", dc: "DC Medan", area: "Area Medan", lifecycle: "Inactive", pricelist: "Pricelist Retail", active: false, multi: false, city: "Medan" },
+];
+
+const BP_OWNERS = [
+  { id: "OW-0001", name: "Budi Hartono", mobile: "+62 812-3456-7890", email: "budi.hartono@indomaret.co.id", city: "Bekasi", active: true },
+  { id: "OW-0002", name: "Siti Rahayu", mobile: "+62 813-2233-4455", email: "siti.rahayu@majubersama.co.id", city: "Bandung", active: true },
+  { id: "OW-0003", name: "Andi Wijaya", mobile: "+62 811-9988-7766", email: "andi.wijaya@alfaria.co.id", city: "Tangerang", active: true },
+  { id: "OW-0004", name: "Rina Kartika", mobile: "+62 856-1122-3344", email: "rina.kartika@sejahterajaya.id", city: "Semarang", active: true },
+  { id: "OW-0005", name: "Hendra Gunawan", mobile: "+62 878-4455-6677", email: "hendra.g@transretail.co.id", city: "Jakarta", active: false },
+];
+
+const BP_TAX = [
+  { id: "TX-0001", name: "PT Indomaret Group", npwp: "01.234.567.8-901.000", address: "Jl. Raya Bekasi No. 100, Bekasi", city: "Bekasi", active: true },
+  { id: "TX-0002", name: "CV Maju Bersama Jaya", npwp: "02.345.678.9-012.000", address: "Jl. Soekarno Hatta No. 45, Bandung", city: "Bandung", active: true },
+  { id: "TX-0003", name: "PT Sumber Alfaria Tbk", npwp: "03.456.789.0-123.000", address: "Jl. MH Thamrin No. 9, Tangerang", city: "Tangerang", active: true },
+  { id: "TX-0004", name: "UD Sejahtera Jaya", npwp: "04.567.890.1-234.000", address: "Jl. Pandanaran No. 12, Semarang", city: "Semarang", active: true },
+  { id: "TX-0005", name: "PT Trans Retail Ind.", npwp: "05.678.901.2-345.000", address: "Jl. Gatot Subroto No. 1, Jakarta", city: "Jakarta", active: false },
+];
+
+const SERIES = ["Body Care", "Hair Care", "Body Care", "Hair Care", "Hair Care", "Deodorant", "Sabun Mandi", "Hair Care", "Body Lotion", "Body Lotion"];
+const PRODUCTS = Array.from({ length: 10 }, (_, i) => ({
+  id: "PRD-" + String(i + 1).padStart(4, "0"),
+  erp: "MU-1000" + String(i + 1).padStart(2, "0"),
+  name: "Wardah Banded B1G1 Perfect Bright Micellar Water 100ml",
+  brand: "Wardah",
+  series: SERIES[i],
+  barcode: "89971073120" + String(1 + i * 7).padStart(2, "0"),
+  units: 24,
+  lifecycle: i % 4 === 3 ? "Discontinued" : "Growth",
+  salesOrg: "General Trade",
+  launch: "13 Januari 2026",
+}));
+
+const RULES = [
+  { id: "ERPR-001", name: "Listing Nasional", org: "1000", type: "Listing", tab: "Listing", inCode: "PC-PCTMOL-001", inName: "Paracetamol 500mg", exCode: "PC-PCTMOL-GEN-001", exName: "Paracetamol Generic 500mg", allDc: "Ya", allOutlet: "Tidak", active: "Ya" },
+  { id: "ERPR-002", name: "Excl Provinsi Bali", org: "1100", type: "Exclusion", tab: "Listing", inCode: "PC-MEFANOL-02", inName: "Mefenamic Acid 500mg", exCode: "PC-MEFANOL-02", exName: "Mefenamic Generic", allDc: "Tidak", allOutlet: "Tidak", active: "Ya" },
+  { id: "ERPR-003", name: "Split Rule Jawa", org: "1200", type: "Special Listing", tab: "Determination", inCode: "PC-AMOX-003", inName: "Amoxicillin 500mg", exCode: "PC-AMOX-003", exName: "Amoxicillin Generic", allDc: "Tidak", allOutlet: "Ya", active: "Ya" },
+  { id: "ERPR-004", name: "Hard Cut-off Nat.", org: "1000", type: "Listing", tab: "Listing", inCode: "PC-IBUPRO-004", inName: "Ibuprofen 400mg", exCode: "PC-IBUPRO-004", exName: "Ibuprofen Generic", allDc: "Ya", allOutlet: "Ya", active: "Ya" },
+  { id: "ERPR-005", name: "Flowthrough Sumatra", org: "1100", type: "Exclusion", tab: "Determination", inCode: "PC-CEFIXIM-005", inName: "Cefixime 100mg", exCode: "PC-CEFIXIM-005", exName: "Cefixime Generic", allDc: "Tidak", allOutlet: "Tidak", active: "Tidak" },
+  { id: "ERPR-006", name: "Spec Listing Kalimantan", org: "1200", type: "Special Listing", tab: "Dropsize & Allocation", inCode: "PC-METF-006", inName: "Metformin 500mg", exCode: "PC-METF-006", exName: "Metformin Generic", allDc: "Tidak", allOutlet: "Tidak", active: "Ya" },
+  { id: "ERPR-007", name: "Listing Regional Jawa", org: "1000", type: "Listing", tab: "Listing", inCode: "PC-ANTASIN-007", inName: "Antasida Doen", exCode: "PC-ANTASIN-007", exName: "Antasida Generic", allDc: "Tidak", allOutlet: "Ya", active: "Ya" },
+  { id: "ERPR-008", name: "Exclusion Outlet Kecil", org: "1100", type: "Exclusion", tab: "Dropsize & Allocation", inCode: "PC-VITE-008", inName: "Vitamin E 100 IU", exCode: "PC-VITE-008", exName: "Vitamin E Generic", allDc: "Ya", allOutlet: "Tidak", active: "Tidak" },
+  { id: "ERPR-009", name: "Split Provinsi NTT", org: "1200", type: "Special Listing", tab: "Determination", inCode: "PC-VITC-009", inName: "Vitamin C 500mg", exCode: "PC-VITC-009", exName: "Vitamin C Generic", allDc: "Tidak", allOutlet: "Tidak", active: "Ya" },
+  { id: "ERPR-010", name: "Flowthrough Nasional", org: "1000", type: "Listing", tab: "Listing", inCode: "PC-ZINC-010", inName: "Zinc 20mg", exCode: "PC-ZINC-010", exName: "Zinc Generic", allDc: "Ya", allOutlet: "Ya", active: "Ya" },
+];
+
+const SCOPE_TABS = [
+  { key: "dc", label: "Distribution Center", rows: [] },
+  { key: "bpg", label: "BP Group", rows: [ { kode: "BPG-0001", nama: "BP Group Nasional" }, { kode: "BPG-0002", nama: "BP Group Nasional" } ] },
+  { key: "outlet", label: "Outlet Type", rows: [] },
+  { key: "channel", label: "Channel Type", rows: [] },
+  { key: "so", label: "SO Type", rows: [] },
+  { key: "cust", label: "Customer", rows: [ { kode: "C0001001", nama: "PT Indomaret Group" }, { kode: "C0001003", nama: "PT Sumber Alfaria Tbk" }, { kode: "C0001007", nama: "PT Hero Supermarket Tbk" } ] },
+];
+
+const OPT = {
+  outlet: ["Modern Trade", "General Trade", "Wholesale", "Pharmacy"],
+  area: ["Area Jakarta Pusat", "Area Jakarta Barat", "Area Jakarta Selatan", "Area Jakarta Timur", "Area Bandung", "Area Semarang", "Area Surabaya", "Area Yogyakarta", "Area Medan"],
+  lifecycle: ["Active", "Blocked", "Inactive"],
+  pricelist: ["Pricelist Distributor", "Pricelist Wholesaler", "Pricelist Retail"],
+  active: ["Aktif", "Nonaktif"],
+  multi: ["Ya", "Tidak"],
+  dc: ["DC Jakarta", "DC Bandung", "DC Semarang", "DC Surabaya", "DC Yogyakarta", "DC Medan"],
+  brand: ["Wardah", "Make Over", "Emina", "Kahf", "Instaperfect", "Putri"],
+  series: ["Body Care", "Hair Care", "Deodorant", "Sabun Mandi", "Body Lotion"],
+  prodLifecycle: ["Growth", "Mature", "Discontinued"],
+  ruleType: ["Listing", "Exclusion", "Special Listing"],
+  salesOrg: ["1000", "1100", "1200"],
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this._tid = 0;
+    this.state = {
+      module: ({ "#product": "product", "#rule": "rule", "#bp": "bp" })[String(window.location.hash)] || props.startModule || "bp",
+      view: "list",
+      bpTab: "customer", ruleTab: "Listing",
+      search: "", page: 1, perPage: "10", sortKey: null, sortDir: null,
+      filters: {}, filterOpen: false, filterDraft: null,
+      exportOpen: false, exportSub: null,
+      detailId: null, detailTab: "general", scopeTab: "bpg",
+      modal: null, toasts: [],
+    };
+  }
+
+  /* ---------- helpers ---------- */
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(n, s) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20 }) : null; }
+  iconC(n, s, c) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20, color: c }) : null; }
+  isBP() { return this.state.module === "bp"; }
+  isProduct() { return this.state.module === "product"; }
+  isRule() { return this.state.module === "rule"; }
+  moduleTitle() { return this.isBP() ? "Business Partner" : this.isProduct() ? "Product List" : "Product Rule"; }
+
+  data() {
+    if (this.isProduct()) return PRODUCTS;
+    if (this.isRule()) return RULES.filter(r => r.tab === this.state.ruleTab);
+    if (this.state.bpTab === "owner") return BP_OWNERS;
+    if (this.state.bpTab === "tax") return BP_TAX;
+    return BP_CUSTOMERS;
+  }
+  goModule(m) { this.setState({ module: m, view: "list", search: "", page: 1, filters: {}, sortKey: null, sortDir: null, detailId: null, exportOpen: false }); }
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+  closeToast(id) { this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })); }
+  downloadBlob(name, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  }
+
+  /* ---------- list ---------- */
+  filtered() {
+    const s = this.state; const q = s.search.trim().toLowerCase();
+    let rows = this.data().slice();
+    if (q) rows = rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+    const f = s.filters;
+    Object.keys(f).forEach(k => {
+      const v = f[k];
+      if (!v || (Array.isArray(v) && !v.length)) return;
+      rows = rows.filter(r => {
+        if (k === "active") return typeof r.active === "boolean" ? ((v === "Aktif") === r.active) : (r.active === v);
+        if (k === "multi") return (v === "Ya") === !!r.multi;
+        const cell = r[k];
+        return Array.isArray(v) ? v.includes(cell) : cell === v;
+      });
+    });
+    if (s.sortKey) {
+      const dir = s.sortDir === "desc" ? -1 : 1;
+      rows.sort((a, b) => String(a[s.sortKey]).localeCompare(String(b[s.sortKey])) * dir);
+    }
+    return rows;
+  }
+  filterCount() { return Object.values(this.state.filters).filter(v => v && (!Array.isArray(v) || v.length)).length; }
+  cycleSort(key) {
+    this.setState(s => s.sortKey !== key ? { sortKey: key, sortDir: "asc" } : s.sortDir === "asc" ? { sortKey: key, sortDir: "desc" } : { sortKey: null, sortDir: null });
+  }
+  statusTag(active, labelOn, labelOff) {
+    const { Tag } = this.ns();
+    return React.createElement(Tag, { colorScheme: active ? "green" : "neutral", size: "s", dot: true }, active ? (labelOn || "Aktif") : (labelOff || "Nonaktif"));
+  }
+
+  columns() {
+    const { Button, Tag } = this.ns();
+    const detailBtn = (r) => React.createElement(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r) }, "Detail");
+    if (this.isProduct()) return [
+      { key: "erp", header: "ERP Code", sortable: true, width: 120, render: (r) => React.createElement("span", { style: { fontWeight: 700, fontVariantNumeric: "tabular-nums" } }, r.erp) },
+      { key: "name", header: "Nama", sortable: true, render: (r) => React.createElement("span", { style: { color: "var(--color-text-primary)" } }, r.name) },
+      { key: "brand", header: "Merek", sortable: true, width: 110 },
+      { key: "series", header: "Seri", sortable: true, width: 130 },
+      { key: "barcode", header: "Barcode", sortable: true, width: 150, render: (r) => React.createElement("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, r.barcode) },
+      { key: "aksi", header: "Aksi", width: 84, render: detailBtn },
+    ];
+    if (this.isRule()) return [
+      { key: "id", header: "ERP Rule ID", sortable: true, width: 120, render: (r) => React.createElement("span", { style: { fontWeight: 700 } }, r.id) },
+      { key: "name", header: "Nama Rule", sortable: true, width: 190 },
+      { key: "org", header: "Sales Org", sortable: true, width: 100 },
+      { key: "type", header: "Tipe", sortable: true, width: 140, render: (r) => React.createElement(Tag, { colorScheme: r.type === "Exclusion" ? "red" : r.type === "Special Listing" ? "purple" : "blue", size: "s" }, r.type) },
+      { key: "inCode", header: "Kode Produk Masuk", sortable: true, width: 170 },
+      { key: "inName", header: "Nama Produk Masuk", width: 200, render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)" } }, r.inName) },
+      { key: "exCode", header: "Kode Produk Exchange", width: 180 },
+      { key: "active", header: "Aktif", width: 90, align: "center", render: (r) => this.statusTag(r.active === "Ya", "Ya", "Tidak") },
+      { key: "aksi", header: "Aksi", width: 84, render: detailBtn },
+    ];
+    if (this.state.bpTab === "owner") return [
+      { key: "id", header: "Owner ID", sortable: true, width: 120, render: (r) => React.createElement("span", { style: { fontWeight: 700 } }, r.id) },
+      { key: "name", header: "Name", sortable: true },
+      { key: "mobile", header: "Mobile", width: 180 },
+      { key: "email", header: "Email", render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)" } }, r.email) },
+      { key: "city", header: "City", width: 130 },
+      { key: "active", header: "Active", width: 110, align: "center", render: (r) => this.statusTag(r.active) },
+      { key: "aksi", header: "Action", width: 84, render: detailBtn },
+    ];
+    if (this.state.bpTab === "tax") return [
+      { key: "id", header: "Tax ID", sortable: true, width: 110, render: (r) => React.createElement("span", { style: { fontWeight: 700 } }, r.id) },
+      { key: "name", header: "Nama Wajib Pajak", sortable: true },
+      { key: "npwp", header: "NPWP", width: 190, render: (r) => React.createElement("span", { style: { fontVariantNumeric: "tabular-nums" } }, r.npwp) },
+      { key: "address", header: "Alamat Pajak", render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)" } }, r.address) },
+      { key: "active", header: "Active", width: 110, align: "center", render: (r) => this.statusTag(r.active) },
+      { key: "aksi", header: "Action", width: 84, render: detailBtn },
+    ];
+    return [
+      { key: "id", header: "ERP ID", sortable: true, width: 110, render: (r) => React.createElement("span", { style: { fontWeight: 700, fontVariantNumeric: "tabular-nums" } }, r.id) },
+      { key: "name", header: "Name", sortable: true, width: 200, render: (r) => React.createElement("span", { style: { fontWeight: 600 } }, r.name) },
+      { key: "holding", header: "BP Holding", sortable: true, width: 130 },
+      { key: "selling", header: "Selling Type", sortable: true, width: 130 },
+      { key: "channel", header: "Channel", sortable: true, width: 140 },
+      { key: "channelReport", header: "Channel Report", width: 160, render: (r) => React.createElement("span", { style: { color: "var(--color-text-secondary)" } }, r.channelReport) },
+      { key: "salesOrg", header: "Sales Organization", width: 150 },
+      { key: "company", header: "Company ID", width: 140, render: (r) => React.createElement("span", { style: { fontVariantNumeric: "tabular-nums", color: "var(--color-text-secondary)" } }, r.company) },
+      { key: "dc", header: "Distribution Center", sortable: true, width: 160 },
+      { key: "area", header: "Sales Area", sortable: true, width: 170 },
+      { key: "lifecycle", header: "Cust. Lifecycle", width: 140, render: (r) => React.createElement(Tag, { colorScheme: r.lifecycle === "Active" ? "green" : r.lifecycle === "Blocked" ? "red" : "neutral", size: "s" }, r.lifecycle) },
+      { key: "pricelist", header: "Pricelist", width: 170 },
+      { key: "active", header: "Active", width: 110, align: "center", render: (r) => this.statusTag(r.active) },
+      { key: "multi", header: "Multi-Brand Order", width: 150, align: "center", render: (r) => React.createElement("span", { style: { fontWeight: 600, color: r.multi ? "var(--success-600)" : "var(--color-text-tertiary)" } }, r.multi ? "Ya" : "Tidak") },
+      { key: "aksi", header: "Action", width: 84, render: detailBtn },
+    ];
+  }
+  buildTable(paged, filtered) {
+    const { Table, EmptyState, Button } = this.ns();
+    if (filtered.length === 0) {
+      return React.createElement("div", { style: { padding: "48px 0" } },
+        React.createElement(EmptyState, { colour: "neutral", icon: "SearchOutlineIcon", title: "Data tidak ditemukan",
+          description: "Coba ubah kata kunci pencarian atau filter yang diterapkan.",
+          actions: React.createElement(Button, { variant: "secondary", size: "s", onClick: () => this.setState({ search: "", filters: {}, page: 1 }) }, "Reset pencarian") }));
+    }
+    return React.createElement("div", { style: { animation: "md-fade .2s ease", minWidth: this.isBP() && this.state.bpTab === "customer" ? 2000 : "auto" } },
+      React.createElement(Table, { columns: this.columns(), data: paged, size: "s", rowKey: "id", sortKey: this.state.sortKey, sortDir: this.state.sortDir, onSort: (k) => this.cycleSort(k) }));
+  }
+
+  /* ---------- filter ---------- */
+  filterSpec() {
+    if (this.isProduct()) return [ ["Merek", "brand", OPT.brand], ["Seri", "series", OPT.series], ["Lifecycle", "lifecycle", OPT.prodLifecycle], ["Sales Organization", "salesOrg", ["General Trade", "Modern Trade"]] ];
+    if (this.isRule()) return [ ["Tipe", "type", OPT.ruleType], ["Sales Org", "org", OPT.salesOrg], ["Aktif", "active", ["Ya", "Tidak"]] ];
+    if (this.state.bpTab !== "customer") return [ ["City", "city", ["Bekasi", "Bandung", "Tangerang", "Semarang", "Jakarta"]], ["Active", "active", OPT.active] ];
+    return [ ["Distribution Center", "dc", OPT.dc], ["Outlet Type", "channelReport", ["Minimarket Chain", "Grosir", "Semi Grosir", "Hypermarket", "Supermarket", "Retail", "Minimarket Lokal"]],
+      ["Sales Area", "area", OPT.area], ["Customer Lifecycle", "lifecycle", OPT.lifecycle], ["Pricelist", "pricelist", OPT.pricelist],
+      ["Active", "active", OPT.active], ["Multi-Brand Order", "multi", OPT.multi] ];
+  }
+  openFilter() { this.setState({ filterOpen: true, filterDraft: { ...this.state.filters }, exportOpen: false }); }
+  closeFilter() { this.setState({ filterOpen: false, filterDraft: null }); }
+  applyFilter() { this.setState({ filters: this.state.filterDraft, filterOpen: false, filterDraft: null, page: 1 }); this.toast("info", "Filter diterapkan", "Daftar disaring sesuai pilihan Anda."); }
+  buildFilterBar() {
+    const f = this.state.filters;
+    const spec = this.filterSpec();
+    const chips = spec.filter(([, k]) => f[k] && (!Array.isArray(f[k]) || f[k].length)).map(([label, k]) => ({ label: label + ": " + (Array.isArray(f[k]) ? f[k].join(", ") : f[k]), k }));
+    if (!chips.length) return null;
+    return React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 } },
+      React.createElement("span", { style: { fontSize: 13, color: "var(--color-text-tertiary)" } }, "Filter aktif:"),
+      ...chips.map(c => React.createElement("span", { key: c.k, style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 8px", borderRadius: "var(--radius-base)", background: "var(--primary-100)", border: "1px solid var(--primary-200)", color: "var(--primary-500)", fontSize: 13, fontWeight: 600 } },
+        c.label,
+        React.createElement("button", { type: "button", "aria-label": "Hapus filter", onClick: () => { const nf = { ...f }; delete nf[c.k]; this.setState({ filters: nf, page: 1 }); }, style: { background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", color: "inherit" } }, this.iconC("CloseIcon", 14, "var(--primary-500)")))),
+      React.createElement("button", { type: "button", onClick: () => this.setState({ filters: {}, page: 1 }), style: { background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--color-text-tertiary)", textDecoration: "underline" } }, "Hapus semua"));
+  }
+
+  /* ---------- export ---------- */
+  exportRows(scope, tab) {
+    const cols = this.columns().filter(c => c.key !== "aksi");
+    let rows = this.data();
+    if (this.isBP() && tab) rows = tab === "owner" ? BP_OWNERS : tab === "tax" ? BP_TAX : BP_CUSTOMERS;
+    if (scope === "filter") rows = this.filtered();
+    return { cols, rows };
+  }
+  doExport(scope, tab, format) {
+    const { cols, rows } = this.exportRows(scope, tab);
+    const esc = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+    const head = cols.map(c => esc(c.header)).join(",");
+    const body = rows.map(r => cols.map(c => esc(c.key === "active" ? (r.active === true ? "Aktif" : r.active === false ? "Nonaktif" : r.active) : c.key === "multi" ? (r.multi ? "Ya" : "Tidak") : r[c.key])).join(",")).join("\r\n");
+    const base = (this.isBP() ? "business-partner-" + (tab || this.state.bpTab) : this.isProduct() ? "product-list" : "product-rule-" + this.state.ruleTab.toLowerCase().replace(/[^a-z]+/g, "-"))
+      + (scope === "filter" ? "-hasil-filter" : "") + "-" + new Date().toISOString().slice(0, 10);
+    if (format === "csv") this.downloadBlob(base + ".csv", "\ufeff" + head + "\r\n" + body, "text/csv;charset=utf-8");
+    else this.downloadBlob(base + ".xls", "\ufeff" + head.replace(/,/g, "\t") + "\r\n" + body.replace(/","/g, '"\t"'), "application/vnd.ms-excel;charset=utf-8");
+    this.setState({ exportOpen: false, exportSub: null });
+    this.toast("success", "Export dimulai", rows.length + " baris diekspor ke format " + (format === "csv" ? ".csv" : ".xlsx") + ".");
+  }
+  buildExportMenu() {
+    if (!this.state.exportOpen) return null;
+    const sub = this.state.exportSub;
+    const item = (label, opts) => React.createElement("button", { key: label, type: "button", disabled: opts.disabled, onClick: opts.onClick,
+      onMouseEnter: (e) => { if (!opts.disabled) e.currentTarget.style.background = "var(--color-bg-primary)"; },
+      onMouseLeave: (e) => { e.currentTarget.style.background = "transparent"; },
+      style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, width: "100%", padding: "10px 14px", background: "transparent", border: "none", cursor: opts.disabled ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", fontSize: 14, color: opts.disabled ? "var(--color-text-disabled)" : "var(--color-text-primary)", textAlign: "left" } },
+      React.createElement("span", null, label),
+      opts.chevron ? this.iconC("ChevronRightIcon", 16, "var(--color-text-tertiary)") : null);
+    const panel = (children, extra) => React.createElement("div", { style: { position: "absolute", top: 44, left: 0, minWidth: 260, background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-dropdown)", padding: "6px 0", zIndex: 40, animation: "md-fade .12s ease", ...(extra || {}) } }, children);
+    const fmt = (scope, tab) => panel([
+      item("Format .xlsx", { onClick: () => this.doExport(scope, tab, "xlsx") }),
+      item("Format .csv", { onClick: () => this.doExport(scope, tab, "csv") }),
+    ], { left: 264, minWidth: 180 });
+    const tabsPanel = panel(["customer", "owner", "tax"].map(t => item(t.charAt(0).toUpperCase() + t.slice(1), { chevron: true, onClick: () => this.setState({ exportSub: "tab:" + t }) })), { left: 264, minWidth: 190 });
+    return React.createElement(React.Fragment, null,
+      React.createElement("div", { onClick: () => this.setState({ exportOpen: false, exportSub: null }), style: { position: "fixed", inset: 0, zIndex: 30 } }),
+      panel([
+        item("Export Semua", { chevron: true, onClick: () => this.setState({ exportSub: "all" }) }),
+        this.isBP() ? item("Export Berdasar Tab/Type", { chevron: true, onClick: () => this.setState({ exportSub: "tabs" }) }) : null,
+        item("Export Hasil Filter/Pencarian", { chevron: true, disabled: this.filterCount() === 0 && !this.state.search, onClick: () => this.setState({ exportSub: "filter" }) }),
+      ]),
+      sub === "all" ? fmt("all", null) : null,
+      sub === "filter" ? fmt("filter", null) : null,
+      sub === "tabs" ? tabsPanel : null,
+      (sub && sub.startsWith("tab:")) ? fmt("all", sub.slice(4)) : null);
+  }
+
+  /* ---------- detail ---------- */
+  openDetail(r) { this.setState({ view: "detail", detailId: r.id, detailTab: "general", scopeTab: "bpg", exportOpen: false }); }
+  detailRow() { return this.data().find(r => r.id === this.state.detailId); }
+  section(title, body) {
+    return React.createElement("div", { key: title, style: { display: "flex", flexDirection: "column", gap: 14 } },
+      React.createElement("div", { style: { paddingBottom: 8, borderBottom: "1px solid var(--neutral-300)", fontWeight: 700, fontSize: 14, lineHeight: "20px", letterSpacing: "0.25px", color: "var(--color-text-primary)" } }, title),
+      body);
+  }
+  fields(pairs) {
+    return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "14px 40px" } },
+      ...pairs.map(([k, v], i) => React.createElement("div", { key: i, style: { display: "flex", alignItems: "flex-start", gap: 16 } },
+        React.createElement("span", { style: { width: 180, flexShrink: 0, fontSize: 12, lineHeight: "16px", letterSpacing: "0.4px", color: "var(--color-text-secondary)" } }, k),
+        React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 12, lineHeight: "16px", letterSpacing: "0.4px", fontWeight: 600, color: "var(--color-text-primary)" } }, v))));
+  }
+  miniTable(cols, rows) {
+    const { Table } = this.ns();
+    return React.createElement(Table, { columns: cols, data: rows, size: "s", rowKey: (r) => r.kode || r.id || r.brand || r.name });
+  }
+  link(text) { return React.createElement("a", { href: "#", onClick: (e) => { e.preventDefault(); this.toast("info", "Pratinjau foto", "Foto toko dibuka pada tampilan penuh."); }, style: { fontWeight: 600 } }, text); }
+
+  bpDetailBody(r) {
+    const t = this.state.detailTab;
+    if (t === "general") return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.section("Identitas", this.fields([["ERP ID", r.id], ["Company", "PT Paragon Corp"], ["Customer Type", "Customer"], ["Lifecycle Status", r.lifecycle]])),
+      this.section("Nama", this.fields([["Name 1", r.name], ["Name 2", r.holding === "—" ? "—" : r.holding], ["Name 3", "—"], ["Name 4", "—"]])),
+      this.section("ID & Hierarki", this.fields([["BP Holding ID", "BP-0001"], ["Group Name (BP Holding)", r.holding], ["Parent ID", "BP-0001"], ["Parent Name", r.holding]])),
+      this.section("Informasi Penjualan", this.fields([["Consignment Type", r.selling === "Consignment" ? "National Consignment" : "—"], ["Sales Type", "Local"], ["Selling Type", r.selling], ["Special Stock ID", "—"]])),
+      this.section("Foto Toko", this.fields([["Foto Tampak Depan", this.link("Lihat Foto Depan")], ["Foto Tampak Dalam", this.link("Lihat Foto Dalam")]])),
+      this.section("Kontak", this.fields([["Email", "contact@indomaret.co.id"], ["Mobile", "+62 812-3456-7890"], ["Phone", "(021) 5555-0001"], ["Website", "www.indomaret.co.id"]])),
+      this.section("Jam Operasional", this.fields([["Day Open", "Senin - Minggu"], ["Morning From", "08:00"], ["Morning To", "12:00"], ["Afternoon From", "13:00"], ["Afternoon To", "22:00"]])),
+      this.section("Alamat Pelanggan", this.fields([["Street 1", "Jl. Raya Bekasi No. 100"], ["Street 2", "Blok A, Lantai 3"], ["Street 3", "—"], ["Street 4", "—"], ["Kelurahan", "Harapan Baru"], ["Kecamatan", "Bekasi Utara"], ["Area Code", "17122"], ["City", r.city], ["State", "Jawa Barat"], ["ZIP", "17122"], ["Country", "Indonesia"]])),
+      this.section("Geolokasi", React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        this.fields([["Latitude", "-6.2346789"], ["Longitude", "106.9987654"]]),
+        React.createElement("div", { style: { height: 220, borderRadius: "var(--radius-base)", background: "var(--neutral-variant-100)", border: "1px solid var(--color-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center" } },
+          React.createElement("span", { style: { padding: "6px 12px", borderRadius: 999, background: "var(--primary-500)", color: "#fff", fontSize: 12, fontWeight: 600 } }, "-6.2346789, 106.9987654")))));
+    if (t === "hierarchy") return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.section("Channel Segmentation", this.fields([["Group Channel", "HABA"], ["Sub Channel", r.channelReport], ["Outlet Type", r.channel.startsWith("MT") ? "Modern Trade" : "General Trade"], ["Distribution Channel", "Services"]])),
+      this.section("Operasional", this.fields([["Area", r.area], ["Channel Business", r.channel.startsWith("MT") ? "Modern Trade" : "General Trade"], ["Distribution Center", r.dc], ["Sales Area", r.area], ["Shipping Condition", "Normal Delivery"]])));
+    if (t === "shipto") return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.section("Daftar Pengiriman", React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+        this.fields([["Name 1", r.name + " - " + r.city], ["Street 1", "Jl. Raya Bekasi No. 100"], ["City", r.city], ["Country", "Indonesia"], ["Lead Time", "5 hari kerja"]]))));
+    if (t === "tax") return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.section("Nama & Alamat Pajak", this.fields([["Nama Wajib Pajak", r.name], ["NPWP", "01.234.567.8-901.000"], ["Alamat Pajak", "Jl. Raya Bekasi No. 100"], ["City", r.city], ["State", "Jawa Barat"], ["ZIP", "17122"], ["Country", "Indonesia"]])),
+      this.section("Payer & Bill To", this.fields([["Payer ID", r.id], ["Payer Name", r.name], ["Bill To ID", r.id], ["Bill To Name", r.name], ["Terms of Payment", "NET 30"], ["Credit Limit", "Rp 1.500.000.000"]])));
+    if (t === "discount") return this.section("Diskon", this.miniTable([
+      { key: "brand", header: "Brand", width: 180 },
+      { key: "vol", header: "Discount Volume", width: 160 },
+      { key: "add", header: "Discount Add", width: 150 },
+      { key: "file", header: "Filename Discount", render: (x) => this.link(x.file) },
+    ], [
+      { brand: "Scarlett", vol: "5%", add: "2%", file: "discount_SCAR_2024.pdf" },
+      { brand: "BLP Beauty", vol: "3%", add: "1%", file: "discount_BLP_2024.pdf" },
+      { brand: "Nuface", vol: "4%", add: "1.5%", file: "discount_NUF_2024.pdf" },
+      { brand: "Putri", vol: "2%", add: "0.5%", file: "discount_PTR_2024.pdf" },
+    ]));
+    if (t === "pic") return this.section("PIC Toko", this.fields([["Nama PIC", "Budi Hartono"], ["Jabatan", "Store Manager"], ["Mobile", "+62 812-3456-7890"], ["Email", "budi.hartono@indomaret.co.id"], ["Owner ID", "OW-0001"], ["Owner Name", "Budi Hartono"]]));
+    return this.section("Customer Assortment", this.miniTable([
+      { key: "erp", header: "ERP Code", width: 110 },
+      { key: "name", header: "Product Name", width: 300 },
+      { key: "tipe", header: "Tipe Product", width: 120 },
+      { key: "brand", header: "Brand", width: 100 },
+      { key: "series", header: "Series", width: 130 },
+      { key: "status", header: "Material Status", width: 140 },
+      { key: "lifecycle", header: "Lifecycle", width: 120 },
+      { key: "info", header: "Additional Information" },
+    ], ["EBP", "MHS", "NPD", "EBP", "Other"].map((tp, i) => ({
+      id: "as" + i, erp: "01010101", name: "Wardah Banded B1G1 Perfect Bright Micellar Water 100ml", tipe: tp, brand: "Wardah",
+      series: "Perfect Bright", status: i === 4 ? "Discontinued" : "Product Ready", lifecycle: i === 4 ? "Decline" : "Growth", info: "—" }))));
+  }
+
+  productDetailBody(r) {
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 28 } },
+      this.section("Informasi Umum", React.createElement("div", { style: { display: "flex", gap: 32, flexWrap: "wrap" } },
+        React.createElement("div", { style: { width: 190, height: 190, borderRadius: "var(--radius-md)", background: "var(--neutral-variant-100)", border: "1px solid var(--color-border-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } },
+          React.createElement("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)", textAlign: "center", padding: 12 } }, "Foto produk")),
+        React.createElement("div", { style: { flex: 1, minWidth: 320, display: "flex", flexDirection: "column", gap: 14 } },
+          this.fields([["Nama", r.name], ["ID", r.id], ["ERP Code", r.erp], ["Units per Carton", String(r.units)], ["Barcode", r.barcode], ["Seri", r.series], ["Merek", r.brand]])))),
+      this.section("Status Material", this.miniTable([
+        { key: "code", header: "DC Code", width: 100 },
+        { key: "dc", header: "Distribution Center", width: 180 },
+        { key: "msCode", header: "Material Status Code", width: 180 },
+        { key: "msName", header: "Material Status Name", width: 190 },
+        { key: "at", header: "Updated At", width: 160 },
+        { key: "by", header: "Updated By" },
+      ], [
+        { id: "m1", code: "P001", dc: "DC Aceh", msCode: "ZPRD", msName: "Product Ready", at: "10 Jan 2024, 08:00", by: "Budi Santoso" },
+        { id: "m2", code: "P001", dc: "DC Aceh", msCode: "ZPRD", msName: "Product Ready", at: "10 Jan 2024, 08:00", by: "Budi Santoso" },
+        { id: "m3", code: "P002", dc: "DC Bandung", msCode: "ZDIS", msName: "Discontinued", at: "03 Mar 2024, 14:30", by: "Sari Dewi" },
+      ])),
+      this.section("Daftar Harga", this.miniTable([
+        { key: "id", header: "ID", width: 110 },
+        { key: "erp", header: "ERP ID", width: 120 },
+        { key: "nama", header: "Nama" },
+        { key: "harga", header: "Harga", align: "right", width: 140, render: (x) => React.createElement("span", { style: { fontWeight: 700, fontVariantNumeric: "tabular-nums" } }, x.harga) },
+      ], [
+        { id: "PL-001", erp: "PL-001", nama: "Pricelist Distributor", harga: "Rp 18.500" },
+        { id: "PL-002", erp: "PL-002", nama: "Pricelist Wholesaler", harga: "Rp 19.000" },
+        { id: "PL-003", erp: "PL-003", nama: "Pricelist Retail", harga: "Rp 21.000" },
+      ])),
+      this.section("Informasi Lainnya", this.fields([["Sales Organization", r.salesOrg], ["Lifecycle", r.lifecycle], ["Tanggal Launching", r.launch]])));
+  }
+
+  ruleDetailBody(r) {
+    const { Alert, Input } = this.ns();
+    if (this.state.detailTab === "general") return this.section("Informasi Rule", this.fields([
+      ["ERP Rule ID", r.id], ["Nama Rule", r.name], ["Sales Org", r.org], ["Tipe", r.type], ["Aktif", r.active],
+      ["Kode Produk Masuk", r.inCode], ["Kode Produk Tukar", r.exCode], ["Set All DC", r.allDc],
+      ["Nama Produk Masuk", r.inName], ["Nama Produk Tukar", r.exName], ["Set All Outlet Type", r.allOutlet],
+      ["Terakhir Diubah", "15 April 2026, 08:30 WIB"], ["Diubah Oleh", "Muchamad Lutfi Maulana"]]));
+    const active = SCOPE_TABS.find(t => t.key === this.state.scopeTab) || SCOPE_TABS[1];
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap" } },
+        React.createElement("div", { style: { width: 340 } }, React.createElement(Input, { placeholder: "Cari product rule...", size: "s", leftIcon: this.icon("SearchOutlineIcon") })),
+        r.allDc === "Ya" ? React.createElement("div", { style: { minWidth: 380 } }, React.createElement(Alert, { state: "info" }, "Aturan ini berlaku untuk semua Distribution Center.")) : null),
+      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } },
+        ...SCOPE_TABS.map(t => {
+          const on = t.key === active.key;
+          return React.createElement("button", { key: t.key, type: "button", onClick: () => this.setState({ scopeTab: t.key }),
+            style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: on ? 700 : 400, background: on ? "var(--primary-100)" : "transparent", color: on ? "var(--primary-500)" : "var(--color-text-primary)" } },
+            t.label,
+            React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 20, height: 20, padding: "0 6px", borderRadius: 10, background: t.rows.length ? "var(--error-600)" : "var(--neutral-300)", color: t.rows.length ? "#fff" : "var(--color-text-secondary)", fontSize: 11, fontWeight: 700 } }, t.rows.length));
+        })),
+      active.rows.length
+        ? this.miniTable([
+            { key: "no", header: "No.", width: 80, render: (x) => active.rows.indexOf(x) + 1 },
+            { key: "kode", header: "Kode", width: 200 },
+            { key: "nama", header: "Nama" },
+          ], active.rows)
+        : React.createElement("div", { style: { padding: "56px 0", textAlign: "center", color: "var(--color-text-tertiary)", fontSize: 14 } }, "Belum ada " + active.label.toLowerCase() + " yang dicakup aturan ini."));
+  }
+
+  /* ---------- render ---------- */
+  navDateText() {
+    const d = new Date(), D = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"], M = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return D[d.getDay()] + ", " + d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  navClock() {
+    if (!this._NavClock) {
+      this._NavClock = function NavClock() {
+        const fmt = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Jakarta", hour12: false }) + " WIB";
+        const [t, setT] = React.useState(fmt());
+        React.useEffect(() => { const i = setInterval(() => setT(fmt()), 1000); return () => clearInterval(i); }, []);
+        return React.createElement("span", null, t);
+      };
+    }
+    return React.createElement(this._NavClock, null);
+  }
+  renderVals() {
+    const s = this.state;
+    const { Toast, Select, Tag } = this.ns();
+    const filtered = this.filtered();
+    const per = parseInt(s.perPage, 10);
+    const pageCount = Math.max(1, Math.ceil(filtered.length / per));
+    const page = Math.min(s.page, pageCount);
+    const paged = filtered.slice((page - 1) * per, page * per);
+    const fcount = this.filterCount();
+    const r = this.detailRow();
+    const bp = this.isBP(), prod = this.isProduct(), rule = this.isRule();
+
+    const bpTabs = [ { key: "customer", label: "Customer" }, { key: "owner", label: "Owner" }, { key: "tax", label: "Tax" } ];
+    const ruleTabs = ["Listing", "Determination", "Dropsize & Allocation"].map(t => ({ key: t, label: t }));
+    const bpDetailTabs = [
+      { key: "general", label: "General Info" }, { key: "hierarchy", label: "Customer Hierarchy" }, { key: "shipto", label: "Ship To" },
+      { key: "tax", label: "Financial & Tax" }, { key: "discount", label: "Discount" }, { key: "pic", label: "PIC Toko" }, { key: "assort", label: "Customer Assortment" },
+    ];
+
+    return {
+      isList: s.view === "list", isDetail: s.view === "detail",
+      pageTitle: this.moduleTitle(),
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: this.icon("SearchOutlineIcon") },
+      sideClass: "cmp-side" + (this.state.sideCollapsed ? " is-collapsed" : ""),
+      sideCollapsed: !!this.state.sideCollapsed,
+      sideExpanded: !this.state.sideCollapsed,
+      sideToggleLabel: this.state.sideCollapsed ? "Perluas menu" : "Tutup menu",
+      toggleSidebar: () => this.setState(s => ({ sideCollapsed: !s.sideCollapsed })),
+      sidebarProps: {
+        collapsed: !!this.state.sideCollapsed, activeKey: bp ? "md-bp" : prod ? "product-list" : "product-rule",
+        defaultExpanded: ["master-data", "product"],
+        onSelect: (k) => {
+          if (k === "parameter") window.location.href = "Parameter.dc.html";
+          if (k === "manage-project") window.location.href = "Manage Project.dc.html";
+          if (k === "target-management") window.location.href = "Target Management.dc.html";
+          if (k === "npd-setting") window.location.href = "NPD Setting.dc.html";
+          if (k === "mhs-setting") window.location.href = "MHS Setting.dc.html";
+          if (k === "target-sku-setting") window.location.href = "Target SKU Setting.dc.html";
+          if (k === "target-mvp") window.location.href = "Target Mngmt MVP.dc.html";
+          if (k === "md-bp") this.goModule("bp");
+          if (k === "product-list") this.goModule("product");
+          if (k === "product-rule") this.goModule("rule");
+          if (k === "manage-content") window.location.href = "Manage Content.dc.html";
+          if (k === "content-type") window.location.href = "Content Type.dc.html";
+          if (k === "manage-roles") window.location.href = "Account Management.dc.html#roles";
+          if (k === "manage-users") window.location.href = "Account Management.dc.html#users";
+          if (k === "standar-stok") window.location.href = "Standard Stock Management.dc.html";
+          if (k === "order") window.location.href = "Order.dc.html";
+          if (k === "retur") window.location.href = "Retur.dc.html";
+          if (k === "bp") window.location.href = "Business Partner Management.dc.html";
+        },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [
+            { key: "manage-roles", label: "Manage Roles" }, { key: "manage-users", label: "Manage Users" } ] },
+          { key: "project", label: "Project", icon: "project-plus", children: [ { key: "project-list", label: "Coming Soon" } ] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [
+            { key: "md-bp", label: "Business Partner" },
+            { key: "product", label: "Product", children: [ { key: "product-list", label: "Product List" }, { key: "product-rule", label: "Product Rule" } ] },
+            { key: "employee", label: "Employee" }, { key: "holiday", label: "Holiday" }, { key: "consumer-data", label: "Consumer Data" } ] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [
+            { key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" } ] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [
+            { key: "product-configuration", label: "Product Configuration", children: [ { key: "standar-stok", label: "Standar Stok" }, { key: "npd-setting", label: "NPD Setting" }, { key: "mhs-setting", label: "MHS Setting" }, { key: "target-sku-setting", label: "Target SKU Setting" } ] } ] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [ { key: "order", label: "Order" }, { key: "retur", label: "Retur" } ] },
+          { key: "bp", label: "BP Management", icon: "account-mgmt" },
+          { key: "parameter", label: "Parameter", icon: "note-list" },
+          { key: "manage-project", label: "Manage Project", icon: "project-plus" },
+          { key: "target-management", label: "Target Management", icon: "visit-list" },
+          { key: "target-management-sl", label: "Target Management MVP", icon: "visit-list" },
+          { key: "target-mvp", label: "Target Mngmt MVP", icon: "visit-list" },
+          { key: "content-management", label: "Content Management", icon: "note-list", children: [ { key: "manage-content", label: "Manage Content" }, { key: "content-type", label: "Content Type" } ] },
+        ],
+      },
+      navProps: {
+        left: React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, React.createElement("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, this.navDateText()), React.createElement("span", { style: { fontWeight: 400, fontSize: 12, lineHeight: "18px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, this.navClock())),
+        user: { name: "Muchamad Lutfi Maulana", role: "Super Admin", status: "active" },
+      },
+
+      searchProps: { placeholder: bp ? "Cari business partner..." : prod ? "Cari produk list..." : "Cari product rule...", size: "s", value: s.search, leftIcon: this.icon("SearchOutlineIcon"), onChange: (e) => this.setState({ search: e.target.value, page: 1 }) },
+      filterProps: fcount
+        ? { variant: "secondary", size: "s", style: { gap: 8, background: "var(--primary-100)", borderColor: "var(--primary-500)", color: "var(--primary-500)" },
+            leftIcon: React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "var(--primary-500)", color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, fcount),
+            onClick: () => this.openFilter() }
+        : { variant: "tertiary", size: "s", leftIcon: this.icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.openFilter() },
+      hasExport: !rule,
+      exportProps: { variant: "tertiary", size: "s", leftIcon: this.icon("download", 16), rightIcon: this.iconC("ChevronDownIcon", 16, "var(--color-text-secondary)"), style: { gap: 8 }, onClick: () => this.setState({ exportOpen: !s.exportOpen, exportSub: null }) },
+      exportMenu: this.buildExportMenu(),
+
+      hasTabs: bp || rule,
+      tabProps: bp
+        ? { variant: "line", value: s.bpTab, items: bpTabs, onChange: (k) => this.setState({ bpTab: k, page: 1, search: "", filters: {}, sortKey: null }) }
+        : { variant: "line", value: s.ruleTab, items: ruleTabs, onChange: (k) => this.setState({ ruleTab: k, page: 1, sortKey: null }) },
+
+      filterBar: this.buildFilterBar(),
+      tableRegion: this.buildTable(paged, filtered),
+      showPagination: filtered.length > 0,
+      perPageProps: { options: ["10", "25", "50"], value: s.perPage, size: "s", onChange: (v) => this.setState({ perPage: v, page: 1 }) },
+      totalLabel: "dari total " + filtered.length + " Data",
+      pagerProps: { page, pageCount, showPageSize: false, onPageChange: (p) => this.setState({ page: p }) },
+
+      backProps: { variant: "ghost", size: "s", leftIcon: this.iconC("arrow-left", 18, "var(--primary-500)"), onClick: () => this.setState({ view: "list" }) },
+      detailTitle: r ? (rule ? r.name : r.name) : "",
+      detailBadges: r ? React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+        bp && r.active !== undefined ? React.createElement(Tag, { colorScheme: r.active ? "green" : "neutral", size: "s" }, r.active ? "Aktif" : "Nonaktif") : null,
+        bp && r.multi ? React.createElement(Tag, { colorScheme: "blue", size: "s" }, "Multi-Brand Order") : null,
+        rule ? React.createElement(Tag, { colorScheme: r.active === "Ya" ? "green" : "neutral", size: "s" }, r.active === "Ya" ? "Aktif" : "Nonaktif") : null) : null,
+      detailSub: r ? (bp ? (s.bpTab === "customer" ? "ERP ID: " + r.id + " \u00B7 Lifecycle: " + r.lifecycle : "ID: " + r.id)
+        : prod ? "ERP Code: " + r.erp + " \u00B7 Merek: " + r.brand
+        : "ERP Rule ID: " + r.id + " \u00B7 Tipe: " + r.type) : "",
+      detailMeta: "Created: 19 Apr 2026, 08:00  \u00B7  Updated: 19 Apr 2026, 08:00",
+      hasDetailTabs: (bp && s.bpTab === "customer") || rule,
+      detailTabProps: rule
+        ? { variant: "line", value: s.detailTab, items: [ { key: "general", label: "General Info" }, { key: "scope", label: "Applied Scope" } ], onChange: (k) => this.setState({ detailTab: k }) }
+        : { variant: "line", value: s.detailTab, items: bpDetailTabs, onChange: (k) => this.setState({ detailTab: k }) },
+      detailBody: !r ? null : (prod ? this.productDetailBody(r) : rule ? this.ruleDetailBody(r)
+        : (s.bpTab === "customer" ? this.bpDetailBody(r)
+          : s.bpTab === "owner" ? this.section("Informasi Owner", this.fields([["Owner ID", r.id], ["Name", r.name], ["Mobile", r.mobile], ["Email", r.email], ["City", r.city], ["Status", r.active ? "Aktif" : "Nonaktif"]]))
+          : this.section("Informasi Pajak", this.fields([["Tax ID", r.id], ["Nama Wajib Pajak", r.name], ["NPWP", r.npwp], ["Alamat Pajak", r.address], ["City", r.city], ["Status", r.active ? "Aktif" : "Nonaktif"]])))),
+
+      filterOpen: s.filterOpen,
+      drawerScrim: React.createElement("div", { onClick: () => this.closeFilter(), style: { position: "absolute", inset: 0 } }),
+      drawerClose: React.createElement("button", { type: "button", "aria-label": "Tutup filter", onClick: () => this.closeFilter(), style: { background: "none", border: "none", cursor: "pointer", padding: 4, display: "inline-flex" } }, this.iconC("CloseIcon", 20, "var(--color-text-secondary)")),
+      drawerFields: React.createElement(React.Fragment, null, ...this.filterSpec().map(([label, key, opts]) => {
+        const d = s.filterDraft || {};
+        const multi = !["active", "multi"].includes(key);
+        return React.createElement("div", { key, style: { display: "flex", flexDirection: "column", gap: 6 } },
+          React.createElement("span", { style: { fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" } }, label),
+          React.createElement(Select, { options: opts, multi, clearable: !multi, value: d[key] || (multi ? [] : ""), size: "s", placeholder: "Pilih " + label.toLowerCase() + "...", onChange: (v) => this.setState({ filterDraft: { ...d, [key]: v } }) }));
+      })),
+      drawerResetProps: { variant: "ghost", size: "s", onClick: () => this.setState({ filterDraft: {} }) },
+      drawerCancelProps: { variant: "secondary", size: "s", onClick: () => this.closeFilter() },
+      drawerApplyProps: { variant: "primary", size: "s", onClick: () => this.applyFilter() },
+
+      modalOpen: !!s.modal, modalProps: { open: false },
+      toastRegion: s.toasts.map(t => React.createElement("div", { key: t.id, style: { pointerEvents: "auto", animation: "md-fade .18s ease", minWidth: 320, maxWidth: 420 } },
+        React.createElement(Toast, { state: t.state, title: t.title, onClose: () => this.closeToast(t.id) }, t.msg))),
+    };
+  }
+}
+</script>
+</body>
+</html>

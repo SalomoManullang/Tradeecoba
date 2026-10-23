@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; background:#EEF1F6; }
+  a { color:#304DDE; }
+  a:hover { color:#2438B0; }
+</style>
+</helmet>
+
+<section style="display:flex; flex-direction:column; gap:28px; padding:40px 40px 8px; font-family:'Lato',sans-serif; box-sizing:border-box;">
+  <div style="display:flex; flex-direction:column; gap:6px; max-width:900px;">
+    <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:24px; line-height:32px; color:#1F1F1F;">Putaran 2 — versi lebih ringkas</div>
+    <div style="font-size:14px; line-height:22px; color:#5E6C77; text-wrap:pretty;">Ketiganya muat dalam satu blok pendek dan menambah satu hal yang belum ada di <a href="#1a">1a</a>: umur antrean. Sebutkan <a href="#2a">2a</a>, <a href="#2b">2b</a>, atau <a href="#2c">2c</a>.</div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:28px;">
+
+    <div id="2a" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">2a</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Rel satu baris</span>
+        <span style="font-size:13px; color:#78868F;">Satu bar tahapan, angka menempel di bawahnya</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:20px 24px; box-sizing:border-box;">{{ variant2A }}</div>
+    </div>
+
+    <div id="2b" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">2b</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Baris pill + kartu aksi</span>
+        <span style="font-size:13px; color:#78868F;">Paling pendek; yang perlu ditindak dipisah ke kanan</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:18px 24px; box-sizing:border-box;">{{ variant2B }}</div>
+    </div>
+
+    <div id="2c" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">2c</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Meter dua baris + sorotan hambatan</span>
+        <span style="font-size:13px; color:#78868F;">Komposisi sekilas, lalu satu kalimat yang menyimpulkan</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:20px 24px; box-sizing:border-box;">{{ variant2C }}</div>
+    </div>
+
+  </div>
+</section>
+
+<section style="display:flex; flex-direction:column; gap:28px; padding:32px 40px 40px; font-family:'Lato',sans-serif; box-sizing:border-box;">
+  <div style="display:flex; flex-direction:column; gap:6px; max-width:900px;">
+    <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:24px; line-height:32px; color:#1F1F1F;">Putaran 1 — tiga alternatif</div>
+    <div style="font-size:14px; line-height:22px; color:#5E6C77; text-wrap:pretty;">Data yang sama di ketiganya. Setiap status tetap bisa diklik untuk memfilter tabel. Sebutkan <a href="#1a">1a</a>, <a href="#1b">1b</a>, atau <a href="#1c">1c</a> untuk saya terapkan ke halaman BP Management.</div>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start;">
+
+    <div id="1a" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">1a</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Pipeline persetujuan</span>
+        <span style="font-size:13px; color:#78868F;">Alur tahap kiri ke kanan, terlihat di mana antrean menumpuk</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; box-sizing:border-box;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:18px;">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:18px; line-height:26px; color:#1F1F1F;">Ringkasan Pengajuan</div>
+          <div style="font-size:11px; color:#9AA6AD;">Klik status untuk memfilter daftar</div>
+        </div>
+        {{ variantA }}
+      </div>
+    </div>
+
+    <div id="1b" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">1b</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Satu bar komposisi + daftar</span>
+        <span style="font-size:13px; color:#78868F;">Paling ringkas, proporsi langsung terbaca</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; box-sizing:border-box;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:18px;">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:18px; line-height:26px; color:#1F1F1F;">Ringkasan Pengajuan</div>
+          <div style="font-size:11px; color:#9AA6AD;">Klik status untuk memfilter daftar</div>
+        </div>
+        {{ variantB }}
+      </div>
+    </div>
+
+    <div id="1c" style="display:flex; flex-direction:column; gap:10px; width:900px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:22px; padding:0 8px; border-radius:4px; background:#304DDE; color:#fff; font-size:12px; font-weight:700;">1c</span>
+        <span style="font-weight:700; font-size:15px; color:#2A3D4A;">Fokus tindakan + bar peringkat</span>
+        <span style="font-size:13px; color:#78868F;">Angka yang perlu ditindak dulu, lalu distribusi terurut</span>
+      </div>
+      <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; box-sizing:border-box;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:18px;">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:18px; line-height:26px; color:#1F1F1F;">Ringkasan Pengajuan</div>
+          <div style="font-size:11px; color:#9AA6AD;">Klik status untuk memfilter daftar</div>
+        </div>
+        {{ variantC }}
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1040,&quot;height&quot;:1500}}">
+const META = {
+  "Draft": "#78868F",
+  "Menunggu Consent": "#9D7B00",
+  "Waiting Approval CBD": "#304DDE",
+  "Waiting Approval KDC": "#0056CC",
+  "Waiting Approval BAC": "#7C3AED",
+  "Waiting Approval MDM": "#0B8C8C",
+  "Approved": "#33995E",
+  "Rejected": "#E6001C",
+};
+const ORDER = Object.keys(META);
+const DATA = {
+  "Draft": { noo: 2, pdc: 0 },
+  "Menunggu Consent": { noo: 1, pdc: 0 },
+  "Waiting Approval CBD": { noo: 1, pdc: 4 },
+  "Waiting Approval KDC": { noo: 2, pdc: 2 },
+  "Waiting Approval BAC": { noo: 0, pdc: 4 },
+  "Waiting Approval MDM": { noo: 2, pdc: 0 },
+  "Approved": { noo: 3, pdc: 3 },
+  "Rejected": { noo: 1, pdc: 1 },
+};
+const SHORT = {
+  "Draft": "Draft", "Menunggu Consent": "Consent", "Waiting Approval CBD": "CBD",
+  "Waiting Approval KDC": "KDC", "Waiting Approval BAC": "BAC", "Waiting Approval MDM": "MDM",
+  "Approved": "Approved", "Rejected": "Rejected",
+};
+
+class Component extends DCLogic {
+  state = { sel: "", hover: "" };
+  total() { return ORDER.reduce((a, k) => a + DATA[k].noo + DATA[k].pdc, 0); }
+  n(k) { return DATA[k].noo + DATA[k].pdc; }
+  pick(k) { this.setState(s => ({ sel: s.sel === k ? "" : k })); }
+  legend() {
+    const h = React.createElement;
+    const dot = (c, label) => h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "#78868F" } },
+      h("span", { style: { width: 8, height: 8, borderRadius: 2, background: c } }), label);
+    return h("div", { style: { display: "flex", gap: 16, alignItems: "center" } }, dot("#7C3AED", "Registrasi Baru"), dot("#304DDE", "Perubahan Data"));
+  }
+
+  /* ---------- 1a: pipeline ---------- */
+  variantA() {
+    const h = React.createElement;
+    const flow = ["Draft", "Menunggu Consent", "Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM"];
+    const term = ["Approved", "Rejected"];
+    const maxN = Math.max(...flow.map(k => this.n(k)), 1);
+    const stage = (k, i, isTerm) => {
+      const n = this.n(k), d = DATA[k], on = this.state.sel === k, hov = this.state.hover === k;
+      const c = META[k];
+      return h("button", { key: k, type: "button", onClick: () => this.pick(k),
+        onMouseEnter: () => this.setState({ hover: k }), onMouseLeave: () => this.setState({ hover: "" }),
+        style: { flex: isTerm ? "0 0 150px" : 1, minWidth: 0, cursor: "pointer", textAlign: "left", fontFamily: "'Lato',sans-serif",
+          border: "1px solid " + (on ? c : hov ? "#C8CFD6" : "#EBEBEB"), background: on ? c + "12" : "#FFFFFF",
+          borderRadius: 8, padding: "12px 12px 14px", display: "flex", flexDirection: "column", gap: 10, transition: "border-color .12s, background .12s" } },
+        h("span", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0 } },
+          h("span", { style: { width: 7, height: 7, borderRadius: "50%", background: c, flexShrink: 0 } }),
+          h("span", { style: { fontSize: 12, fontWeight: 700, color: "#5E6C77", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, SHORT[k])),
+        h("span", { style: { display: "flex", alignItems: "baseline", gap: 5 } },
+          h("span", { style: { fontSize: 26, fontWeight: 700, lineHeight: "28px", color: n ? "#2A3D4A" : "#B6BFC6", fontVariantNumeric: "tabular-nums" } }, n),
+          h("span", { style: { fontSize: 11, color: "#9AA6AD" } }, "pengajuan")),
+        h("span", { style: { display: "flex", alignItems: "flex-end", gap: 3, height: 34 } },
+          h("span", { title: "Registrasi Baru " + d.noo, style: { width: 14, height: Math.max(3, d.noo / maxN * 34), background: "#7C3AED", borderRadius: 2 } }),
+          h("span", { title: "Perubahan Data " + d.pdc, style: { width: 14, height: Math.max(3, d.pdc / maxN * 34), background: "#304DDE", borderRadius: 2 } }),
+          h("span", { style: { marginLeft: 6, fontSize: 11, color: "#78868F", lineHeight: "13px" } }, d.noo + " / " + d.pdc)));
+    };
+    const arrow = (i) => h("span", { key: "a" + i, style: { flex: "0 0 12px", display: "flex", alignItems: "center", justifyContent: "center", color: "#C8CFD6", fontSize: 16 } }, "\u203A");
+    const items = [];
+    flow.forEach((k, i) => { items.push(stage(k, i, false)); if (i < flow.length - 1) items.push(arrow(i)); });
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+      h("div", { style: { display: "flex", alignItems: "stretch", gap: 4 } }, items),
+      h("div", { style: { display: "flex", alignItems: "center", gap: 14 } },
+        h("span", { style: { flex: 1, height: 1, background: "#EBEBEB" } }),
+        h("span", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.4px", color: "#9AA6AD" } }, "HASIL AKHIR"),
+        h("span", { style: { flex: 1, height: 1, background: "#EBEBEB" } })),
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" } },
+        h("div", { style: { display: "flex", gap: 10 } }, term.map((k, i) => stage(k, i, true))),
+        this.legend()));
+  }
+
+  /* ---------- 1b: composition bar + list ---------- */
+  variantB() {
+    const h = React.createElement;
+    const total = this.total();
+    const seg = (k) => {
+      const n = this.n(k), on = this.state.sel === k, hov = this.state.hover === k;
+      return h("button", { key: k, type: "button", title: SHORT[k] + " \u00B7 " + n, onClick: () => this.pick(k),
+        onMouseEnter: () => this.setState({ hover: k }), onMouseLeave: () => this.setState({ hover: "" }),
+        style: { width: (n / total * 100) + "%", height: 30, border: "none", padding: 0, cursor: "pointer", background: META[k],
+          opacity: this.state.sel && !on ? 0.32 : hov ? 0.85 : 1, transition: "opacity .12s",
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700, fontFamily: "'Lato',sans-serif" } },
+        n / total > 0.07 ? n : "");
+    };
+    const row = (k) => {
+      const n = this.n(k), d = DATA[k], on = this.state.sel === k;
+      return h("button", { key: k, type: "button", onClick: () => this.pick(k),
+        onMouseEnter: (e) => { e.currentTarget.style.background = "#F5F7FA"; }, onMouseLeave: (e) => { e.currentTarget.style.background = on ? "#EEF1FE" : "transparent"; },
+        style: { display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 6, border: "1px solid " + (on ? "#304DDE" : "transparent"), background: on ? "#EEF1FE" : "transparent", cursor: "pointer", fontFamily: "'Lato',sans-serif", textAlign: "left" } },
+        h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: META[k], flexShrink: 0 } }),
+        h("span", { style: { flex: 1, minWidth: 0, fontSize: 13, fontWeight: 600, color: "#2A3D4A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, k),
+        h("span", { style: { fontSize: 11, color: "#9AA6AD", whiteSpace: "nowrap" } }, d.noo + " / " + d.pdc),
+        h("span", { style: { width: 26, textAlign: "right", fontSize: 14, fontWeight: 700, color: "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, n),
+        h("span", { style: { width: 40, textAlign: "right", fontSize: 11, color: "#78868F", fontVariantNumeric: "tabular-nums" } }, Math.round(n / total * 100) + "%"));
+    };
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 16 } },
+      h("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } },
+        h("span", { style: { fontSize: 30, fontWeight: 700, lineHeight: "34px", color: "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, total),
+        h("span", { style: { fontSize: 13, color: "#78868F" } }, "pengajuan pada periode ini")),
+      h("div", { style: { display: "flex", borderRadius: 6, overflow: "hidden" } }, ORDER.map(seg)),
+      h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 24px" } }, ORDER.map(row)),
+      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 4, borderTop: "1px solid #EBEBEB" } },
+        h("span", { style: { fontSize: 11, color: "#9AA6AD" } }, "Kolom: jumlah Registrasi Baru / Perubahan Data"),
+        this.legend()));
+  }
+
+  /* ---------- 1c: action-first + ranked bars ---------- */
+  variantC() {
+    const h = React.createElement;
+    const total = this.total();
+    const waiting = ["Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM"].reduce((a, k) => a + this.n(k), 0);
+    const kpi = (label, value, sub, color, onClick) => h("button", { key: label, type: "button", onClick,
+      style: { flex: 1, minWidth: 0, textAlign: "left", cursor: onClick ? "pointer" : "default", border: "none", background: "transparent", padding: "0 18px", borderLeft: "3px solid " + color, fontFamily: "'Lato',sans-serif", display: "flex", flexDirection: "column", gap: 2 } },
+      h("span", { style: { fontSize: 12, fontWeight: 700, color: "#5E6C77" } }, label),
+      h("span", { style: { fontSize: 28, fontWeight: 700, lineHeight: "32px", color: "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, value),
+      h("span", { style: { fontSize: 11, color: "#9AA6AD" } }, sub));
+    const sorted = ORDER.slice().sort((a, b) => this.n(b) - this.n(a));
+    const max = Math.max(...sorted.map(k => this.n(k)), 1);
+    const bar = (k) => {
+      const d = DATA[k], n = this.n(k), on = this.state.sel === k;
+      const w = n / max * 100;
+      return h("button", { key: k, type: "button", onClick: () => this.pick(k),
+        onMouseEnter: (e) => { e.currentTarget.style.background = "#F5F7FA"; }, onMouseLeave: (e) => { e.currentTarget.style.background = on ? "#EEF1FE" : "transparent"; },
+        style: { display: "grid", gridTemplateColumns: "190px 1fr 44px 44px", alignItems: "center", gap: 12, padding: "6px 10px", borderRadius: 6, border: "1px solid " + (on ? "#304DDE" : "transparent"), background: on ? "#EEF1FE" : "transparent", cursor: "pointer", fontFamily: "'Lato',sans-serif", textAlign: "left" } },
+        h("span", { style: { display: "inline-flex", alignItems: "center", gap: 7, minWidth: 0 } },
+          h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: META[k], flexShrink: 0 } }),
+          h("span", { style: { fontSize: 13, fontWeight: 600, color: "#2A3D4A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, k)),
+        h("span", { style: { display: "flex", height: 14, borderRadius: 3, background: "#F1F3F6", overflow: "hidden" } },
+          h("span", { style: { width: w + "%", display: "flex", borderRadius: 3, overflow: "hidden" } },
+            h("span", { title: "Registrasi Baru " + d.noo, style: { flex: d.noo || 0.0001, background: "#7C3AED" } }),
+            h("span", { title: "Perubahan Data " + d.pdc, style: { flex: d.pdc || 0.0001, background: "#304DDE" } }))),
+        h("span", { style: { textAlign: "right", fontSize: 14, fontWeight: 700, color: "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, n),
+        h("span", { style: { textAlign: "right", fontSize: 11, color: "#78868F", fontVariantNumeric: "tabular-nums" } }, Math.round(n / total * 100) + "%"));
+    };
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 18 } },
+      h("div", { style: { display: "flex", gap: 8 } },
+        kpi("Total pengajuan", total, "periode berjalan", "#C8CFD6", null),
+        kpi("Menunggu persetujuan", waiting, "tersebar di 4 tahap", "#304DDE", () => this.setState({ sel: "Waiting Approval CBD" })),
+        kpi("Perlu perhatian", this.n("Rejected") + this.n("Menunggu Consent"), "ditolak & menunggu consent", "#E6001C", () => this.pick("Rejected")),
+        kpi("Approved", this.n("Approved"), "selesai diproses", "#33995E", () => this.pick("Approved"))),
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, borderTop: "1px solid #EBEBEB" } },
+        h("span", { style: { fontSize: 12, fontWeight: 700, letterSpacing: "0.4px", color: "#9AA6AD" } }, "DISTRIBUSI STATUS"),
+        this.legend()),
+      h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, sorted.map(bar)));
+  }
+
+  /* ---------- shared: aging ---------- */
+  aging() { return { "Draft": 1, "Menunggu Consent": 4, "Waiting Approval CBD": 6, "Waiting Approval KDC": 2, "Waiting Approval BAC": 9, "Waiting Approval MDM": 1, "Approved": 0, "Rejected": 0 }; }
+  stale() { return { "Menunggu Consent": 1, "Waiting Approval CBD": 2, "Waiting Approval BAC": 3 }; }
+  bottleneck() {
+    const flow = ["Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM"];
+    const age = this.aging();
+    return flow.slice().sort((a, b) => (age[b] * 10 + this.n(b)) - (age[a] * 10 + this.n(a)))[0];
+  }
+
+  /* ---------- 2a: single rail ---------- */
+  variant2A() {
+    const h = React.createElement;
+    const flow = ["Draft", "Menunggu Consent", "Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM", "Approved", "Rejected"];
+    const total = this.total();
+    const age = this.aging(), stale = this.stale();
+    const seg = (k) => {
+      const n = this.n(k), on = this.state.sel === k;
+      return h("button", { key: k, type: "button", title: k + " \u00B7 " + n, onClick: () => this.pick(k),
+        style: { width: (n / total * 100) + "%", height: 10, border: "none", padding: 0, cursor: "pointer", background: META[k],
+          opacity: this.state.sel && !on ? 0.3 : 1, transition: "opacity .12s" } });
+    };
+    const tick = (k) => {
+      const n = this.n(k), d = DATA[k], on = this.state.sel === k, st = stale[k];
+      return h("button", { key: k, type: "button", onClick: () => this.pick(k),
+        style: { flex: 1, minWidth: 0, border: "none", background: "transparent", cursor: "pointer", padding: "0 2px", textAlign: "left", fontFamily: "'Lato',sans-serif", display: "flex", flexDirection: "column", gap: 2, opacity: this.state.sel && !on ? 0.45 : 1 } },
+        h("span", { style: { display: "flex", alignItems: "center", gap: 5, minWidth: 0 } },
+          h("span", { style: { width: 7, height: 7, borderRadius: "50%", background: META[k], flexShrink: 0 } }),
+          h("span", { style: { fontSize: 11, fontWeight: 700, color: on ? "#304DDE" : "#5E6C77", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, SHORT[k])),
+        h("span", { style: { display: "flex", alignItems: "baseline", gap: 4 } },
+          h("span", { style: { fontSize: 18, fontWeight: 700, lineHeight: "22px", color: n ? "#2A3D4A" : "#B6BFC6", fontVariantNumeric: "tabular-nums" } }, n),
+          h("span", { title: d.noo + " Registrasi Baru \u00B7 " + d.pdc + " Perubahan Data", style: { display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" } },
+            h("span", { style: { width: 6, height: 6, borderRadius: 2, background: "#7C3AED" } }),
+            h("span", { style: { color: "#5E6C77", fontWeight: 700 } }, d.noo),
+            h("span", { style: { width: 6, height: 6, borderRadius: 2, background: "#304DDE", marginLeft: 3 } }),
+            h("span", { style: { color: "#5E6C77", fontWeight: 700 } }, d.pdc))),
+        h("span", { style: { fontSize: 10, color: "#B23B00", fontWeight: 700, whiteSpace: "nowrap" } }, st ? st + " > 3 hari" : "\u00A0"));
+    };
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+      h("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 } },
+        h("span", { style: { display: "flex", alignItems: "baseline", gap: 8 } },
+          h("span", { style: { fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 18, color: "#1F1F1F" } }, "Ringkasan Pengajuan"),
+          h("span", { style: { fontSize: 13, color: "#78868F" } }, total + " pengajuan")),
+        h("span", { style: { display: "flex", alignItems: "center", gap: 14 } },
+          h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "#78868F" } },
+            h("span", { style: { width: 8, height: 8, borderRadius: 2, background: "#7C3AED" } }), "Registrasi Baru"),
+          h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "#78868F" } },
+            h("span", { style: { width: 8, height: 8, borderRadius: 2, background: "#304DDE" } }), "Perubahan Data"),
+          h("span", { style: { fontSize: 11, color: "#9AA6AD" } }, "\u00B7 Klik status untuk memfilter daftar"))),
+      h("div", { style: { display: "flex", borderRadius: 5, overflow: "hidden" } }, flow.map(seg)),
+      h("div", { style: { display: "flex", gap: 4 } }, flow.map(tick)));
+  }
+
+  /* ---------- 2b: pill row + action card ---------- */
+  variant2B() {
+    const h = React.createElement;
+    const flow = ["Draft", "Menunggu Consent", "Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM", "Approved", "Rejected"];
+    const stale = this.stale();
+    const staleTotal = Object.values(stale).reduce((a, b) => a + b, 0);
+    const pill = (k) => {
+      const n = this.n(k), d = DATA[k], on = this.state.sel === k, st = stale[k];
+      return h("button", { key: k, type: "button", title: "Registrasi Baru " + d.noo + " \u00B7 Perubahan Data " + d.pdc, onClick: () => this.pick(k),
+        style: { display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 11px 6px 9px", borderRadius: 999, cursor: "pointer", fontFamily: "'Lato',sans-serif",
+          border: "1px solid " + (on ? "#304DDE" : "#E4E7EB"), background: on ? "#EEF1FE" : "#FFFFFF" } },
+        h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: META[k], flexShrink: 0 } }),
+        h("span", { style: { fontSize: 13, fontWeight: 600, color: "#2A3D4A", whiteSpace: "nowrap" } }, SHORT[k]),
+        h("span", { style: { fontSize: 13, fontWeight: 700, color: "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, n),
+        h("span", { style: { display: "inline-flex", height: 12, width: 22, borderRadius: 2, overflow: "hidden", background: "#F1F3F6" } },
+          h("span", { style: { flex: d.noo || 0.0001, background: "#7C3AED" } }),
+          h("span", { style: { flex: d.pdc || 0.0001, background: "#304DDE" } })),
+        st ? h("span", { style: { fontSize: 10, fontWeight: 700, color: "#B23B00", background: "#FFF1E6", padding: "1px 5px", borderRadius: 3, whiteSpace: "nowrap" } }, st + " lama") : null);
+    };
+    return h("div", { style: { display: "flex", alignItems: "flex-start", gap: 20 } },
+      h("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 } },
+        h("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } },
+          h("span", { style: { fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 18, color: "#1F1F1F" } }, "Ringkasan Pengajuan"),
+          h("span", { style: { fontSize: 13, color: "#78868F" } }, this.total() + " pengajuan \u00B7 klik untuk memfilter")),
+        h("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, flow.map(pill)),
+        h("div", { style: { display: "flex", gap: 16 } },
+          h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "#78868F" } },
+            h("span", { style: { width: 8, height: 8, borderRadius: 2, background: "#7C3AED" } }), "Registrasi Baru"),
+          h("span", { style: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "#78868F" } },
+            h("span", { style: { width: 8, height: 8, borderRadius: 2, background: "#304DDE" } }), "Perubahan Data"))),
+      h("div", { style: { flex: "0 0 210px", border: "1px solid #FFD9BF", background: "#FFF7F0", borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6 } },
+        h("span", { style: { fontSize: 12, fontWeight: 700, color: "#B23B00" } }, "Perlu ditindak"),
+        h("span", { style: { display: "flex", alignItems: "baseline", gap: 6 } },
+          h("span", { style: { fontSize: 26, fontWeight: 700, lineHeight: "28px", color: "#B23B00", fontVariantNumeric: "tabular-nums" } }, staleTotal),
+          h("span", { style: { fontSize: 11, color: "#8A5A3A" } }, "tertahan > 3 hari")),
+        h("span", { style: { fontSize: 11, lineHeight: "16px", color: "#8A5A3A" } }, "Terbanyak di " + SHORT[this.bottleneck()] + " \u00B7 tertua " + this.aging()[this.bottleneck()] + " hari")));
+  }
+
+  /* ---------- 2c: two-line meter + bottleneck ---------- */
+  variant2C() {
+    const h = React.createElement;
+    const total = this.total();
+    const inflight = ["Waiting Approval CBD", "Waiting Approval KDC", "Waiting Approval BAC", "Waiting Approval MDM"].reduce((a, k) => a + this.n(k), 0);
+    const bn = this.bottleneck();
+    const stat = (label, value, color) => h("span", { key: label, style: { display: "flex", alignItems: "baseline", gap: 6 } },
+      h("span", { style: { fontSize: 22, fontWeight: 700, lineHeight: "26px", color: color || "#2A3D4A", fontVariantNumeric: "tabular-nums" } }, value),
+      h("span", { style: { fontSize: 12, color: "#78868F" } }, label));
+    const seg = (k) => {
+      const n = this.n(k), on = this.state.sel === k;
+      return h("button", { key: k, type: "button", title: k + " \u00B7 " + n + " (" + DATA[k].noo + " baru / " + DATA[k].pdc + " perubahan)", onClick: () => this.pick(k),
+        style: { width: (n / total * 100) + "%", height: 26, border: "none", padding: 0, cursor: "pointer", background: META[k], opacity: this.state.sel && !on ? 0.3 : 1,
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontFamily: "'Lato',sans-serif", fontSize: 11, fontWeight: 700 } },
+        n / total > 0.06 ? n : "");
+    };
+    const key = (k) => h("button", { key: k, type: "button", onClick: () => this.pick(k),
+      style: { display: "inline-flex", alignItems: "center", gap: 6, border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: "'Lato',sans-serif",
+        opacity: this.state.sel && this.state.sel !== k ? 0.45 : 1 } },
+      h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: META[k] } }),
+      h("span", { style: { fontSize: 11, color: "#5E6C77", whiteSpace: "nowrap" } }, SHORT[k]));
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+      h("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 20, flexWrap: "wrap" } },
+        h("span", { style: { fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, fontSize: 18, color: "#1F1F1F" } }, "Ringkasan Pengajuan"),
+        h("span", { style: { display: "flex", gap: 22, alignItems: "baseline" } },
+          stat("total", total), stat("dalam proses", inflight, "#304DDE"), stat("approved", this.n("Approved"), "#33995E"), stat("rejected", this.n("Rejected"), "#E6001C"))),
+      h("div", { style: { display: "flex", borderRadius: 5, overflow: "hidden" } }, ORDER.map(seg)),
+      h("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px 16px" } }, ORDER.map(key)),
+      h("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, background: "#FFF7F0", border: "1px solid #FFD9BF" } },
+        h("span", { style: { width: 8, height: 8, borderRadius: "50%", background: "#B23B00", flexShrink: 0 } }),
+        h("span", { style: { fontSize: 12, lineHeight: "18px", color: "#7A4A2E", textWrap: "pretty" } },
+          "Antrean terlama di ", h("b", { style: { color: "#B23B00" } }, bn), " \u2014 ", h("b", { style: { color: "#B23B00" } }, this.n(bn) + " pengajuan"), ", tertua ", h("b", { style: { color: "#B23B00" } }, this.aging()[bn] + " hari"), ". Klik untuk melihat daftarnya."),
+        h("button", { type: "button", onClick: () => this.pick(bn), style: { marginLeft: "auto", border: "1px solid #E0A57A", background: "#fff", color: "#B23B00", borderRadius: 4, padding: "5px 10px", fontFamily: "'Lato',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" } }, "Lihat")));
+  }
+
+  renderVals() {
+    return {
+      variantA: this.variantA(), variantB: this.variantB(), variantC: this.variantC(),
+      variant2A: this.variant2A(), variant2B: this.variant2B(), variant2C: this.variant2C(),
+    };
+  }
+}
+</script>
+</body>
+</html>

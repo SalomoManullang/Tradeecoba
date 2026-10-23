@@ -23,17 +23,17 @@
     UI.requireRole('CBD');
     const programs = DB.where('programs', (p) => p.year === year && p.status === 'PUBLISHED').map((x) => E.loadProgram(x.id));
     return {
-      title: 'Registration', html: `<div class="page-head"><div><h1>Registration ${year}</h1><div class="sub">Pilih program & channel. Saran toko mengikuti aturan eligibility yang diatur Admin HO.</div></div></div>
+      title: 'Registration', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Registration ${year}</h1><div class="sub">Pilih program & channel. Saran toko mengikuti aturan eligibility yang diatur Admin HO.</div></div></div>
       ${programs.map((p) => `<div class="card mb-3"><div class="card-header">${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)} · ${h.date(p.period_start)} – ${h.date(p.period_end)}</span></div>
         <div class="card-body"><div class="row g-3">${p.channels.filter((c) => canSeeChannel(user, c.channel_code)).map((c) => {
           const regs = DB.where('registrations', (x) => x.program_channel_id === c.id);
-          return `<div class="col-md-4"><div class="border rounded p-3 h-100 d-flex flex-column">
+          return `<div class="col-md-4"><div class="border rounded p-3 h-100 d-flex flex-column cps-tile">
             <div class="fw-semibold">${esc(c.channel_name)}</div>
             <div class="small text-muted mb-2">${c.brands.map((b) => esc(b.brand_name)).join(', ')}</div>
             <div class="small mb-3"><strong>${regs.filter((x) => x.status !== 'rejected').length}</strong> toko terdaftar${regs.some((x) => x.status === 'returned') ? ` · <span class="text-info">${regs.filter((x) => x.status === 'returned').length} perlu revisi</span>` : ''}</div>
             <a href="#/registration/program/${p.id}/${c.id}" class="btn btn-brand btn-sm mt-auto">Lihat saran toko <i class="bi bi-arrow-right"></i></a></div></div>`;
         }).join('') || '<div class="col-12 text-muted">Tidak ada channel dalam scope Anda.</div>'}</div></div></div>`).join('')
-        || `<div class="card"><div class="card-body text-muted">Belum ada program PUBLISHED di tahun ${year}.</div></div>`}`,
+        || `<div class="card"><div class="card-body text-muted">Belum ada program PUBLISHED di tahun ${year}.</div></div>`}</div></div>`,
     };
   });
 
@@ -48,18 +48,21 @@
     if (!showAll) rows = rows.filter((r) => r.el.eligible);
     const ref = E.baselineMonths(program)[0].slice(0, 4);
     return {
-      title: `Saran toko · ${ch.channel_name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/registration">Registration</a> / ${esc(program.name)}</div>
-        <h1>Saran toko · ${esc(ch.channel_name)}</h1><div class="sub">Saran baseline = total sell in ${ref} ÷ bulan aktif sejak first DO, per brand. Baseline final diisi CBD/CDT di form.</div></div>
-        <div class="text-right"><div class="fs-5"><strong>${nElig}</strong> <span class="text-muted fs-6">eligible dari ${stores.length} toko belum terdaftar</span></div>
-          <a href="#/registration/program/${program.id}/${ch.id}?all=${showAll ? '0' : '1'}" class="small">${showAll ? 'Sembunyikan yang tidak eligible' : 'Tampilkan juga yang tidak eligible'}</a></div></div>
-      <div class="card mb-2"><div class="card-body py-2 small d-flex flex-wrap gap-3"><span class="text-muted">Aturan eligibility:</span>
+      title: `Saran toko · ${ch.channel_name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: '/registration', crumb: `<a href="#/registration">Registration</a> / ${esc(program.name)}`, title: `Saran toko · ${esc(ch.channel_name)}`,
+        sub: `${esc(program.name)} · Saran baseline = total sell in ${ref} ÷ bulan aktif sejak first DO, per brand. Baseline final diisi CBD/CDT di form.`,
+        facts: [['Toko eligible', `${nElig}`], ['Belum terdaftar', `${stores.length}`]],
+        actions: `<a href="#/registration/program/${program.id}/${ch.id}?all=${showAll ? '0' : '1'}" class="small btn btn-sm btn-outline-secondary">${showAll ? 'Sembunyikan yang tidak eligible' : 'Tampilkan juga yang tidak eligible'}</a>` })}
+      <div class="cps-work">
+      <div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-diagram-3"></i> Channel</div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">${program.channels.filter((c) => canSeeChannel(user, c.channel_code)).map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/registration/program/${program.id}/${c.id}">${esc(c.channel_name)}</a>`).join('')}</div></div>
+      <div class="card mb-2"><div class="card-body"><p class="small text-muted mb-0"><span class="text-muted">Aturan eligibility:</span>
         ${ch.elig_min_sell_out_months ? `<span>Min ${ch.elig_min_sell_out_months} bulan sell out</span>` : ''}
         ${ch.elig_ratio_at_registration && ch.elig_ratio_min !== null ? `<span>· SO:SI ${ch.elig_ratio_min}–${ch.elig_ratio_max === null ? '∞' : ch.elig_ratio_max}%</span>` : ''}
         ${(ch.elig_exclusive_program_ids || []).length ? `<span>· Tidak boleh bersamaan: ${(ch.elig_exclusive_program_ids || []).map((x) => esc((DB.byId('programs', x) || {}).name || x)).join(', ')}</span>` : ''}
         <span>· Baseline min per brand: ${ch.brands.map((b) => `${esc(b.brand_name)} ${h.rpShort(E.minBaseline(ch, b))}`).join(', ')}</span>
-        ${ch.elig_prior_payout_required ? '<span>· Wajib pernah menerima payout</span>' : ''}</div></div>
-      <div class="card"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
+        ${ch.elig_prior_payout_required ? '<span>· Wajib pernah menerima payout</span>' : ''}</p></div></div>
+      <div class="card"><div class="card-header">Toko belum terdaftar</div><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
         <thead><tr><th>Toko</th><th>DC</th><th class="num">Bln SO</th><th class="num">SO:SI</th>${ch.brands.map((b) => `<th class="num">${esc(b.brand_name)}</th>`).join('')}<th></th></tr></thead>
         <tbody>${rows.map(({ s, el }) => `<tr class="${el.eligible ? '' : 'text-muted'}">
           <td><div class="fw-semibold">${esc(s.name)}</div><div class="small text-muted">${s.customer_id} · ${esc(s.city)}</div>
@@ -68,7 +71,7 @@
           ${el.brands.map((b) => `<td class="num small ${b.eligible ? '' : 'text-muted'}">${b.suggested ? h.rpShort(b.suggested) : '-'}${b.cls ? `<br>${h.cls(b.cls.code)}` : ''}</td>`).join('')}
           <td class="text-right">${el.eligible ? `<a href="#/registration/program/${program.id}/${ch.id}/store/${s.customer_id}" class="btn btn-sm btn-brand">Daftarkan</a>`
             : `<span class="small text-danger">${esc(el.reasons.join('; '))}</span>`}</td></tr>`).join('')
-          || `<tr><td colspan="${5 + ch.brands.length}" class="text-center text-muted py-4">Tidak ada toko ${showAll ? '' : 'eligible '}yang belum terdaftar.</td></tr>`}</tbody></table></div></div>`,
+          || `<tr><td colspan="${5 + ch.brands.length}" class="text-center text-muted py-4">Tidak ada toko ${showAll ? '' : 'eligible '}yang belum terdaftar.</td></tr>`}</tbody></table></div></div></div></div>`,
     };
   });
 
@@ -108,10 +111,13 @@
     });
     const layers = ch.phases.REGISTRATION.layers;
     return {
-      title: `${reg ? 'Revisi' : 'Daftarkan'} ${s.name}`, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/registration">Registration</a> / <a href="#/registration/program/${program.id}/${ch.id}">${esc(program.name)} · ${esc(ch.channel_name)}</a></div>
-        <h1>${reg ? 'Revisi' : 'Daftarkan'} ${esc(s.name)}</h1><div class="sub">${s.customer_id} · ${esc(s.city)} · SO:SI ${h.pct(el.ratio)} · ${el.soMonths} bulan sell out</div></div></div>
+      title: `${reg ? 'Revisi' : 'Daftarkan'} ${s.name}`, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: reg ? `/registration/participant/${reg.id}` : `/registration/program/${program.id}/${ch.id}`,
+        crumb: `<a href="#/registration">Registration</a> / <a href="#/registration/program/${program.id}/${ch.id}">${esc(program.name)} · ${esc(ch.channel_name)}</a>`,
+        title: `${reg ? 'Revisi' : 'Daftarkan'} ${esc(s.name)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Customer ID', s.customer_id], ['Kota', esc(s.city)], ['SO:SI', h.pct(el.ratio)], ['Sell out', `${el.soMonths} bulan`]] })}
       ${UI.errorsHtml(errors)}
+      <div class="cps-work">
       <form data-action="reg.submit" id="regForm" data-program="${program.id}" data-pc="${ch.id}" data-cid="${s.customer_id}" data-reg="${reg ? reg.id : ''}">
       <div class="card mb-3"><div class="card-header">Target per brand&nbsp;<span class="small text-muted fw-normal">— baseline & growth diisi CBD/CDT, kelas/tier/rebate otomatis</span></div>
         <div class="table-responsive"><table class="table table-sm table-bordered mb-0 reg-brands"><thead><tr><th>Ikut</th><th>Brand</th><th class="num">Saran baseline</th>
@@ -125,9 +131,9 @@
               const val = f.field_key === 'baseline' ? r.baseline : f.field_key === 'growth' ? r.growth : r.data[f.field_key];
               return `<td style="min-width:${f.data_type === 'RUPIAH' ? 180 : 120}px">${UI.fieldInput(Object.assign({}, f, { is_required: false }), val, { prefix: `b_${r.b.brand_code}_`, bare: true })}</td>`;
             }).join('')}</tr>`).join('')}</tbody></table></div>
-        <div class="card-body py-2 small text-muted">Kelas dari baseline/bulan (min inklusif, maks eksklusif). Tier = tier tertinggi yang growth-nya terpenuhi. Total rebate = fix maks + conditional (komitmen; dibayar terpisah di Payout).
+        <div class="card-body"><p class="small text-muted mb-0">Kelas dari baseline/bulan (min inklusif, maks eksklusif). Tier = tier tertinggi yang growth-nya terpenuhi. Total rebate = fix maks + conditional (komitmen; dibayar terpisah di Payout).
           ${fGrowth && (fGrowth.min_value !== null || fGrowth.max_value !== null) ? ` Growth: ${fGrowth.min_value !== null ? 'min ' + fGrowth.min_value + '%' : ''} ${fGrowth.max_value !== null ? 'maks ' + fGrowth.max_value + '%' : ''}.` : ''}
-          ${fBase ? '' : '<span class="text-danger">Form belum punya field baseline.</span>'}</div></div>
+          ${fBase ? '' : '<span class="text-danger">Form belum punya field baseline.</span>'}</p></div></div>
       <div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-header">Data lain</div><div class="card-body">
         ${other.map((f) => UI.fieldInput(f, values.data[f.field_key] !== undefined ? values.data[f.field_key] : reg ? reg.data[f.field_key] : '')).join('') || '<div class="small text-muted">Tidak ada field tambahan.</div>'}
         ${reg ? '<div class="mb-3"><label class="form-label">Catatan revisi</label><textarea name="note" class="form-control" rows="2"></textarea></div>' : ''}
@@ -135,7 +141,7 @@
       <div class="col-lg-5"><div class="card sticky-summary"><div class="card-header">Approval Registration</div><div class="card-body">
         <div id="apPath"></div>
         <button class="btn btn-brand w-100 mt-3"><i class="bi bi-check2-circle"></i> ${reg ? 'Kirim ulang' : 'Ajukan registrasi'}</button>
-        <div class="form-text">Layer dengan kondisi yang terpenuhi langsung auto-approved & tercatat.</div></div></div></div></div></form>`,
+        <div class="form-text">Layer dengan kondisi yang terpenuhi langsung auto-approved & tercatat.</div></div></div></div></div></form></div></div>`,
       after(root) {
         const form = root.querySelector('#regForm');
         function calc() {
@@ -248,8 +254,8 @@
     const opt = (v, cur, label) => `<option value="${v}" ${h.sel(String(cur || '') === String(v))}>${esc(label)}</option>`;
     const bName = (code) => (DB.t('brands').find((b) => b.code === code) || {}).name || code;
     return {
-      title: 'Peserta', html: `<div class="page-head"><div><h1>Peserta ${year}</h1><div class="sub">${rows.length} registrasi sesuai filter & scope Anda</div></div></div>
-      <form class="card card-body py-2 mb-3 d-flex flex-row flex-wrap gap-2 align-items-center" data-action="filter" data-path="/registration/participants">
+      title: 'Peserta', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Peserta ${year}</h1><div class="sub">${rows.length} registrasi sesuai filter & scope Anda</div></div></div>
+      <form class="card card-body py-2 mb-3 d-flex flex-row flex-wrap gap-2 align-items-center cps-filter" data-action="filter" data-path="/registration/participants">
         <select name="program" class="form-control form-control-sm" style="width:auto"><option value="">Semua program</option>${programs.map((p) => opt(p.id, q.program, p.name)).join('')}</select>
         <select name="channel" class="form-control form-control-sm" style="width:auto"><option value="">Semua channel</option>${DB.t('channels').map((c) => opt(c.code, q.channel, c.name)).join('')}</select>
         <select name="status" class="form-control form-control-sm" style="width:auto"><option value="">Semua status</option>${['approved', 'in_review', 'returned', 'rejected'].map((s) => opt(s, q.status, h.STATUS[s][0])).join('')}</select>
@@ -264,7 +270,7 @@
             <td class="small">${r.brands.map((b) => `<span class="mr-2 text-nowrap">${esc(bName(b.brand_code))} ${h.cls(b.class_code)} ${b.total_pct}%</span>`).join('')}</td>
             <td>${h.badge(r.status)}${l ? `<div class="small text-muted">Layer ${l.layer_order} · ${esc(C.APPROVAL_ROLES[l.role_code])}</div>` : ''}</td>
             <td class="small">${esc(by.name)}<div class="text-muted">${h.datetime(r.registered_at)}</div></td></tr>`;
-        }).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada data.</td></tr>'}</tbody></table></div></div>`,
+        }).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">Tidak ada data.</td></tr>'}</tbody></table></div></div></div></div>`,
     };
   });
 
@@ -288,17 +294,18 @@
     const pays = DB.where('payouts', (x) => x.registration_id === reg.id);
     const docCtx = { store: s, program, ch, brands: reg.brands.map((b) => Object.assign({ brand_name: (E.brandOf(ch, b.brand_code) || {}).brand_name || b.brand_code }, b)) };
     return {
-      title: s.name, html: `
-      <div class="page-head"><div><div class="small text-muted"><a href="#/registration/participants">Peserta</a> / ${esc(program.name)} · ${esc(ch.channel_name)}</div>
-        <h1>${esc(s.name)} ${h.badge(reg.status)}</h1><div class="sub">${reg.customer_id} · ${esc(s.city)} · DC ${s.dc_code} · didaftarkan ${esc((DB.byId('users', reg.registered_by) || {}).name)} ${h.datetime(reg.registered_at)}</div></div>
-        ${canEdit ? `<a href="#/registration/participant/${reg.id}/edit" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi & kirim ulang</a>` : ''}</div>
+      title: s.name, html: `<div class="cps cps-app">
+      ${UI.detailHead({ back: '/registration/participants', crumb: `<a href="#/registration/participants">Peserta</a> / ${esc(program.name)} · ${esc(ch.channel_name)}`,
+        title: `${esc(s.name)} ${h.badge(reg.status)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
+        facts: [['Customer ID', reg.customer_id], ['Kota', esc(s.city)], ['DC', s.dc_code], ['Didaftarkan', `${esc((DB.byId('users', reg.registered_by) || {}).name)}<small>${h.datetime(reg.registered_at)}</small>`]],
+        actions: canEdit ? `<a href="#/registration/participant/${reg.id}/edit" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi & kirim ulang</a>` : '' })}
       <div class="row g-3"><div class="col-lg-8">
         ${canAct ? UI.approvalBox('registration', reg.id, layer, `/registration/participant/${reg.id}`) : ''}
         <div class="card mb-3"><div class="card-header">Hasil per brand</div><div class="table-responsive"><table class="table table-sm mb-0">
           <thead><tr><th>Brand</th><th>Kelas</th><th class="num">Baseline / bln</th><th class="num">Growth</th><th class="num">Target / bln</th><th class="num">Fix maks</th><th class="num">Conditional</th><th class="num">Total</th></tr></thead>
           <tbody>${docCtx.brands.map((b) => `<tr><td class="fw-semibold">${esc(b.brand_name)}</td><td>${h.cls(b.class_code)}</td><td class="num">${h.rp(Math.round(b.baseline))}</td><td class="num">${b.growth_pct}%</td>
             <td class="num">${h.rp(Math.round(b.target_monthly || 0))}</td><td class="num">${b.fix_max_pct}%</td><td class="num">${b.conditional_pct}%</td><td class="num fw-bold">${b.total_pct}%</td></tr>`).join('')}</tbody></table></div>
-          <div class="card-body py-2 small text-muted">Angka disimpan saat registrasi (registrationBrandResult). Total rebate = komitmen; payout Conditional & Fix dibayar terpisah.</div></div>
+          <div class="card-body"><p class="small text-muted mb-0">Angka disimpan saat registrasi (registrationBrandResult). Total rebate = komitmen; payout Conditional & Fix dibayar terpisah.</p></div></div>
         ${fields.length ? `<div class="card mb-3"><div class="card-header">Data registrasi</div><div class="card-body"><dl class="row mb-0">
           ${fields.map((f) => `<dt class="col-sm-4">${esc(f.label)}</dt><dd class="col-sm-8">${esc(reg.data[f.field_key] !== undefined ? reg.data[f.field_key] : '-')}</dd>`).join('')}</dl></div></div>` : ''}
         ${docs.length ? `<div class="card mb-3"><div class="card-header">Dokumen MOU / SKN</div><div class="card-body">
@@ -309,7 +316,7 @@
           <div><strong>Payout:</strong> ${pays.map((x) => `<a href="#/payout/item/${x.id}" class="mr-2">${x.component === 'CONDITIONAL' ? 'Conditional' : 'Fix'} ${esc(x.period_label)} ${h.rp(x.amount)} ${h.badge(x.status)}</a>`).join('') || '<span class="text-muted">belum ada</span>'}</div></div></div>` : ''}
       </div>
       <div class="col-lg-4"><div class="card mb-3"><div class="card-header">Jalur approval</div><div class="card-body">${UI.layerPath(ch.phases.REGISTRATION.layers, 'registration', reg)}</div></div>
-        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('registration', reg.id)}</div></div></div></div>`,
+        <div class="card"><div class="card-header">Riwayat</div><div class="card-body">${UI.logHtml('registration', reg.id)}</div></div></div></div></div>`,
     };
   });
 })();

@@ -1,0 +1,782 @@
+=== INTRO ===
+Epic: Master Data: Business Partner Management
+Description: Develop the Business Partner Management menu under Master Data > Business Partner menu in COMPASS (backoffice) as the single unified page for: (1) submitting New Outlet Order (NOO) requests to register new customer outlets (2) submitting Perubahan Data Customer (PDC) requests, and (3) the approval queue where authorized approver roles review, approve, or reject pending NOO and PDC requests from both COMPASS and SFM Mobile. The approval flow is sequential: CDO → KDC → BAC → MDM.
+Objective: To provide a structured, role-based approval workflow for NOO and PDC requests that ensures all submitted new outlet and data-change requests pass through the correct approval hierarchy before being committed to the master data system (SAP), reducing errors and maintaining data ownership accountability.
+Requirements:
+
+=== REQUIREMENTS TABLE ===
+
+===== ROW 1 =====
+[TASK]
+Task / Story
+[SHORTDESC]
+Short Description
+[USERSTORY]
+User Story
+[AC]
+Acceptance Criteria
+
+===== ROW 2 =====
+[TASK]
+Access Restriction
+[SHORTDESC]
+Restrict access to the Approval List menu based on approver role.
+[USERSTORY]
+As an authorized backoffice user, I want to access the Business Partner Management menu, so that I can submit NOO/PDC requests and review the approval queue relevant to my role.
+[AC]
+  - The system must provide an Business Partner Management page under Master Data > Business Partner.
+  - The menu must only be visible to users with permission to view Business Partner master data.
+  - Users without approver permission must not have the  access to approval button.
+  - Each approver must only see requests that are in the approval stage matching their role.
+
+===== ROW 3 =====
+[TASK]
+BP Management Page Display
+[SHORTDESC]
+Provide the BP Management page with NOO/PDC request entry and approval queue in one unified page.
+[USERSTORY]
+As an authorized backoffice user, I want to see the BP Management page so that I can initiate NOO/PDC requests and monitor the approval queue from one place.
+[AC]
+  - The page must display:
+  - a 'Request' button in the page header,
+  - a request queue table showing all NOO and PDC requests,
+  - search and filter controls, sort, pagination, export action, and page-level summary counters.
+  - Summary counters must display at minimum:
+  - Total requests pending my review,
+  - Approved today,
+  - Rejected, and
+  - Total in queue.
+  - The Business Partner Management list table must display:
+  - Request ID,
+  - Request Type (NOO / PDC)
+  - BP Type (Customer/Owner/Holding/Tax). But, BP Type isn’t available For NOO request type.
+  - Sold-to Name
+  - Company ID
+  - Selling Type
+  - Distribution Center
+  - Submission Date
+  - Submitted by
+  - State
+  - Action.
+  - The Action column must provide a button for approver to review in the current approver's stage.
+  - If the queue is empty, the system must display an empty state with an appropriate message.
+
+===== ROW 4 =====
+[TASK]
+Search Business Partner
+[SHORTDESC]
+Allow users to search Business Partner data using relevant identifiers.
+[USERSTORY]
+As an authorized backoffice user, I want to search Business Partner data, so that I can find specific Business Partner records faster.
+[AC]
+  - The system must provide a search field supporting:
+  - Request ID,
+  - Company ID
+  - Sold-to Name, and
+  - Submitted By.
+  - The search result must be filtered based on the entered keyword.
+  - The system should update the displayed result according to implemented search behavior
+  - Applied filters must refresh the displayed list.
+  - An option to clear all filters must be available.
+
+===== ROW 5 =====
+[TASK]
+Filter Business Partner
+[SHORTDESC]
+Allow users to filter Business Partner data based on relevant business attributes.
+[USERSTORY]
+As an authorized backoffice user, I want to filter Business Partner data, so that I can narrow down the records shown on the list page.
+[AC]
+  - The system must provide filter capability on the Business Partner Management list table page.
+  - The system must support filter by at least:
+  - Request Type (NOO/PDC)
+  - Selling Type,
+  - BP Type,
+  - Distribution Center,
+  - Submission date
+  - The system must refresh the list result based on selected filter criteria.
+  - The system must allow user to clear applied filters.
+
+===== ROW 6 =====
+[TASK]
+Sort Business Partner List
+[SHORTDESC]
+Allow users to sort Business Partner data on sortable columns.
+[AC]
+  - The system must support sorting on:
+  - Request ID,
+  - Submission Date,
+  - State
+  - Pagination must be provided; page size should be configurable.
+  - Pagination must persist with active search and filter state.
+
+===== ROW 7 =====
+[TASK]
+Pagination BP List
+[SHORTDESC]
+Support manageable viewing for large Business Partner volume.
+[USERSTORY]
+As an authorized backoffice user, I want the Business Partner list to remain manageable, so that I can navigate large amounts of data efficiently.
+[AC]
+  - The system must provide pagination on the Business Partner Management list table page.
+  - The system should support configurable page size if needed.
+  - Pagination must be applied consistently with current search, filter, and sort state.
+
+===== ROW 8 =====
+[TASK]
+Export Request Queue Data
+[SHORTDESC]
+Allow authorized users to export the request queue data.
+[USERSTORY]
+As an authorized backoffice user, I want to export the request queue, so that I can report on pending and completed approval actions.
+[AC]
+  - The page must provide an Export button.
+  - The exported file must include at minimum:
+  - Request ID,
+  - Request type,
+  - Sold-to Name,
+  - Customer ID,
+  - Submitted By,
+  - Submission Date,
+  - State
+  - And the field inside each request form
+  - Export must reflect the currently active search and filter context.
+  - Supported format: .xlsx or .csv.
+
+===== ROW 9 =====
+[TASK]
+Request Button Entry Point
+[SHORTDESC]
+Provide a single 'Request' button on the BP Management page header as the unified entry point for both NOO and PDC requests.
+[USERSTORY]
+As an authorized backoffice user, I want to initiate a NOO or PDC request from the BP Management page so that I can register a new outlet or update existing customer data from one place.
+[AC]
+  - A 'Request' button must be visible in the BP Management page header, accessible to authorized roles (Admin CBD, Admin KDC, Admin BAC, Admin MDM, Super admin).
+  - Clicking 'Request' must display a popup/modal with two options: (1) NOO (New Outlet Order), and (2) PDC (Perubahan Data Customer).
+  - If user choose PDC request, then show BP partners to choose for PDC: BP Customer, BP Owner, BP Tax, BP Holding).
+  - The popup must display a brief description of each option so the user understands which to choose.
+  - The 'Request' button on the BP Management page header is the only entry point for creating both NOO and PDC from COMPASS backoffice.
+
+===== ROW 10 =====
+[TASK]
+Request NOO (From Request Button)
+[SHORTDESC]
+Open the NOO form when user selects NOO from the Request popup.
+[USERSTORY]
+As an Admin, I want to open the NOO form directly after selecting NOO from the Request popup so that I can register a new customer outlet.
+[AC]
+  - When user selects NOO from the Request popup, the system must close the popup and open the NOO form
+  - The NOO form must follow all 6 tab requirements consist of:
+  - General Info & PIC Toko
+  - Customer Hierarchy
+  - Ship To
+  - Financial & Tax
+  - Discount
+  - Each tab requirements have field sections to fill in
+
+===== ROW 11 =====
+[TASK]
+NOO Form (General Info & PIC Toko)
+[SHORTDESC]
+Provide the NOO form General Info& PIC Toko tab with all required fields.
+[USERSTORY]
+As an Admin, I want to fill in the NOO form with complete store data so that the new customer can be registered accurately.
+[AC]
+  - Fields with * sign is mandatory to fill in.
+  - General Info & PIC Toko tab must display the following fields in order:
+  - Identitas Section
+  - Lifecycle Status (read-only).
+  - Customer Type* (dropdown: Individual / Company).
+  - Company* (dropdown: PARAMA/PARAGON).
+  - Nama
+  - Name 1* (text, max character limit per URS). Name 2–4 (text, optional): Name 2–4 rows must only appear when the previous name field exceeds the character limit.
+  - ID & Hierarki
+  - BP Holding ID (read-only)
+  - Parent ID (read-only)
+  - Parent Name
+  - Informasi Penjualan
+  - Sales Type (dropdown)
+  - Selling Type (dropdown)
+  - Sales Person* (dropdown)
+  - Foto Toko
+  - Foto Tampak Depan* (file upload/Browse, with note: 'Pastikan nama toko terlihat').
+  - Foto Tampak Dalam* (file upload/Browse, with note: 'Pastikan gambar terlihat dengan jelas').
+  - Kontak
+  - Phone
+  - Mobile*
+  - Email
+  - Website
+  - Jam Operasional
+  - Day Open* (multi-select: Senin–Minggu).
+  - Morning From* / Morning To* (time picker).
+  - Afternoon From* / Afternoon To* (time picker).
+  - Alamat Pelanggan
+  - Pick a location trough GPS (Address is auto-filled once location has been selected)
+  - Penanggung Jawab Toko
+  - Jabatan*
+  - Fill Kontak Owner*, then to check in system
+  - IF Registered: Show registered contact number, then name and Owner address field is auto filled by the registered owner data.
+  - IF NOT: manually fill in owner name, and pick Owner address location by GPS to fill in Owner address field.
+  - Owner ID (read-only)
+
+===== ROW 12 =====
+[TASK]
+NOO Form (Customer Hierarchy)
+[SHORTDESC]
+Provide the NOO form Customer Hierarchy tab with all required fields.
+[USERSTORY]
+As an Admin CBD / Admin Sales, I want to fill in the NOO form with complete store data so that the new customer can be registered accurately.
+[AC]
+  - After completing all fields in Tab General Info, user can continue to Customer Hierarchy tab.
+  - Fields with * sign is mandatory to fill in.
+  - Customer Hierarchy tab must display the following fields in order:
+  - Channel Segmentation
+  - Outlet Type*
+  - Sub Channel* (auto-filled by Outlet Type Option)
+  - Channel Type* (auto-filled by Outlet Type Option)
+  - Channel* (auto-filled by Outlet Type Option)
+  - Group Channel* (auto-filled by Outlet Type Option)
+  - Operational
+  - Area*
+  - Distribution Centeer*
+  - Shipping Condition (Normal/Urgent)*
+  - Channel Business*
+  - Sales Area*
+
+===== ROW 13 =====
+[TASK]
+NOO Form (Ship To)
+[SHORTDESC]
+Provide the NOO form Ship To tab with all required fields.
+[USERSTORY]
+As an Admin CBD / Admin Sales, I want to fill in the NOO form with complete store data so that the new customer can be registered accurately.
+[AC]
+  - After completing all fields in Tab Customer Hierarchy, user can continue to Ship To tab.
+  - Fields with * sign is mandatory to fill in.
+  - Check box: Ship to same with Customer Address (Alamat Pelanggan).
+  - If Yes: Address is filled with Customer Address.
+  - If No: Enter registered address.
+  - Field in Ship To:
+  - Ship To ID (read-only)
+  - Name 1* . Name 2–4 (text, optional): Name 2–4 rows must only appear when the previous name field exceeds the character limit.
+  - City*
+  - Lead Time*
+  - DC*
+  - Street 1*. Street 2–4 (text, optional): Street2–4 rows must only appear when the previous name field exceeds the character limit.
+  - Country*
+
+===== ROW 14 =====
+[TASK]
+NOO Form (Financial & Tax)
+[SHORTDESC]
+Provide the NOO form Customer Hierarchy tab with all required fields.
+[USERSTORY]
+As an Admin CBD / Admin Sales, I want to fill in the NOO form with complete store data so that the new customer can be registered accurately.
+[AC]
+  - After completing all fields in Customer Hierarchy, user can continue to Financial & Tax tab.
+  - Fields with * sign is mandatory to fill in.
+  - Financial & Tax tab must display the following fields in order:
+  - Payer
+  - Bill to
+  - Pricelist*
+  - Price Group ID*
+  - Payment term*
+  - PPBJ (PBBJ/Non-PPBJ)
+  - Tipe Organisasi (Bendaharwan/BUMN).
+  - Nama Organisasi (dropdown)
+  - PKP (checkbox).  If PKP checked: Upload SPPKP* (file upload).
+  - Toko Meminta Faktur Pajak (checkbox)
+  - Tax Classification (Fiscal Position): dropdown.
+  - Incoterm
+  - Tax Identity (Identitas Pajak).
+  - Tax sama dengan Customer Address (checkbox)
+  - Tax ID
+  - NPWP Type Option:
+  - Perorangan: Upload NPWP and KTP for system checking based on NPWP or KTP (NIK) number.
+  - If registered in system, choose NPWP/KTP registered, then address is auto-filled from database record.
+  - If not yet registered, show checlist box: “Sudah dipadankan?”.
+  - IF yes: No NPWP filled by NIK.
+  - IF no: No NPWP filed by NPWP scan result, and No NIK filled by KTP (NIK). Address field is filled by Address from KTP/NPWP scan result.
+  - Badan: Upload foto NPWP Badan (OCR) to check in sytem database.
+  - If the NPWP/KTP is registered, the system must "Show data NPWP/KTP sudah terdaftar" and allow "Auto-fill alamat terdaftar" from the database record.
+  - If the NPWP is not registered, the system must perform "Auto-fill Nomor NPWP", “Auto-fill nama NPWP”, “Auto-fill Alamat NPWP” based on extracted OCR data.
+  - Group Name (BP Holding)
+  - If Tax Identity using existing/registered data: display a recommendation of the group registered under that customer to choose.
+  - If NOT: Admin can click “Create New Customer Group” checkbox field
+  - Create New Group Name (Checkbox)
+  - When "Create New Group" option is selected, the system automatically populate the field with a default value of [Store Name + Group], while still allowing the admin, CDO, and MDM to edit the value manually.
+  - No uniqueness validation shall be performed when the auto-populated value is generated (e.g., when the form is first opened). Validation shall occur only when the manually edit or NOO form approve button is clicked.
+  - If the New Group Name isn’t unique, it can’t be approved and shall choose the existing one from Group Name field.
+  - Checkbox: Memiliki Toko Cabang
+  - IF YES: Fill in NITKU.
+  - Bounded NITKU
+  - If user previously choose “PPBJ”:
+  - Display Bounded NITKU and Bounded Area Street as mandatory fields to be filled in.
+  - Street 2–4: Street 2–4 rows must only appear when the previous name field exceeds the character limit.
+  - Rekening:
+  - Bank Country
+  - Account Number
+  - Bank
+  - Account Name
+  - Account Type
+
+===== ROW 15 =====
+[TASK]
+NOO Form (Customer Hierarchy)
+[SHORTDESC]
+Provide the NOO form Customer Hierarchy tab with all required fields.
+[USERSTORY]
+As an Admin CBD / Admin Sales, I want to fill in the NOO form with complete store data so that the new customer can be registered accurately.
+[AC]
+  - After completing all fields in Financial & Tax, user can continue to Discont tab.
+  - Fields with * sign is mandatory to fill in.
+  - Discount tab must display the following fields in order:
+  - Discount
+  - Brand
+  - Discount Volume
+  - Discount Add
+  - Filename Discount
+  - Diskon Cash
+  - Brand
+  - Terms of Payment
+  - Discount Value
+
+===== ROW 16 =====
+[TASK]
+NOO Form Validation & Submit
+[SHORTDESC]
+Validate mandatory fields and handle NOO form submission.
+[USERSTORY]
+As an Admin CBD / Admin Sales, I want the system to validate my inputs and confirm submission so that NOO data is complete before sending for approval.
+[AC]
+  - The system must validate all mandatory fields (marked *) before allowing submission.
+  - Mandatory fields that are empty must display inline error messages on attempted submission.
+  - The system must provide a 'Save Draft' action that saves current data without mandatory field validation.
+  - The system must provide a 'Approve' action that triggers a confirmation dialog before final submission.
+  - Upon confirmation, the NOO is submitted with status 'Waiting Approval CDO'.
+  - The relevant CDO approver must receive the new pending NOO.
+  - After successful submission, the user is returned to the BP Management page with a success notification.
+  - After submission, the NOO form becomes read-only until rejected.
+
+===== ROW 17 =====
+[TASK]
+Request Detail Page NOO
+[SHORTDESC]
+Provide a detail page for each NOO or PDC request in the BP Management queue, showing full request information, approval progress, action buttons, and request-specific History & Approval Log.
+[USERSTORY]
+As an authorized backoffice user, I want to open the detail of a NOO or PDC request from the queue so that I can review the full request data, see the approval progress, and take action if the request is at my approval stage.
+[AC]
+Access from Queue
+  - Each row in the BP Management queue must provide an action button.
+  - Clicking action button must open the Request Detail Page NOO for the selected request.
+Approval Progress
+  - The page must display an approval progress indicator.
+  - The indicator must include four stages: CDO → KDC → BAC → MDM.
+  - Each stage must show a clear visual status (Pending, Completed, or Rejected).
+Request Data Display
+  - The page must display the full submitted NOO form data.
+  - All sections from all tabs must be shown.
+Action Buttons
+  - Approvers at the current approval stage must see Approve and Reject buttons.
+  - The buttons must be enabled for the current approver.
+Request History & Approval Log
+  - The page must display a Request History & Approval Log section.
+  - The log must include:
+  - Timestamp
+  - Action (Submitted / Approved / Auto Approved / Rejected)
+  - Actor name and role
+  - Rejection reason (if applicable)
+  - The log must be sorted from newest to oldest.
+Rejection Handling
+  - If the request is rejected, the system must display the rejection reason.
+  - The rejection reason must appear in the current History & Approval Log.
+Navigation
+  - The page must provide a Back button.
+  - The Back button must return the user to the BP Management queue.
+Editable Conditions
+  - If status is Draft, the original submitter must be able to edit the request.
+  - If status is Rejected, the original submitter must be able to revise the request.
+
+===== ROW 18 =====
+[TASK]
+Approve NOO Request
+[SHORTDESC]
+Allow an authorized approver to approve a NOO request and advance it to the next stage or finalize.
+[USERSTORY]
+As an authorized approver, I want to approve a NOO request so that the new customer data proceeds to the next stage or is committed to SAP/ERP.
+[AC]
+  - The NOO detail request page form must provide an 'Approve' button.
+  - Upon approval by CDO: status changes to 'Waiting Approval KDC'; KDC approver is notified.
+  - Upon approval by KDC: status changes to 'Waiting Approval BAC'; BAC approver is notified.
+  - BAC Approval two cases:
+  - Upon approval by BAC (manual): status changes to 'Waiting Approval MDM'; MDM approver is notified.
+  - Upon BAC auto-approval (Pricing & Discount match group): status changes to 'Waiting Approval MDM' automatically; actor logged as 'System – Auto Approval'.
+  - Upon approval by MDM (final): NOO data is committed to SAP/ERP; status changes to 'Approved / Active'; submitter is notified.
+  - Each approval action must be logged in the History & Approval Log: timestamp, approver role, approver name, action (Approved), comment (if any).
+  - Approved request must no longer appear as actionable in the Approval List for that role.
+
+===== ROW 19 =====
+[TASK]
+Reject NOO Request
+[SHORTDESC]
+Allow an authorized approver to reject a NOO request with a mandatory reason.
+[USERSTORY]
+As an authorized approver, I want to reject a NOO request with a reason so that the submitter understands what needs to be corrected.
+[AC]
+  - The review form must provide a 'Reject' button.
+  - Upon clicking Reject, the system must display a mandatory rejection reason input field.
+  - The rejection reason must be non-empty before submission.
+  - Upon rejection: status → 'Rejected'; submitter notified with the rejection reason.
+  - Rejection details (approver role, name, reason, timestamp) must be logged in the History & Approval Log.
+  - The rejected NOO must remain accessible to the original submitter for revision and resubmission.
+
+===== ROW 20 =====
+[TASK]
+Request PDC (BP Type)
+[SHORTDESC]
+After selecting PDC from the Request button. Guide user to select BP Type then search the specific Business Partner to be updated.
+[USERSTORY]
+As an Admin, I want to select the BP Type and then search the specific Business Partner I want to update so that the correct pre-filled PDC form opens.
+[AC]
+  - When user selects PDC from the Request button, the system must close the popup and display a BP Type selection step before the BP search.
+  - The BP Type selection step must show four options: Customer, Tax, Owner, Holding.
+  - After user selects a BP Type, the system must display a BP search field filtered to that BP Type only.
+  - The search must support at least: Customer ID / Tax ID / Owner ID, SAP/ERP ID, and BP Name.
+  - Search results must only show BP records matching the selected BP Type.
+  - User must select one BP from the search results before proceeding.
+  - After selecting a BP, the system must open the PDC form pre-populated with the current data of the selected BP.
+  - The PDC form structure must match the selected BP Type.
+  - Users without PDC permission must not see the PDC option in the Request popup.
+
+===== ROW 21 =====
+[TASK]
+PDC Form BP Customer
+[SHORTDESC]
+Provide the PDC form for BP Type Customer, pre-filled with current Customer data.
+[USERSTORY]
+As an authorized submitter, I want to update Customer data via PDC form so that changes to the customer's profile go through the correct approval flow.
+[AC]
+  - When the selected BP Type is Customer, the PDC form must have these editable fields in Tab General Info:
+  - Identitas,
+  - Nama,
+  - ID & Hierarki,
+  - Informasi Penjualan,
+  - kontak,
+  - Jam Operasional,
+  - Customer Address,
+  - Channel Segmentation,
+  - Ship To,
+  - Informasi Finansial,
+  - Pajak,
+  - Identitas Pajak,
+  - Operasional,
+  - Diskon
+  - All fields must be pre-populated with the current data of the selected Customer BP.
+  - Fields editable by the submitter are determined by their data ownership role. Fields outside the submitter's scope must be read-only.
+
+===== ROW 22 =====
+[TASK]
+PDC Form
+BP Tax
+[SHORTDESC]
+Provide the PDC form for BP Type Tax, pre-filled with current Tax data.
+[USERSTORY]
+As an authorized submitter, I want to update Tax data via PDC form so that changes to the tax profile go through the correct approval flow.
+[AC]
+  - The BP Tax section must include Financial & Tax tab at minimum:
+  - Customer ID,
+  - Nama,
+  - Customer Address,
+  - Informasi Finansial (PPBJ)
+  - Pajak,
+  - Identitas Pajak,
+  - Alamat Pajak
+  - Bounded Address & NITKU
+  - All fields must be pre-populated with the current data of the selected Tax BP.
+  - Fields editable by the submitter are determined by their data ownership role.
+
+===== ROW 23 =====
+[TASK]
+PDC Form BP Owner
+[SHORTDESC]
+Provide the PDC form for BP Type Owner, pre-filled with current Owner data.
+[USERSTORY]
+As an authorized submitter, I want to update Owner data via PDC form so that changes to the owner profile go through the correct approval flow.
+[AC]
+  - When the selected BP Type is Owner, the PDC form must display the PIC Toko tab at minimum:
+  - Customer ID
+  - Nama
+  - Kontak
+  - Alamat Owner
+  - Employee Ditugaskan
+  - All fields must be pre-populated with the current data of the selected Owner BP.
+  - Fields editable by the submitter are determined by their data ownership role.
+
+===== ROW 24 =====
+[TASK]
+PDC Form BP Holding
+[SHORTDESC]
+Provide the PDC form for BP Type Holding, pre-filled with current Holding/Group data.
+[USERSTORY]
+As an authorized submitter, I want to update Holding/Group data via PDC form so that changes to the holding profile go through the correct approval flow.
+[AC]
+  - Group Name
+
+===== ROW 25 =====
+[TASK]
+PDC Form  Validation & Submit
+[SHORTDESC]
+Validate changed fields and handle PDC form submission for all BP Types.
+[USERSTORY]
+As an authorized submitter, I want the system to validate my changes and confirm submission so that the PDC request is complete before sending for approval.
+[AC]
+  - The system must validate that at least one field has been changed before allowing submission. If no fields are changed, the system must block submission and show an appropriate message.
+  - Mandatory fields that are cleared must display inline error messages on attempted submission.
+  - The system must provide a 'Submit' action that triggers a confirmation dialog showing a summary of changed fields before final submission.
+  - Upon confirmation, the PDC request is submitted with status 'Waiting Approval CDO'.
+  - The relevant CDO approver must receive an in-app notification of the new pending PDC, including the BP Type being updated.
+  - After successful submission, the user is returned to the BP Management page with a success notification.
+
+===== ROW 26 =====
+[TASK]
+Approve PDC Request
+[SHORTDESC]
+Allow an authorized approver to approve a PDC request.
+[USERSTORY]
+As an authorized approver, I want to approve a PDC request so that the customer data changes are applied to the master data system.
+[AC]
+  - Approval follows the same sequential flow as NOO: CDO → KDC → BAC → MDM.
+  - Upon final MDM approval: changed data committed to SAP/ERP; BP List detail page reflects updated data; status → 'Approved'; submitter notified.
+  - Each approval step must be logged in the History & Approval Log on the BP List detail page.
+
+===== ROW 27 =====
+[TASK]
+Reject PDC Request
+[SHORTDESC]
+Allow an authorized approver to reject a PDC request with a mandatory reason.
+[USERSTORY]
+As an authorized approver, I want to reject a PDC request with a reason so that the requestor can correct and resubmit.
+[AC]
+  - Upon clicking Reject, the system must require a rejection reason (mandatory, non-empty).
+  - Status → 'Rejected'; submitter notified with the reason.
+  - Rejection details must be logged in the History & Approval Log.
+  - The submitter may revise and resubmit; resubmission restarts the approval flow from CDO stage.
+  - Previous rejection details must be preserved in the log and not overwritten upon resubmission.
+
+===== ROW 28 =====
+[TASK]
+NOO / PDC Status
+[SHORTDESC]
+Display the current approval status and progress clearly to all relevant users.
+[USERSTORY]
+As any user involved in the NOO/PDC flow, I want to see the current status and approval progress so that I know what stage the request is in.
+[AC]
+  - Request status values: Draft, Waiting Approval CDO, Waiting Approval KDC, Waiting Approval BAC, Waiting Approval MDM, Approved, Rejected.
+  - The BP Management queue table and the BP List detail History & Approval Log must reflect the current status accurately.
+
+===== ROW 29 =====
+[TASK]
+Notification Approval Actions
+[SHORTDESC]
+Notify relevant parties when approval actions occur.
+[AC]
+  - When a NOO/PDC advances to a new stage, the next approver must receive an in-app notification.
+  - When a NOO/PDC is finally approved, the original submitter must be notified.
+  - When a NOO/PDC is rejected, the original submitter must be notified with the rejection reason.
+  - Notification content must include: Request ID, Tipe Request, Nama Toko, Action Taken, Current Stage.
+
+===== ROW 30 =====
+[TASK]
+Revision & Resubmission of Rejected NOO / PDC
+[SHORTDESC]
+Allow the original submitter to revise and resubmit a rejected NOO/PDC request.
+[USERSTORY]
+As the original submitter, I want to revise a rejected NOO/PDC and resubmit it, so that corrected data can go through the approval flow again.
+[AC]
+  - A rejected NOO/PDC must be accessible to the original submitter from the BP Management queue.
+  - The submitter must be able to open the rejected form, view the rejection reason prominently, and edit the relevant fields.
+  - Upon resubmission, the request status resets to 'Waiting Approval CDO'.
+  - The revised submission must be logged in the History & Approval Log.
+  - Previous rejection details must be preserved in the log.
+
+===== ROW 31 =====
+[TASK]
+Validation, Error Handling & Feedback Approval
+[SHORTDESC]
+Provide clear feedback for loading, empty, error, and unauthorized states.
+[AC]
+  - The system must show a loading indicator when retrieving the queue or opening a review form.
+  - The system must show a clear error message if data retrieval or form submission fails.
+  - The system must show a clear unauthorized message if a user attempts to act on a request outside their role.
+  - Approving or rejecting without completing mandatory fields must show inline validation errors.
+  - The system must prevent partial or broken form rendering on backend failure.
+If scope/deliverables = new/modified dashboard, then complete below (line mockup, mockup image, dimension required, measure, KPI, Target KPI, Availability report)
+Link Mockup:
+Mockup Image:
+Dimension Required
+
+===== ROW 32 =====
+[TASK]
+Data Name
+[SHORTDESC]
+Data Field
+[USERSTORY]
+Source
+
+===== ROW 33 =====
+[TASK]
+ex; Product Hierarchy
+[SHORTDESC]
+All Levels following the latest hierarchy in MDM.
+[USERSTORY]
+MDM
+
+===== ROW 34 =====
+[TASK]
+ex; Customer Hierarchy
+[SHORTDESC]
+All Levels following the latest hierarchy in MDM.
+[USERSTORY]
+MDM
+
+===== ROW 35 =====
+[TASK]
+ex; Time
+[SHORTDESC]
+Yearly, Quarterly, Monthly, Weekly, Daily
+[USERSTORY]
+Measure
+
+===== ROW 36 =====
+[TASK]
+Data Name
+[SHORTDESC]
+Source
+[USERSTORY]
+Field Name
+[AC]
+UoM
+[C4]
+Lowest Time Period [Daily, Weekly, Monthly, Quarterly, Yearly]
+
+===== ROW 37 =====
+[TASK]
+ex; Delivery Order (DO)
+[SHORTDESC]
+Odoo NBM, DO using SO creation date
+[AC]
+Pcs, IDR
+[C4]
+Daily
+KPI
+
+===== ROW 38 =====
+[TASK]
+KPI Name
+[SHORTDESC]
+KPI Definition
+[USERSTORY]
+Calculation
+[AC]
+UoM
+[C4]
+Time Vector [e.g.: MTD, YTD, QTD, Daily, etc]
+
+===== ROW 39 =====
+[TASK]
+Casefill
+[SHORTDESC]
+Measure service level to the customer based on qty
+[USERSTORY]
+DO pcs/ CO pcs (creation date)
+[AC]
+%
+[C4]
+WTD, MTD, QTD, YTD
+Target KPI
+
+===== ROW 40 =====
+[TASK]
+KPI
+[SHORTDESC]
+Level
+[USERSTORY]
+Target
+[AC]
+Colour Sign
+
+===== ROW 41 =====
+[TASK]
+Example: Casefill
+[SHORTDESC]
+Total National, ALL SKUs
+[USERSTORY]
+<Example: 93%>
+[AC]
+<Example:
+Green >= 93%;
+88% <= Yellow <93% ; Red <88%>
+
+===== ROW 42 =====
+[SHORTDESC]
+Cosmetics Store, ALL SKUs
+[USERSTORY]
+Example: 92%
+[AC]
+<Example: Green >= 92%;
+87% <= Yellow <92% ;
+Red <87%>
+Availability Report
+<Put expected time for availability report>: daily/weekly/monthly at XX:XX AM/PM
+UAT Scenarios/User Stories
+
+===== ROW 43 =====
+[TASK]
+No
+[SHORTDESC]
+User/Role
+[USERSTORY]
+Scenario
+[I want to]
+[AC]
+Sub Scenario
+[So that I can]
+[C4]
+Description –
+Detailed Steps
+[C5]
+Expected Result
+[C6]
+Type of Scenarios [Positive | Negative]
+
+===== ROW 44 =====
+[TASK]
+1
+
+===== ROW 45 =====
+[TASK]
+2
+
+===== ROW 46 =====
+[TASK]
+3
+
+===== ROW 47 =====
+[TASK]
+4
+
+===== ROW 48 =====
+[TASK]
+5
+
+===== ROW 49 =====
+[TASK]
+6
+
+===== ROW 50 =====
+[TASK]
+7
+
+===== ROW 51 =====
+[TASK]
+8

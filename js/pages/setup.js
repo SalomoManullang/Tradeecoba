@@ -53,15 +53,21 @@
     const lock = st === 'PUBLISHED'
       ? `<div class="alert alert-success py-2 small mb-3"><i class="bi bi-lock"></i>&nbsp;<span>PUBLISHED: kelas, tier, rumus, pilar, form, approval & aturan <strong>read-only</strong>. Hanya template MOU / SKN yang masih bisa diubah (revisi baru).</span></div>`
       : st === 'CLOSED' ? '<div class="alert alert-dark py-2 small mb-3"><i class="bi bi-archive"></i>&nbsp;<span>CLOSED: seluruh program read-only, termasuk template dokumen. Tetap tersedia untuk audit & laporan.</span></div>' : '';
-    const chNav = ch ? `<div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap channel</div>
+    // Kartu kerja channel (pemilih channel + tab 3a–3h + isi halaman); ditutup di akhir template tiap route channel
+    const chNav = ch ? `<div class="cps-work"><div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap channel</div>
         <div class="d-flex flex-wrap gap-2 align-items-center mb-2">${p.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${c.id}/${sub === 'classes' ? 'brands' : sub}">${esc(c.channel_name)}</a>`).join('')}</div>
         <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-brand sub-tabs mb-0">${CH_TABS.map(([k, n, l]) => `<li class="nav-item"><a class="nav-link ${sub === k ? 'active' : ''}"
           href="#/setup/${p.id}/ch/${ch.id}/${k === 'classes' ? (ch.brands[0] ? 'brands/' + ch.brands[0].id : 'brands') : k}"><span class="n">${n}</span>${l}</a></li>`).join('')}</ul></div>` : '';
-    return `<div class="page-head"><div>
+    return `<div class="cps-head"><div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div>
         <div class="small text-muted"><a href="#/setup">Program Setup</a> / ${p.year}</div>
         <h1>${esc(p.name)} <span class="text-muted fw-normal fs-6">${esc(p.code)}</span> ${h.badge(st)}</h1></div>
-      <div class="small text-muted text-right">${esc(p.type ? p.type.name : '-')} · ${h.date(p.period_start)} – ${h.date(p.period_end)}<br>${p.channels.length} channel · ${p.registrationCount} registrasi</div></div>
-      <ol class="flow-steps">${steps.map(([k, n, l, href]) => `<li class="${step === k ? 'active' : ''}"><a href="${href}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol>
+      </div>
+      <div class="cps-facts">
+        <div class="cps-fact"><span class="cps-fact-label">Periode</span><span class="cps-fact-value">${h.date(p.period_start)} – ${h.date(p.period_end)}</span></div>
+        <div class="cps-fact"><span class="cps-fact-label">Channel</span><span class="cps-fact-value">${p.channels.length}</span></div>
+        <div class="cps-fact"><span class="cps-fact-label">Registrasi</span><span class="cps-fact-value">${p.registrationCount}</span></div>
+      </div></div>
+      <ol class="flow-steps">${steps.map(([k, n, l, href]) => `<li class="${step === k ? 'active' : ''}"><a href="${href}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
       ${lock}${chNav}`;
   }
 
@@ -72,7 +78,7 @@
     const programs = all.filter((p) => p.year === year);
     const types = Object.fromEntries(DB.t('programTypes').map((t) => [t.id, t.name]));
     return {
-      title: 'Program Setup', html: `
+      title: 'Program Setup', html: `<div class="cps"><div class="cps-list">
       <div class="page-head"><div><h1>Program Setup ${year}</h1><div class="sub">Konfigurasi program loyalty tanpa code release. Hanya Admin HO & Admin IT (Superadmin).</div></div>
         <a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Program baru</a></div>
       <div class="card mb-4"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0">
@@ -83,7 +89,7 @@
           <td class="num">${DB.where('registrations', (x) => x.program_id === p.id).length}</td><td>${h.badge(p.status)}</td>
           <td class="text-right text-nowrap"><a href="#/setup/${p.id}/header" class="btn btn-sm btn-outline-brand">${p.status === 'DRAFT' ? 'Edit' : 'Lihat'}</a>
             <a href="#/setup?clone=${p.id}" class="btn btn-sm btn-link">Clone</a></td></tr>`).join('')
-          || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div>
+          || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div></div>
       <div class="card" id="clone"><div class="card-header"><span class="step-chip">1A</span>&nbsp;Clone program</div><div class="card-body">
         <p class="small text-muted">Membuat program <strong>DRAFT</strong> baru dengan semua channel, brand, kelas, tier, pilar, rumus, form fase, approval layer & template dokumen tersalin. Lanjutkan di step 2 untuk mengubah yang berbeda saja.</p>
         <form data-action="setup.clone" class="row g-2 align-items-end">
@@ -95,7 +101,7 @@
           <div class="col-md-2"><label class="form-label small">&nbsp;</label><button class="btn btn-brand w-100"><i class="bi bi-copy"></i> Clone</button></div>
           <div class="col-md-3"><label class="form-label small">Periode mulai <span class="text-danger">*</span></label><input name="period_start" type="date" class="form-control" value="${year}-01-01" required></div>
           <div class="col-md-3"><label class="form-label small">Periode selesai <span class="text-danger">*</span></label><input name="period_end" type="date" class="form-control" value="${year}-12-31" required></div>
-        </form></div></div>`,
+        </form></div></div></div>`,
     };
   });
 
@@ -128,37 +134,25 @@
   // ---------------------------------------------------------------- 1B · header program (+ tipe program)
   function headerPage(p, fv, errors) {
     const isNew = !p;
-    const types = DB.t('programTypes');
     const lockAttr = isNew ? '' : fs(p);
-    return `${isNew ? `<div class="page-head"><div><div class="small text-muted"><a href="#/setup">Program Setup</a> / ${UI.currentYear()}</div><h1>Program baru</h1>
-        <div class="sub">Step 1B · program dibuat dengan status DRAFT</div></div></div>` : nav(p, 'header')}
+    return `<div class="cps">${isNew ? `<div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div><div class="small text-muted"><a href="#/setup">Program Setup</a> / ${UI.currentYear()}</div><h1>Program baru</h1>
+        <div class="sub">Step 1B · program dibuat dengan status DRAFT</div></div></div></div>` : nav(p, 'header')}
       ${UI.errorsHtml(errors)}
-      <div class="row g-3"><div class="col-lg-8">
+      <div class="row g-3"><div class="col-12">
         <form data-action="setup.header" data-id="${isNew ? '' : p.id}"><fieldset ${lockAttr}>
         <div class="card"><div class="card-header"><span class="step-chip">1B</span>&nbsp;Program header</div><div class="card-body row g-3">
           <div class="col-md-4"><label class="form-label">Kode program <span class="text-danger">*</span></label><input name="code" class="form-control text-uppercase" value="${esc(fv.code)}" required placeholder="LOYALTY-2027"><div class="form-text">Unik</div></div>
           <div class="col-md-8"><label class="form-label">Nama program <span class="text-danger">*</span></label><input name="name" class="form-control" value="${esc(fv.name)}" required placeholder="Loyalty Program 2027"></div>
-          <div class="col-md-6"><label class="form-label">Tipe program <span class="text-danger">*</span></label><select name="program_type_id" class="form-control" required>
-            ${types.filter((t) => t.is_active || t.id === fv.program_type_id).map((t) => `<option value="${t.id}" ${sel(t.id === Number(fv.program_type_id))}>${esc(t.name)}</option>`).join('')}</select>
-            <div class="form-text"><a href="javascript:void(0)" onclick="document.getElementById('typeForm').scrollIntoView({behavior:'smooth'})">+ Tambah tipe baru</a></div></div>
-          <div class="col-md-6"><label class="form-label">Tahun <span class="text-danger">*</span></label><input name="year" type="number" class="form-control" value="${esc(fv.year)}" required></div>
-          <div class="col-md-6"><label class="form-label">Periode mulai <span class="text-danger">*</span></label><input name="period_start" type="date" class="form-control" value="${esc(fv.period_start)}" required></div>
-          <div class="col-md-6"><label class="form-label">Periode selesai <span class="text-danger">*</span></label><input name="period_end" type="date" class="form-control" value="${esc(fv.period_end)}" required><div class="form-text">Harus setelah tanggal mulai</div></div>
+          <input type="hidden" name="program_type_id" value="${esc(fv.program_type_id)}">
+          <div class="col-md-4"><label class="form-label">Tahun <span class="text-danger">*</span></label><input name="year" type="number" class="form-control" value="${esc(fv.year)}" required></div>
+          <div class="col-md-4"><label class="form-label">Periode mulai <span class="text-danger">*</span></label><input name="period_start" type="date" class="form-control" value="${esc(fv.period_start)}" required></div>
+          <div class="col-md-4"><label class="form-label">Periode selesai <span class="text-danger">*</span></label><input name="period_end" type="date" class="form-control" value="${esc(fv.period_end)}" required><div class="form-text">Harus setelah tanggal mulai</div></div>
           <div class="col-12"><label class="form-label">Deskripsi</label><textarea name="description" class="form-control" rows="3">${esc(fv.description)}</textarea></div>
           <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> ${isNew ? 'Buat program (DRAFT) & lanjut ke channel' : 'Simpan header'}</button>
             ${!isNew && p.status === 'DRAFT' && !p.registrationCount ? `<a href="#" class="btn btn-link text-danger" data-click="setup.deleteProgram" data-id="${p.id}" data-confirm="Hapus program DRAFT ini beserta seluruh konfigurasinya?"><i class="bi bi-trash"></i> Hapus DRAFT</a>` : ''}</div>
         </div></div></fieldset></form>
       </div>
-      <div class="col-lg-4"><div class="card" id="typeForm"><div class="card-header">Tambah tipe program</div><div class="card-body">
-        <p class="small text-muted">Tipe program baru bisa ditambah tanpa development (FR1).</p>
-        <form data-action="setup.addType" data-back="${isNew ? '/setup/new' : `/setup/${p.id}/header`}" class="row g-2">
-          <div class="col-12"><label class="form-label small">Nama tipe <span class="text-danger">*</span></label><input name="name" class="form-control" placeholder="Trading Term" required></div>
-          <div class="col-12"><label class="form-label small">Deskripsi</label><input name="description" class="form-control"></div>
-          <div class="col-12"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" name="is_active" id="tAct" checked><label for="tAct" class="form-check-label">Aktif</label></div></div>
-          <div class="col-12"><button class="btn btn-sm btn-outline-brand">Simpan tipe</button></div></form>
-        <hr><div class="small">${types.map((t) => `<div class="d-flex justify-content-between"><span>${esc(t.name)}${t.is_active ? '' : ' <span class="text-muted">(nonaktif)</span>'}</span>
-          <a href="#" class="small" data-click="setup.toggleType" data-tid="${t.id}" data-back="${isNew ? '/setup/new' : `/setup/${p.id}/header`}">${t.is_active ? 'Nonaktifkan' : 'Aktifkan'}</a></div>`).join('')}</div>
-      </div></div></div></div>`;
+      </div></div>`;
   }
 
   route('/setup/new', ({}, q, { year, path }) => {
@@ -223,7 +217,7 @@
     const p = getProgram(id);
     const avail = DB.t('channels').filter((c) => c.is_active && !p.channels.some((x) => x.channel_code === c.code));
     return {
-      title: 'Channel', html: `${nav(p, 'channels')}
+      title: 'Channel', html: `<div class="cps">${nav(p, 'channels')}
       <div class="row g-3"><div class="col-lg-8"><div class="card"><div class="card-header"><span class="step-chip">2</span>&nbsp;Channel program</div><div class="card-body p-0">
         <table class="table mb-0"><thead><tr><th>Channel</th><th class="num">Brand</th><th class="num">Pilar / LM</th><th>Approval Registration</th><th></th></tr></thead><tbody>
         ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td><td class="num">${ch.brands.length}</td>
@@ -238,7 +232,7 @@
           ${avail.map((c) => `<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select><button class="btn btn-brand">Tambah</button></form>
           <div class="form-text">Channel baru langsung berisi preset rumus "${C.PRESET_NAME}", form fase, approval layer contoh & template MOU/SKN. Semua bisa diubah.</div>`
           : '<div class="small text-muted">Semua channel master sudah ditambahkan.</div>'}
-      </div></div></div></div>`,
+      </div></div></div></div></div>`,
     };
   });
   actions['setup.addChannel'] = (f, form) => {
@@ -269,7 +263,7 @@
     const inCh = Object.fromEntries(ch.brands.map((b) => [b.brand_code, b]));
     const usedAsMember = new Set(ch.brands.flatMap((b) => b.member_codes || []));
     return {
-      title: `Brand · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'brands')}
+      title: `Brand · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'brands')}
       <form data-action="setup.saveBrands" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
       <div class="card"><div class="card-header"><span class="step-chip">3b</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
         <p class="small text-muted mb-3">Baseline <strong>tidak</strong> diatur di sini: CBD/CDT mengisi baseline tiap toko di form Registration. EST & IR growth hanya informasi (<span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span> definisi dikonfirmasi).</p>
@@ -288,7 +282,7 @@
         <div class="form-text mb-2">Baseline minimal = syarat pendaftaran per brand (saran baseline toko harus ≥ angka ini). Kosong = batas bawah kelas terendah brand tsb (3c).</div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan brand</button>
         <span class="form-text d-inline ml-2">Contoh: Light+ memakai skema & target Wardah.</span>
-      </div></div></fieldset></form>`,
+      </div></div></fieldset></form></div></div>`,
     };
   });
   actions['setup.saveBrands'] = (f, form) => {
@@ -327,7 +321,7 @@
     const state = brand.classes.map((c) => ({ id: c.id, code: c.code, baseline_min: c.baseline_min, baseline_max: c.baseline_max, fix: c.fix_rebate_max_pct,
       tiers: c.tiers.map((t) => ({ g: t.target_growth_pct, cond: t.conditional_rebate_pct, total: t.total_rebate_pct })) }));
     return {
-      title: `Kelas ${brand.brand_name}`, html: `${nav(p, 'config', ch, 'classes')}
+      title: `Kelas ${brand.brand_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'classes')}
       <div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap brand</div>
         <div class="d-flex flex-wrap gap-2">${ch.brands.map((x) => `<a class="btn btn-sm ${x.id === brand.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/brands/${x.id}">${esc(x.brand_name)} <span class="badge badge-light">${x.classes.length}</span></a>`).join('')}</div></div>
       <div class="row g-3"><div class="col-xl-8">
@@ -345,7 +339,7 @@
         <label class="form-label small">Baseline / bulan</label><div class="input-group input-group-sm mb-2"><span class="input-group-text">Rp</span><input type="number" id="qBase" class="form-control" value="200000000"></div>
         <label class="form-label small">Growth komitmen</label><div class="input-group input-group-sm mb-2"><input type="number" id="qGrowth" class="form-control" value="76"><span class="input-group-text">%</span></div>
         <div id="qOut" class="small"></div>
-        <div class="form-text">Cek lengkap (rumus, approval path) ada di step 4 Simulasi.</div></div></div></div></div>`,
+        <div class="form-text">Cek lengkap (rumus, approval path) ada di step 4 Simulasi.</div></div></div></div></div></div></div>`,
       after(root) {
         const el = root.querySelector('#classes');
         const ro = !editable(p);
@@ -488,7 +482,7 @@
     const tree = ch.pillars.map((pl) => ({ id: pl.id, name: pl.name, jtbds: pl.jtbds.map((j) => ({ id: j.id, name: j.name,
       lms: j.lead_measures.map((l) => ({ id: l.id, name: l.name, description: l.description, unit: l.unit, value_type: l.value_type })) })) }));
     return {
-      title: `Pilar · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'pillars')}
+      title: `Pilar · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
       ${pillarTabs(p, ch, 'tree')}
       <form data-action="setup.savePillars" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}><input type="hidden" name="tree" id="treeJson">
       <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pillar framework — ${esc(ch.channel_name)}</span>
@@ -501,7 +495,7 @@
           <div id="tree"></div><div id="wsum" class="small mt-2"></div>
           <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pillar framework</button>
-        </div></div></fieldset></form>`,
+        </div></div></fieldset></form></div></div>`,
       after(root) {
         const el = root.querySelector('#tree');
         const t = tree;
@@ -641,7 +635,7 @@
     const empty = !brand.classes.length ? `Brand ini belum punya kelas. <a href="#/setup/${p.id}/ch/${ch.id}/brands/${brand.id}">Isi kelas di 3c</a>.`
       : !lms.length ? `Channel belum punya lead measure. <a href="#/setup/${p.id}/ch/${ch.id}/pillars">Isi struktur pilar dulu</a>.` : '';
     return {
-      title: `Target pilar ${brand.brand_name}`, html: `${nav(p, 'config', ch, 'pillars')}
+      title: `Target pilar ${brand.brand_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
       ${pillarTabs(p, ch, brand.id)}
       <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p)}><input type="hidden" name="targets" id="lmtJson">
       <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;Target lead measure per kelas — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
@@ -652,7 +646,7 @@
             <button type="button" class="btn btn-sm btn-link p-0" id="lmtResetW">Reset lebar kolom</button></div>
           <div class="lmt-sheet-wrap"><table class="lmt-sheet" id="lmtSheet"></table></div>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan target ${esc(brand.brand_name)}</button>`}
-        </div></div></fieldset></form>`,
+        </div></div></fieldset></form></div></div>`,
       after(root) {
         if (empty) return;
         const ro = !editable(p);
@@ -905,7 +899,7 @@
       <td><input name="ov_desc" class="form-control form-control-sm" value="${esc(o.description)}"></td>
       <td><button type="button" class="btn btn-sm btn-link text-danger del-ov"><i class="bi bi-x-lg"></i></button></td></tr>`;
     return {
-      title: `Rumus · ${ch.channel_name}`, html: `${nav(p, 'config', ch, 'formulas')}
+      title: `Rumus · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'formulas')}
       <div class="row g-3"><div class="col-xl-9">
       <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
       <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3e</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)}</span>
@@ -929,7 +923,7 @@
         <div class="fw-semibold mt-2">Hasil slot sebelumnya</div>${C.FORMULA_SLOTS.map((s) => `<code class="mr-1">${s.code}</code>`).join('')}
         <div class="fw-semibold mt-2">Fungsi</div>${window.Formula.FUNCTION_NAMES.map((n) => `<code class="mr-1">${n}(</code>`).join('')}
         <div class="text-muted mt-2">Variabel baru (data yang belum ada di Tradee) butuh development lalu didaftarkan di katalog.</div>
-      </div></div></div></div>`,
+      </div></div></div></div></div></div>`,
       after(root) {
         const sample = C.sampleVars();
         let active = null;

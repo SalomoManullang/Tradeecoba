@@ -1,0 +1,52 @@
+/* ── COMPASS typography ─────────────────────────────────────────────
+   The source .fig defines no named text styles; type is applied ad hoc,
+   almost entirely in Lato. These tokens + classes codify the observed
+   scale. Font-size / line-height numbers mirror the Figma Variables in
+   fig-tokens.css (--font-size-*, --line-height-*), expressed here in px.
+   ------------------------------------------------------------------- */
+:root {
+  /* Families */
+  --font-sans: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-alt: "Inter", "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Weights */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Semantic type ramp — size / line-height (px) */
+  --type-display-size: 40px;      --type-display-line: 48px;   /* Inter 40 */
+  --type-h1-size: 32px;           --type-h1-line: 40px;        /* Inter 32 */
+  --type-h2-size: 28px;           --type-h2-line: 36px;        /* Plus Jakarta 28 */
+  --type-h3-size: 22px;           --type-h3-line: 28px;        /* Lato Bold 22 */
+  --type-h4-size: 18px;           --type-h4-line: 24px;
+  --type-h5-size: 16px;           --type-h5-line: 24px;
+  --type-body-lg-size: 16px;      --type-body-lg-line: 24px;
+  --type-body-size: 14px;         --type-body-line: 20px;      /* default UI text */
+  --type-body-sm-size: 12px;      --type-body-sm-line: 16px;
+  --type-caption-size: 12px;      --type-caption-line: 16px;
+  --type-overline-size: 10px;     --type-overline-line: 14px;
+}
+
+/* Base — most COMPASS UI text is Lato 14/20, secondary ink. */
+.compass-type {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Specimen / utility classes */
+.type-display { font-family: var(--font-alt); font-weight: 700; font-size: var(--type-display-size); line-height: var(--type-display-line); color: var(--color-text-primary); }
+.type-h1      { font-family: var(--font-alt); font-weight: 700; font-size: var(--type-h1-size); line-height: var(--type-h1-line); color: var(--color-text-primary); }
+.type-h2      { font-family: var(--font-display); font-weight: 600; font-size: var(--type-h2-size); line-height: var(--type-h2-line); color: var(--color-text-primary); }
+.type-h3      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h3-size); line-height: var(--type-h3-line); color: var(--color-text-primary); }
+.type-h4      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h4-size); line-height: var(--type-h4-line); color: var(--color-text-primary); }
+.type-h5      { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-h5-size); line-height: var(--type-h5-line); color: var(--color-text-primary); }
+.type-body-lg { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-lg-size); line-height: var(--type-body-lg-line); color: var(--color-text-primary); }
+.type-body    { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--color-text-primary); }
+.type-body-strong { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--color-text-primary); }
+.type-body-sm { font-family: var(--font-sans); font-weight: 400; font-size: var(--type-body-sm-size); line-height: var(--type-body-sm-line); color: var(--color-text-secondary); }
+.type-caption { font-family: var(--font-sans); font-weight: 600; font-size: var(--type-caption-size); line-height: var(--type-caption-line); color: var(--color-text-tertiary); }
+.type-overline { font-family: var(--font-sans); font-weight: 700; font-size: var(--type-overline-size); line-height: var(--type-overline-line); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); }

@@ -1,0 +1,10 @@
+/* COMPASS webfonts.
+   The source .fig uses Lato (primary UI), Inter and Plus Jakarta Sans
+   (occasional display). All three are the genuine Google Fonts originals,
+   loaded here from Google Fonts — no substitution. */
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap");
+
+/* Lato only ships 400/700 on Google Fonts; the .fig also uses Lato
+   Medium (500) and SemiBold (600). Those weights are synthesized by the
+   browser from 400/700 where referenced. Supply real Lato Medium/SemiBold
+   files to remove the synthesis. */

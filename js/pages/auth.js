@@ -166,12 +166,12 @@
     };
     const n = pending.registration.length + pending.monitoring.length + pending.payout.length;
     return {
-      title: 'Dashboard', html: `
+      title: 'Dashboard', html: `<div class="cps cps-app"><div class="cps-list">
       <div class="page-head"><div><h1>Dashboard ${year}</h1><div class="sub">Ringkasan program loyalty tahun ${year}</div></div>
         ${isHo ? '<a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Program baru</a>' : n ? `<a href="#/inbox" class="btn btn-brand"><i class="bi bi-inbox"></i> ${n} menunggu Anda</a>` : ''}</div>
       <div class="alert alert-light alert-elevate py-2 small"><i class="flaticon2-light kt-font-brand mr-2"></i> ${tips[user.role] || ''} Gunakan <a href="#/switch">Ganti role</a> untuk melihat alur dari sisi lain.</div>
       ${cards || `<div class="card"><div class="card-body text-center py-5"><i class="bi bi-inboxes fs-1 text-muted"></i><p class="mt-2 mb-3">Belum ada program di tahun ${year}.</p>
-        ${isHo ? '<a href="#/setup/new" class="btn btn-brand">Buat program</a> <a href="#/setup" class="btn btn-outline-brand">Clone dari tahun lain</a>' : '<p class="text-muted small">Program dibuat oleh Admin HO lewat Program Setup.</p>'}</div></div>`}`,
+        ${isHo ? '<a href="#/setup/new" class="btn btn-brand">Buat program</a> <a href="#/setup" class="btn btn-outline-brand">Clone dari tahun lain</a>' : '<p class="text-muted small">Program dibuat oleh Admin HO lewat Program Setup.</p>'}</div></div>`}</div></div>`,
     };
   });
 })();

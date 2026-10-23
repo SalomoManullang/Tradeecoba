@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc><template id="__bundler_thumbnail" data-bg-color="#304DDE">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#304DDE"/>
+    <g transform="translate(400,230)"><rect width="400" height="340" rx="26" fill="#fff"/><rect x="40" y="50" width="320" height="40" rx="10" fill="#304DDE"/><rect x="40" y="120" width="320" height="28" rx="8" fill="#C7D0F5"/><rect x="40" y="168" width="320" height="28" rx="8" fill="#E5E9EF"/><rect x="40" y="216" width="260" height="28" rx="8" fill="#E5E9EF"/></g>
+  </svg>
+</template>
+
+<helmet>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:var(--color-border-default); border-radius:var(--radius-lg); border:2px solid transparent; background-clip:padding-box; }
+  @keyframes prm-fade { from { opacity:0; } to { opacity:1; } }
+  input::placeholder { color:var(--color-text-disabled); opacity:1; }
+  tr.prm-returned > td { background:var(--primary-100) !important; }
+  [role="dialog"] > div:first-child { border-bottom:none !important; }
+  [role="dialog"] > div:last-child { border-top:none !important; }
+  a { color:var(--primary-500); }
+  a:hover { color:var(--primary-600); }
+  tbody td, tbody td * { font-size:12px !important; }
+  .cmp-side { transition:width 180ms ease; }
+  .cmp-side.is-collapsed { width:72px !important; }
+  .cmp-side.is-collapsed .cmp-side-full { display:none !important; }
+  .cmp-side.is-collapsed .cmp-side-head { justify-content:center !important; padding:20px 0 12px !important; }
+  .cmp-side-toggle { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-base,4px); cursor:pointer; flex-shrink:0; background:none; border:none; padding:0; }
+  .cmp-side-toggle:hover { background:var(--neutral-variant-100, #F0F2F5); }
+  .cmp-side.is-collapsed .cmp-side-menu { overflow:visible !important; }
+  .prm-sticky1 th:nth-child(1), .prm-sticky1 td:nth-child(1) { position:sticky; left:0; z-index:2; background:inherit; }
+  .prm-sticky1 th:nth-child(1) { z-index:3; }
+  .prm-sticky2 th:nth-child(1), .prm-sticky2 td:nth-child(1) { position:sticky; left:0; z-index:2; background:inherit; }
+  .prm-sticky2 th:nth-child(2), .prm-sticky2 td:nth-child(2) { position:sticky; left:var(--f1w,40px); z-index:2; background:inherit; }
+  .prm-sticky2 th:nth-child(1), .prm-sticky2 th:nth-child(2) { z-index:3; }
+  .prm-sticky1.is-scrolled th:nth-child(1), .prm-sticky1.is-scrolled td:nth-child(1),
+  .prm-sticky2.is-scrolled th:nth-child(2), .prm-sticky2.is-scrolled td:nth-child(2) { box-shadow:10px 0 12px -4px rgba(42,61,74,0.18); }
+</style>
+</helmet>
+<div class="prm-root" data-screen-label="COMPASS — Manage Content" style="display:flex; height:100vh; font-family:var(--font-sans); background:var(--color-bg-primary); color:var(--color-text-primary); overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="{{ sideClass }}" style="width:240px; flex-shrink:0; border-right:1px solid var(--color-border-default); background:var(--color-bg-secondary); display:flex; flex-direction:column; box-sizing:border-box;">
+    <div class="cmp-side-head" style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <span class="cmp-side-full" style="display:inline-flex;"><x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import></span>
+      <button type="button" class="cmp-side-toggle" aria-label="{{ sideToggleLabel }}" title="{{ sideToggleLabel }}" onClick="{{ toggleSidebar }}">
+        <sc-if value="{{ sideCollapsed }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 8.5L13 13L8.5 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13 8.5L17.5 13L13 17.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+        <sc-if value="{{ sideExpanded }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13.5L4.5 9L9 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M13.5 13.5L9 9L13.5 4.5" stroke="var(--color-text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </button>
+    </div>
+    <div class="cmp-side-full" style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div class="cmp-side-menu" style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex:1; overflow:auto; background:var(--color-bg-primary); padding:24px 24px 40px; box-sizing:border-box; width:100%;">
+
+      {{ pageRegion }}
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;tableDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;xs&quot;,&quot;s&quot;,&quot;m&quot;],&quot;default&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tabel&quot;}}">class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const isC = this.MENU() === "content";
+    this.state = { view: "list", rows: isC ? this.contentRows() : this.typeRows(), search: "", filters: {}, filterOpen: false, filterDraft: {}, page: 1, perPage: "10", sortKey: "", sortDir: null, detailId: null, mode: "add", form: null, formOriginal: null, errors: {}, modal: null, toasts: [], sideCollapsed: false };
+    this._tid = 0;
+  }
+  MENU() { return "content"; }
+  isC() { return this.MENU() === "content"; }
+    navDateText() {
+    const d = new Date(), D = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"], M = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return D[d.getDay()] + ", " + d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+  }
+  navClock() {
+    if (!this._NavClock) {
+      this._NavClock = function NavClock() {
+        const fmt = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Jakarta", hour12: false }) + " WIB";
+        const [t, setT] = React.useState(fmt());
+        React.useEffect(() => { const i = setInterval(() => setT(fmt()), 1000); return () => clearInterval(i); }, []);
+        return React.createElement("span", null, t);
+      };
+    }
+    return React.createElement(this._NavClock, null);
+  }
+
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  nsAll() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(n, s) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20 }) : null; }
+  iconColored(n, s, c) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name: n, size: s || 20, color: c }) : null; }
+  todayStr() { const d = new Date(), M = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"]; return String(d.getDate()).padStart(2, "0") + " " + M[d.getMonth()] + " " + d.getFullYear(); }
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+
+  /* ---------------- sample data ---------------- */
+  types() { return ["Banner Promo", "Pop Up Info", "Video Edukasi", "Katalog Produk", "Pengumuman"]; }
+  placements() { return ["Beranda Atas", "Beranda Bawah", "Detail Produk", "Checkout"]; }
+  salesAreas() { return ["Jakarta", "Bandung", "Surabaya", "Semarang", "Medan", "Makassar"]; }
+  outletTypes() { return ["Cosmetics Store", "Minimarket", "Hypermarket", "Drugstore", "General Trade"]; }
+  typeLabel(n) { const i = this.types().indexOf(n); return n ? n + " (" + (i + 1) + ")" : "—"; }
+  placeLabel(n) { const i = this.placements().indexOf(n); return n ? n + " (" + (i + 1) + ")" : "—"; }
+  contentRows() {
+    const T = this.types(), P = this.placements();
+    const seed = [
+      ["Promo Ramadan Wardah", "Diskon hingga 30% untuk seluruh lini Wardah selama bulan Ramadan di outlet modern trade.", 0, 0, true, "rani.kusuma", true, true, true, false],
+      ["Panduan Display Make Over", "Panduan penataan display produk Make Over sesuai standar counter terbaru.", 2, 2, true, "adi.nugraha", false, true, true, true],
+      ["Pengumuman Jadwal Stock Opname", "Jadwal stock opname bulanan untuk seluruh outlet area Jawa dan Sumatera.", 4, 1, true, "sinta.melati", false, false, false, true],
+      ["Katalog Emina Q3", "Katalog produk Emina periode kuartal ketiga lengkap dengan harga dan bundling.", 3, 3, false, "bayu.aditya", true, true, true, false],
+      ["Pop Up Cashback Kahf", "Informasi cashback pembelian Kahf Men Grooming untuk pelanggan baru.", 1, 0, true, "rani.kusuma", true, false, true, false],
+      ["Video Cara Pakai Instaperfect", "Video tutorial penggunaan produk Instaperfect untuk beauty advisor.", 2, 2, true, "adi.nugraha", true, true, true, false],
+      ["Banner Bundling Putri", "Paket hemat Putri Hair Tonic untuk outlet general trade.", 0, 1, false, "sinta.melati", false, true, false, true],
+    ];
+    return seed.map((s, i) => ({
+      id: String(101 + i), user: s[5] + " (" + (21 + i) + ")", write: ["12 Jan 2024", "05 Feb 2024", "19 Feb 2024", "08 Mar 2024", "27 Mar 2024", "14 Apr 2024", "02 Mei 2024"][i],
+      active: s[4], typeName: T[s[2]], name: s[0], desc: s[1], start: "2024-0" + (3 + (i % 3)) + "-01", end: "2024-0" + (4 + (i % 3)) + "-30", placement: P[s[3]],
+      file: i % 2 === 0 ? "konten-" + (101 + i) + ".jpg" : "", link: i % 2 === 0 ? "" : "https://cdn.compass.id/konten/" + (101 + i),
+      allSales: s[6], sales: s[6] ? [] : ["Jakarta", "Bandung", "Surabaya"], allOutlet: s[7], outlets: s[7] ? [] : ["Cosmetics Store", "Minimarket"],
+      allPartner: s[8], incFile: s[8] ? "" : "partner-include-" + (101 + i) + ".csv", anyExc: s[9], excFile: s[9] ? "partner-exclude-" + (101 + i) + ".csv" : "",
+    }));
+  }
+  typeRows() { return this.types().map((n, i) => ({ id: String(i + 1), write: ["10 Jan 2024", "10 Jan 2024", "15 Jan 2024", "22 Jan 2024", "03 Feb 2024"][i], active: i !== 3, name: n })); }
+  blankForm() {
+    return this.isC()
+      ? { active: true, typeName: "", name: "", desc: "", start: "", end: "", placement: "", file: "", link: "", allSales: true, sales: [], allOutlet: true, outlets: [], allPartner: true, updInc: false, incFile: "", anyExc: false, updExc: false, excFile: "" }
+      : { active: true, name: "" };
+  }
+
+  /* ---------------- small builders ---------------- */
+  tagActive(a) { const { Tag } = this.ns(); return React.createElement(Tag, { colorScheme: a ? "green" : "neutral", size: "s", dot: true }, a ? "Active" : "Non-active"); }
+  card(kids, extra) { return React.createElement("div", { style: { background: "var(--color-bg-secondary)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-md)", padding: 24, boxSizing: "border-box", ...(extra || {}) } }, kids); }
+  secHead(title, note) {
+    const h = React.createElement;
+    return h("div", { style: { paddingBottom: 10, borderBottom: "1px solid var(--color-border-subtle)", marginBottom: 20, display: "flex", flexDirection: "column", gap: 2 } },
+      h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)" } }, title),
+      note ? h("span", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)" } }, note) : null);
+  }
+  roRow(label, value, full) {
+    const h = React.createElement;
+    return h("div", { key: label, style: { gridColumn: full ? "1 / -1" : "auto", minWidth: 0, display: "grid", gridTemplateColumns: "minmax(130px, 34%) 1fr", alignItems: "baseline", gap: 16 } },
+      h("span", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-secondary)", textWrap: "pretty" } }, label),
+      h("span", { style: { fontSize: 14, lineHeight: "20px", fontWeight: 700, color: "var(--color-text-primary)", wordBreak: "break-word" } }, value));
+  }
+  field(label, node, req, err, hint) {
+    const h = React.createElement;
+    return h("div", { key: label, style: { minWidth: 0 } },
+      h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, label, req ? h("span", { style: { color: "var(--error-500)" } }, " *") : null),
+      node,
+      err ? h("div", { style: { fontSize: 12, lineHeight: "16px", color: "var(--error-500)", marginTop: 4 } }, err)
+          : (hint ? h("div", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-tertiary)", marginTop: 4 } }, hint) : null));
+  }
+  check(label, on, onChange) {
+    const h = React.createElement; const { Checkbox } = this.ns();
+    return h("label", { key: label, style: { display: "inline-flex", alignItems: "center", gap: 10, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)", cursor: "pointer" } },
+      h(Checkbox, { checked: !!on, size: "s", onChange: () => onChange(!on) }), label);
+  }
+  dropzone(file, onPick, onClear, label) {
+    const h = React.createElement;
+    if (file) return h("div", { style: { border: "1px solid var(--color-border-default)", background: "var(--color-bg-primary)", padding: "20px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, boxSizing: "border-box" } },
+      this.iconColored("upload-doc", 28, "var(--color-text-secondary)"),
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", boxSizing: "border-box", border: "1px solid var(--info-500)", borderRadius: 3, padding: 8 } },
+        h("span", { style: { minWidth: 0, fontSize: 14, color: "var(--info-500)", textDecoration: "underline", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, file),
+        h("button", { type: "button", "aria-label": "Hapus file", onClick: onClear, style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, flexShrink: 0 } }, this.iconColored("CloseIcon", 14, "var(--error-500)"))));
+    return h("div", { role: "button", tabIndex: 0, onClick: onPick, style: { border: "1px solid var(--color-border-default)", background: "var(--color-bg-primary)", padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", boxSizing: "border-box" } },
+      this.iconColored("upload-doc", 28, "var(--color-text-primary)"),
+      h("span", { style: { fontSize: 14, color: "var(--color-text-primary)" } }, label || "Klik atau Drag file ke area ini"),
+      h("span", { style: { display: "inline-flex", padding: "8px 14px", marginTop: 2, border: "1.8px solid var(--info-500)", borderRadius: "var(--radius-base)", fontSize: 14, fontWeight: 600, color: "var(--info-500)" } }, "Select File"));
+  }
+  dateBox(v, onChange, bad) {
+    return React.createElement("input", { type: "date", value: v || "", onChange: (e) => onChange(e.target.value), style: { width: "100%", boxSizing: "border-box", height: 44, border: "1px solid " + (bad ? "var(--error-500)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", padding: "0 12px", fontSize: 14, color: "var(--color-text-primary)", fontFamily: "var(--font-sans)", background: "var(--color-bg-secondary)", outline: "none" } });
+  }
+  headerCard(title, tags, caption, actions, onBack) {
+    const h = React.createElement; const { Button } = this.ns();
+    return this.card(h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px 24px", flexWrap: "wrap" } },
+      h("div", { style: { display: "flex", alignItems: "center", gap: 16, minWidth: 0, flex: "1 1 340px" } },
+        h(Button, { variant: "ghost", size: "s", leftIcon: this.iconColored("arrow-left", 18, "var(--primary-500)"), onClick: onBack }, "Kembali"),
+        h("div", { style: { width: 1, alignSelf: "stretch", flexShrink: 0, background: "var(--color-border-default)" } }),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: 4, minWidth: 0 } },
+          h("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } },
+            h("span", { style: { fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: 22, lineHeight: "28px", color: "var(--color-text-primary)" } }, title), tags),
+          caption ? h("div", { style: { fontSize: 12, lineHeight: "16px", color: "var(--color-text-disabled)" } }, caption) : null)),
+      h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexShrink: 0 } }, actions)));
+  }
+
+    multiSelect(props) {
+    if (!this._MultiSelect) {
+      const self = this; const h = React.createElement;
+      this._MultiSelect = function MultiSelect(p) {
+        const [open, setOpen] = React.useState(false);
+        const [rect, setRect] = React.useState(null);
+        const [q, setQ] = React.useState("");
+        const ref = React.useRef(null); const panelRef = React.useRef(null); const searchRef = React.useRef(null);
+        const vals = p.values || [];
+        const measure = React.useCallback(() => {
+          if (!ref.current) return;
+          const r = ref.current.getBoundingClientRect();
+          const below = window.innerHeight - r.bottom - 12, above = r.top - 12;
+          const flip = below < 220 && above > below;
+          setRect({ left: r.left, width: r.width, top: flip ? undefined : r.bottom + 4, bottom: flip ? (window.innerHeight - r.top + 4) : undefined, avail: Math.max(160, flip ? above : below) });
+        }, []);
+        React.useEffect(() => {
+          const onDoc = (e) => {
+            const a = ref.current && ref.current.contains(e.target);
+            const b = panelRef.current && panelRef.current.contains(e.target);
+            if (!a && !b) { setOpen(false); setQ(""); }
+          };
+          document.addEventListener("mousedown", onDoc);
+          return () => document.removeEventListener("mousedown", onDoc);
+        }, []);
+        React.useEffect(() => {
+          if (!open) return;
+          measure();
+          const on = () => measure();
+          window.addEventListener("resize", on); window.addEventListener("scroll", on, true);
+          const onKey = (e) => { if (e.key === "Escape") { setOpen(false); setQ(""); } };
+          const ft = setTimeout(() => { if (searchRef.current) searchRef.current.focus(); }, 40);
+          document.addEventListener("keydown", onKey);
+          return () => { clearTimeout(ft); window.removeEventListener("resize", on); window.removeEventListener("scroll", on, true); document.removeEventListener("keydown", onKey); };
+        }, [open, measure]);
+        const toggle = (v) => p.onChange(vals.includes(v) ? vals.filter(x => x !== v) : [...vals, v]);
+        const filled = vals.length > 0;
+        const summary = !filled ? null : (vals.length <= 2 ? vals.join(", ") : vals.slice(0, 2).join(", ") + " +" + (vals.length - 2));
+        return h("div", { ref, style: { position: "relative", width: "100%", fontFamily: "var(--font-sans)" } },
+          h("div", { style: { fontSize: 12, fontWeight: 600, lineHeight: "16px", color: "var(--color-text-primary)", marginBottom: 6 } }, p.label),
+          h("div", { role: "button", tabIndex: 0, "aria-label": p.label, onClick: () => setOpen(o => { if (o) setQ(""); return !o; }), onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => { if (o) setQ(""); return !o; }); } },
+            style: { display: "flex", alignItems: "center", gap: 8, height: 44, boxSizing: "border-box", padding: "0 8px 0 12px", background: "var(--color-bg-secondary)", border: "1px solid " + (open ? "var(--primary-500)" : "var(--color-border-default)"), borderRadius: "var(--radius-base)", cursor: "pointer", outline: "none", transition: "border-color 120ms ease" } },
+            h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: filled ? "var(--color-text-primary)" : "var(--color-text-disabled)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, filled ? summary : p.placeholder),
+            filled
+              ? h("button", { type: "button", "aria-label": "Kosongkan " + p.label, title: "Kosongkan", onClick: (e) => { e.stopPropagation(); p.onChange([]); setOpen(false); setQ(""); }, style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, flexShrink: 0, background: "none", border: "none", borderRadius: "var(--radius-full)", cursor: "pointer", padding: 0 } }, self.iconColored("CloseIcon", 16, "var(--color-text-tertiary)"))
+              : h("span", { style: { display: "inline-flex", flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 140ms ease" } }, self.iconColored("ChevronDownIcon", 18, "var(--color-text-tertiary)"))),
+          open && rect && window.ReactDOM && window.ReactDOM.createPortal
+            ? window.ReactDOM.createPortal(h("div", { ref: panelRef, style: { position: "fixed", left: rect.left, width: rect.width, top: rect.top, bottom: rect.bottom, zIndex: 4000, background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-subtle)", borderRadius: "var(--radius-base)", boxShadow: "0 16px 40px rgba(42,61,74,0.22), 0 2px 6px rgba(42,61,74,0.10)", overflow: "hidden", fontFamily: "var(--font-sans)" } },
+                (p.options || []).length > 4 ? h("div", { style: { padding: 8, borderBottom: "1px solid var(--color-border-subtle)" } },
+                  h("div", { style: { display: "flex", alignItems: "center", gap: 8, height: 36, boxSizing: "border-box", padding: "0 10px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)" } },
+                    self.iconColored("SearchOutlineIcon", 16, "var(--color-text-tertiary)"),
+                    h("input", { ref: searchRef, type: "text", value: q, placeholder: "Cari " + (p.label || "").toLowerCase() + "…",
+                      onChange: (e) => setQ(e.target.value),
+                      style: { flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }),
+                    q ? h("button", { type: "button", "aria-label": "Bersihkan pencarian", onClick: () => { setQ(""); if (searchRef.current) searchRef.current.focus(); },
+                      style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, flexShrink: 0 } }, self.iconColored("CloseIcon", 14, "var(--color-text-tertiary)")) : null)) : null,
+                h("div", { style: { maxHeight: Math.min(260, rect.avail - 20), overflowY: "auto", padding: 4 } },
+                  (function () {
+                    const list = (p.options || []).filter(o => o.toLowerCase().includes(q.trim().toLowerCase()));
+                    if (!list.length) return h("div", { style: { padding: "16px 10px", textAlign: "center", fontSize: 12, color: "var(--color-text-tertiary)" } }, "Tidak ada hasil untuk \u201C" + q + "\u201D");
+                    return list.map(o => {
+                      const on = vals.includes(o);
+                      return h("div", { key: o, role: "option", "aria-selected": on, onClick: () => toggle(o),
+                        style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: "var(--radius-base)", cursor: "pointer", background: "transparent" },
+                        onMouseEnter: (e) => { e.currentTarget.style.background = "var(--color-bg-primary)"; },
+                        onMouseLeave: (e) => { e.currentTarget.style.background = "transparent"; } },
+                        h(self.nsAll().Checkbox, { checked: on, size: "s", onChange: () => toggle(o), style: { flexShrink: 0, pointerEvents: "none" } }),
+                        h("span", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, o));
+                    });
+                  })())), document.body)
+            : null);
+      };
+    }
+    return React.createElement(this._MultiSelect, props);
+  }
+
+
+  /* ---------------- list logic ---------------- */
+  filterCfg() {
+    return this.isC()
+      ? [{ key: "status", label: "Status", options: ["Active", "Non-active"] }, { key: "type", label: "Content Type", options: this.types() }, { key: "placement", label: "Placement", options: this.placements() }]
+      : [{ key: "status", label: "Status", options: ["Active", "Non-active"] }];
+  }
+  filtered() {
+    const s = this.state, f = s.filters; let rows = s.rows.slice();
+    const q = s.search.trim().toLowerCase();
+    if (q) rows = rows.filter(r => (r.id + " " + r.name + " " + (r.desc || "") + " " + (r.typeName || "")).toLowerCase().includes(q));
+    if ((f.status || []).length) rows = rows.filter(r => f.status.includes(r.active ? "Active" : "Non-active"));
+    if ((f.type || []).length) rows = rows.filter(r => f.type.includes(r.typeName));
+    if ((f.placement || []).length) rows = rows.filter(r => f.placement.includes(r.placement));
+    if (s.sortKey && s.sortDir) {
+      const k = s.sortKey, dir = s.sortDir === "desc" ? -1 : 1;
+      rows.sort((a, b) => { let av = a[k], bv = b[k]; if (k === "id") { av = +av; bv = +bv; } else if (typeof av === "boolean") { av = av ? 1 : 0; bv = bv ? 1 : 0; } else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); } return av < bv ? -dir : av > bv ? dir : 0; });
+    }
+    return rows;
+  }
+  cycleSort(key) {
+    this.setState(s => {
+      if (s.sortKey !== key) return { sortKey: key, sortDir: "asc", page: 1 };
+      if (s.sortDir === "asc") return { sortDir: "desc", page: 1 };
+      if (s.sortDir === "desc") return { sortKey: "", sortDir: null, page: 1 };
+      return { sortDir: "asc", page: 1 };
+    });
+  }
+  fcount() { const f = this.state.filters; return this.filterCfg().filter(c => (f[c.key] || []).length).length; }
+  buildChips() {
+    const h = React.createElement, f = this.state.filters;
+    const chips = this.filterCfg().filter(c => (f[c.key] || []).length).map(c => {
+      const v = f[c.key]; const brief = v.length <= 2 ? v.join(", ") : v.slice(0, 2).join(", ") + " +" + (v.length - 2);
+      return h("div", { key: c.key, style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 8px 6px 12px", background: "var(--color-border-subtle)", borderRadius: "var(--radius-base)", fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } },
+        h("span", null, h("span", { style: { fontWeight: 700 } }, c.label), ": ", brief),
+        h("button", { type: "button", "aria-label": "Hapus filter " + c.label, onClick: () => this.setState(s => ({ filters: { ...s.filters, [c.key]: [] }, page: 1 })), style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--color-text-secondary)" } }, this.icon("CloseIcon", 16)));
+    });
+    if (!chips.length) return null;
+    return h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } },
+      h("span", { style: { fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" } }, "Filters by:"), chips,
+      h("button", { type: "button", onClick: () => this.setState({ filters: {}, page: 1 }), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 14, fontWeight: 700, color: "var(--primary-500)" } }, this.iconColored("RefreshIcon", 18, "var(--primary-500)"), "Hapus Filter"));
+  }
+  buildDrawer() {
+    const h = React.createElement; const { Button } = this.ns(); const s = this.state;
+    const cfg = this.filterCfg(), d = s.filterDraft;
+    const any = cfg.some(c => (d[c.key] || []).length);
+    return h("div", { onClick: () => this.setState({ filterOpen: false }), style: { position: "fixed", inset: 0, background: "rgba(42,61,74,0.45)", display: "flex", justifyContent: "flex-end", zIndex: 50, opacity: s.filterOpen ? 1 : 0, pointerEvents: s.filterOpen ? "auto" : "none", transition: "opacity 260ms ease" } },
+      h("div", { onClick: (e) => e.stopPropagation(), style: { width: 440, maxWidth: "100%", height: "100%", background: "var(--color-bg-secondary)", display: "flex", flexDirection: "column", boxSizing: "border-box", fontFamily: "var(--font-sans)", transform: s.filterOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 280ms cubic-bezier(0.4,0,0.2,1)" } },
+        h("div", { style: { flex: 1, minHeight: 0, overflow: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 24 } },
+          h("div", { style: { height: 28, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 } },
+            h("span", { style: { fontWeight: 700, fontSize: 22, lineHeight: "28px", color: "var(--color-text-primary)" } }, "Filter"),
+            h("span", { onClick: () => this.setState({ filterOpen: false }), style: { cursor: "pointer", display: "inline-flex" } }, this.iconColored("CloseIcon", 24, "var(--color-text-primary)"))),
+          h("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+            cfg.map(c => h("div", { key: c.key }, this.multiSelect({ label: c.label, placeholder: "Pilih " + c.label, options: c.options, values: d[c.key] || [], onChange: (v) => this.setState({ filterDraft: { ...this.state.filterDraft, [c.key]: v } }) }))))),
+        h("div", { style: { flexShrink: 0, padding: 24, display: "flex", gap: 12, alignItems: "center" } },
+          any ? h(Button, { variant: "ghost", size: "s", leftIcon: this.icon("RefreshIcon", 16), onClick: () => this.setState({ filterDraft: {} }) }, "Hapus Filter") : null,
+          h("div", { style: { flex: 1 } }),
+          h(Button, { variant: "secondary", size: "s", onClick: () => this.setState({ filterOpen: false }) }, "Batal"),
+          h(Button, { variant: "primary", size: "s", onClick: () => this.setState(st => ({ filters: { ...st.filterDraft }, filterOpen: false, page: 1 })) }, "Terapkan"))));
+  }
+
+  /* ---------------- screens ---------------- */
+  listScreen() {
+    const h = React.createElement; const NS = this.ns(); const { Table, Input, Button, Select, PageNumbers, EmptyState } = NS;
+    const isC = this.isC(), s = this.state;
+    const strong = (v) => h("span", { style: { fontWeight: 700, color: "var(--color-text-primary)", whiteSpace: "nowrap" } }, v);
+    const soft = (v) => h("span", { style: { color: "var(--color-text-secondary)", whiteSpace: "nowrap" } }, v);
+    const detailBtn = (r) => h(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r) }, "Detail");
+    const columns = isC ? [
+      { key: "id", header: "ID", sortable: true, width: 64, render: (r) => soft(r.id) },
+      { key: "user", header: "User", sortable: true, width: 150, render: (r) => soft(r.user) },
+      { key: "write", header: "Write Date", width: 120, render: (r) => soft(r.write) },
+      { key: "active", header: "Status", sortable: true, align: "center", width: 120, render: (r) => this.tagActive(r.active) },
+      { key: "typeName", header: "Content Type", sortable: true, width: 170, render: (r) => soft(this.typeLabel(r.typeName)) },
+      { key: "name", header: "Name", sortable: true, width: 220, render: (r) => strong(r.name) },
+      { key: "desc", header: "Description", width: 280, render: (r) => h("span", { title: r.desc, style: { display: "block", maxWidth: 280, color: "var(--color-text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.desc) },
+      { key: "placement", header: "Placement", sortable: true, width: 160, render: (r) => soft(this.placeLabel(r.placement)) },
+      { key: "action", header: "Action", align: "left", width: 75, render: detailBtn },
+    ] : [
+      { key: "id", header: "ID", sortable: true, width: 72, render: (r) => soft(r.id) },
+      { key: "write", header: "Write Date", width: 160, render: (r) => soft(r.write) },
+      { key: "name", header: "Name", sortable: true, render: (r) => strong(r.name) },
+      { key: "active", header: "Active", sortable: true, align: "center", width: 140, render: (r) => this.tagActive(r.active) },
+      { key: "action", header: "Action", align: "left", width: 75, render: detailBtn },
+    ];
+    const rows = this.filtered();
+    const per = parseInt(s.perPage, 10), pageCount = Math.max(1, Math.ceil(rows.length / per)), page = Math.min(s.page, pageCount);
+    const paged = rows.slice((page - 1) * per, page * per), fc = this.fcount();
+    const unit = isC ? "konten" : "content type";
+    const addLabel = isC ? "Add Content" : "Add Content Type";
+    let body;
+    if (!s.rows.length) body = h("div", { style: { padding: "40px 0" } }, h(EmptyState, { colour: "neutral", title: "Belum Ada " + (isC ? "Konten" : "Content Type"), description: "Belum ada " + unit + " yang dibuat.", actions: h(Button, { variant: "primary", size: "s", leftIcon: this.icon("plus-thin", 16), onClick: () => this.openAdd() }, addLabel) }));
+    else if (!rows.length) body = h("div", { style: { padding: "40px 0" } }, h(EmptyState, { colour: "neutral", icon: "SearchOutlineIcon", title: "Tidak Ada Hasil", description: "Tidak ada " + unit + " yang cocok dengan pencarian atau filter Anda.", actions: h(Button, { variant: "tertiary", size: "s", onClick: () => this.setState({ search: "", filters: {}, page: 1 }) }, "Bersihkan Filter") }));
+    else body = h("div", null,
+      h("div", { style: { overflowX: "auto" } }, h(Table, { columns, data: paged, size: this.props.tableDensity || "s", rowKey: "id", hoverable: true, sortKey: s.sortKey, sortDir: s.sortDir, onSort: (k) => this.cycleSort(k), style: { border: "none", borderRadius: 0, minWidth: 1280 } })),
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap", marginTop: 20 } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+          h("span", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, "Item per halaman"),
+          h("div", { style: { width: 84 } }, h(Select, { options: ["10", "25", "50"], value: s.perPage, size: "s", onChange: (v) => this.setState({ perPage: v, page: 1 }) })),
+          h("span", { style: { fontSize: 14, lineHeight: "20px", letterSpacing: "0.25px", color: "var(--color-text-primary)" } }, "dari total " + rows.length + " " + unit)),
+        h(PageNumbers, { page, pageCount, onPageChange: (p) => this.setState({ page: p }) })));
+    return this.card(h("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+      h("div", { style: { fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, lineHeight: "32px", color: "var(--neutral-950)" } }, isC ? "Manage Content" : "Content Type"),
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } },
+          h("div", { style: { width: 300 } }, h(Input, { size: "s", placeholder: isC ? "Cari nama konten" : "Cari content type", value: s.search, leftIcon: this.icon("SearchOutlineIcon"), onChange: (e) => this.setState({ search: e.target.value, page: 1 }) })),
+          h(Button, fc
+            ? { variant: "secondary", size: "s", leftIcon: h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "var(--primary-500)", color: "var(--color-bg-secondary)", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, fc), style: { gap: 10, background: "var(--primary-100)", borderColor: "var(--primary-500)", color: "var(--primary-500)" }, onClick: () => this.setState({ filterOpen: true, filterDraft: { ...s.filters } }) }
+            : { variant: "tertiary", size: "s", leftIcon: this.icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.setState({ filterOpen: true, filterDraft: { ...s.filters } }) }, "Filters"),
+          h(Button, { variant: "tertiary", size: "s", leftIcon: this.icon("export-up", 16), onClick: () => this.toast("success", "Export dimulai", rows.length + " " + unit + " diekspor ke Excel sesuai filter aktif.") }, "Export")),
+        h(Button, { variant: "primary", size: "s", leftIcon: this.icon("plus-thin", 16), onClick: () => this.openAdd() }, addLabel)),
+      this.buildChips(), body));
+  }
+
+  detailScreen() {
+    const h = React.createElement; const { Button, Tag } = this.ns();
+    const isC = this.isC(), r = this.state.rows.find(x => x.id === this.state.detailId);
+    if (!r) return null;
+    const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px 48px" };
+    const acts = h("div", { style: { display: "flex", gap: 12 } },
+      h(Button, { variant: "tertiary", size: "s", style: { color: "var(--error-500)" }, leftIcon: this.iconColored("DeleteOutlineIcon", 16, "var(--error-500)"), onClick: () => this.setState({ modal: { type: "delete" } }) }, "Hapus"),
+      h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("pencil", 16), onClick: () => this.openEdit(r) }, "Edit"));
+    const back = () => this.setState({ view: "list", detailId: null });
+    if (!isC) {
+      return h("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+        this.headerCard(r.name, this.tagActive(r.active), "ID " + r.id + " · Dibuat " + r.write, acts, back),
+        this.card(h("div", null, this.secHead("Informasi Content Type"),
+          h("div", { style: grid }, this.roRow("ID", r.id), this.roRow("Write Date", r.write), this.roRow("Name", r.name), this.roRow("Active", this.tagActive(r.active))))));
+    }
+    const list = (a) => a.length ? h("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, a.map(t => h("span", { key: t }, t))) : "—";
+    const fmt = (d) => { if (!d) return "—"; const p = d.split("-"), M = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"]; return p[2] + " " + M[+p[1] - 1] + " " + p[0]; };
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.headerCard(r.name, h("span", { style: { display: "inline-flex", gap: 8 } }, h(Tag, { colorScheme: "blue", size: "s" }, r.typeName), this.tagActive(r.active)), "ID " + r.id + " · " + r.placement + " · Dibuat " + r.write + " oleh " + r.user, acts, back),
+      this.card(h("div", null, this.secHead("Informasi Konten"),
+        h("div", { style: grid },
+          this.roRow("ID", r.id), this.roRow("Write Date", r.write), this.roRow("Status", this.tagActive(r.active)), this.roRow("User", r.user),
+          this.roRow("Content Type", this.typeLabel(r.typeName)), this.roRow("Placement", this.placeLabel(r.placement)), this.roRow("Name", r.name), this.roRow("Start Date", fmt(r.start)),
+          this.roRow("End Date", fmt(r.end)), this.roRow("Description", r.desc, true)))),
+      this.card(h("div", null, this.secHead("Target Distribusi", "Cakupan sales area, tipe outlet dan partner yang menerima konten"),
+        h("div", { style: grid },
+          this.roRow("Untuk semua Sales Area", r.allSales ? "Ya" : "Tidak"), this.roRow("Sales Area", r.allSales ? "All Sales Area" : list(r.sales)),
+          this.roRow("Untuk semua Tipe Outlet", r.allOutlet ? "Ya" : "Tidak"), this.roRow("Outlet Type", r.allOutlet ? "All Outlet Types" : list(r.outlets)),
+          this.roRow("Semua Partner diikutsertakan", r.allPartner ? "Ya" : "Tidak"), this.roRow("Partner Included", r.allPartner ? "All Partner Included" : (r.incFile || "—")),
+          this.roRow("Ada Partner yang tidak diikutsertakan", r.anyExc ? "Ya" : "Tidak"), this.roRow("Partner Excluded", r.anyExc ? (r.excFile || "—") : "No Excluded Partner")))),
+      this.card(h("div", null, this.secHead("Berkas Konten"),
+        h("div", { style: grid },
+          this.roRow("Content File", r.file ? h("div", { style: { width: 250, height: 150, background: "var(--color-bg-primary)", border: "1px solid var(--color-border-default)", borderRadius: "var(--radius-base)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, fontWeight: 400, color: "var(--color-text-tertiary)" } }, this.iconColored("upload-doc", 24, "var(--color-text-tertiary)"), r.file) : "—"),
+          this.roRow("Content Link", r.link ? h("a", { href: "#" }, r.link) : "—")))));
+  }
+
+  /* ---------------- form logic ---------------- */
+  setForm(p) { this.setState(s => ({ form: { ...s.form, ...p }, errors: {} })); }
+  openAdd() { const f = this.blankForm(); this.setState({ view: "form", mode: "add", form: f, formOriginal: JSON.parse(JSON.stringify(f)), errors: {} }); }
+  openEdit(r) {
+    const f = this.isC()
+      ? { active: r.active, typeName: r.typeName, name: r.name, desc: r.desc, start: r.start, end: r.end, placement: r.placement, file: r.file, link: r.link, allSales: r.allSales, sales: r.sales.slice(), allOutlet: r.allOutlet, outlets: r.outlets.slice(), allPartner: r.allPartner, updInc: false, incFile: r.incFile, anyExc: r.anyExc, updExc: false, excFile: r.excFile }
+      : { active: r.active, name: r.name };
+    this.setState({ view: "form", mode: "edit", form: f, formOriginal: JSON.parse(JSON.stringify(f)), errors: {} });
+  }
+  dirty() { return JSON.stringify(this.state.form) !== JSON.stringify(this.state.formOriginal); }
+  leaveForm(force) {
+    if (!force && this.dirty()) { this.setState({ modal: { type: "discard" } }); return; }
+    this.setState(s => ({ view: s.mode === "edit" ? "detail" : "list", form: null, formOriginal: null, errors: {}, modal: null }));
+  }
+  validate() {
+    const f = this.state.form, e = {};
+    if (!String(f.name).trim()) e.name = (this.isC() ? "Name" : "Name") + " wajib diisi";
+    if (this.isC()) {
+      if (!f.typeName) e.typeName = "Content Type wajib dipilih";
+      if (!f.placement) e.placement = "Placement wajib dipilih";
+      if (!String(f.desc).trim()) e.desc = "Description wajib diisi";
+      if (!f.start) e.start = "Start Date wajib diisi";
+      if (!f.end) e.end = "End Date wajib diisi";
+      else if (f.start && f.end < f.start) e.end = "End Date tidak boleh sebelum Start Date";
+      if (!f.allSales && !f.sales.length) e.sales = "Pilih minimal satu Sales Area";
+      if (!f.allOutlet && !f.outlets.length) e.outlets = "Pilih minimal satu Outlet Type";
+    }
+    return e;
+  }
+  submit() { const e = this.validate(); if (Object.keys(e).length) { this.setState({ errors: e }); return; } this.setState({ modal: { type: "save" } }); }
+  commitSave() {
+    const f = this.state.form, s = this.state, edit = s.mode === "edit";
+    const id = edit ? s.detailId : String(Math.max(0, ...s.rows.map(r => +r.id)) + 1);
+    let row;
+    if (this.isC()) {
+      const prev = edit ? s.rows.find(r => r.id === id) : null;
+      row = { id, user: prev ? prev.user : "m.lutfi (1)", write: prev ? prev.write : this.todayStr(), active: f.active, typeName: f.typeName, name: f.name.trim(), desc: f.desc.trim(), start: f.start, end: f.end, placement: f.placement, file: f.file, link: f.file ? "" : f.link,
+        allSales: f.allSales, sales: f.allSales ? [] : f.sales, allOutlet: f.allOutlet, outlets: f.allOutlet ? [] : f.outlets, allPartner: f.allPartner, incFile: f.allPartner ? "" : f.incFile, anyExc: f.anyExc, excFile: f.anyExc ? f.excFile : "" };
+    } else {
+      const prev = edit ? s.rows.find(r => r.id === id) : null;
+      row = { id, write: prev ? prev.write : this.todayStr(), active: f.active, name: f.name.trim() };
+    }
+    this.setState(st => ({ rows: edit ? st.rows.map(r => r.id === id ? row : r) : [row, ...st.rows], view: "detail", detailId: id, mode: "add", form: null, formOriginal: null, errors: {}, modal: null }));
+    this.toast("success", edit ? "Berhasil menyimpan data" : (this.isC() ? "Konten berhasil dibuat" : "Content type berhasil dibuat"), row.name + (edit ? " telah diperbarui." : " telah ditambahkan dengan ID " + id + "."));
+  }
+  commitDelete() {
+    const r = this.state.rows.find(x => x.id === this.state.detailId);
+    this.setState(s => ({ rows: s.rows.filter(x => x.id !== s.detailId), view: "list", detailId: null, modal: null }));
+    if (r) this.toast("success", "Berhasil menghapus data", r.name + " telah dihapus.");
+  }
+  openDetail(r) { this.setState({ view: "detail", detailId: r.id }); }
+
+  formScreen() {
+    const h = React.createElement; const { Button, Input, Select, TextArea, Toggle } = this.ns();
+    const isC = this.isC(), s = this.state, f = s.form, e = s.errors, edit = s.mode === "edit";
+    if (!f) return null;
+    const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px 48px" };
+    const acts = h("div", { style: { display: "flex", gap: 12 } },
+      h(Button, { variant: "secondary", size: "s", onClick: () => this.leaveForm(false) }, "Batal"),
+      h(Button, { variant: "primary", size: "s", disabled: edit && !this.dirty(), leftIcon: this.icon("save", 16), onClick: () => this.submit() }, "Simpan"));
+    const status = this.field("Status", h("div", { style: { display: "flex", alignItems: "center", gap: 10, height: 44 } }, h(Toggle, { checked: !!f.active, variant: "success", onChange: (v) => this.setForm({ active: v }) }), h("span", { style: { fontSize: 14, fontWeight: 600, color: f.active ? "var(--success-600)" : "var(--color-text-tertiary)" } }, f.active ? "Active" : "Non-active")));
+    const nameField = this.field("Name", h(Input, { size: "m", placeholder: isC ? "Nama Konten" : "Nama Content Type", value: f.name, error: !!e.name, onChange: (ev) => this.setForm({ name: ev.target.value }) }), true, e.name);
+    if (!isC) {
+      return h("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+        this.headerCard(edit ? "Edit Content Type" : "Add Content Type", null, edit ? "Perubahan akan langsung berlaku" : "Write Date dibuat otomatis oleh sistem saat disimpan", acts, () => this.leaveForm(false)),
+        this.card(h("div", null, this.secHead("Informasi Content Type"), h("div", { style: grid }, nameField, status))));
+    }
+    const pick = (key, name) => () => this.setForm({ [key]: name });
+    const slug = String(f.name || "konten").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "konten";
+    const target = (chk, label, node) => h("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, chk, node);
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: 24 } },
+      this.headerCard(edit ? "Edit Content" : "Add Content", null, edit ? "Perubahan akan langsung berlaku di aplikasi mobile" : "Konten baru akan dikirim ke aplikasi mobile sesuai target distribusi", acts, () => this.leaveForm(false)),
+      this.card(h("div", null, this.secHead("Informasi Konten"),
+        h("div", { style: grid },
+          status,
+          this.field("Content Type", h(Select, { size: "m", placeholder: "Tipe Konten", options: this.types(), value: f.typeName, error: !!e.typeName, onChange: (v) => this.setForm({ typeName: v }) }), true, e.typeName),
+          nameField,
+          this.field("Placement", h(Select, { size: "m", placeholder: "Penempatan Konten", options: this.placements(), value: f.placement, error: !!e.placement, onChange: (v) => this.setForm({ placement: v }) }), true, e.placement),
+          this.field("Start Date", this.dateBox(f.start, (v) => this.setForm({ start: v }), !!e.start), true, e.start),
+          this.field("End Date", this.dateBox(f.end, (v) => this.setForm({ end: v }), !!e.end), true, e.end),
+          h("div", { key: "d", style: { gridColumn: "1 / -1" } }, this.field("Description", h(TextArea, { placeholder: "Deskripsi konten", value: f.desc, error: !!e.desc, onChange: (ev) => this.setForm({ desc: ev.target.value }) }), true, e.desc))))),
+      this.card(h("div", null, this.secHead("Berkas Konten", "Unggah berkas atau isi tautan konten"),
+        h("div", { style: grid },
+          this.field("Content File", this.dropzone(f.file, pick("file", "banner-" + slug + ".jpg"), () => this.setForm({ file: "" }))),
+          this.field("Content Link", h(Input, { size: "m", placeholder: "https://", value: f.link, disabled: !!f.file, onChange: (ev) => this.setForm({ link: ev.target.value }) }), false, null, f.file ? "Hapus berkas untuk mengisi tautan" : "Dipakai bila tidak ada berkas yang diunggah")))),
+      this.card(h("div", null, this.secHead("Target Distribusi", "Atur sales area, tipe outlet dan partner penerima konten"),
+        h("div", { style: grid },
+          target(this.check("Untuk semua Sales Area", f.allSales, (v) => this.setForm({ allSales: v })), null,
+            f.allSales ? null : h("div", { key: "sa" }, this.multiSelect({ label: "Sales Area Tertentu", placeholder: "Pilih Sales Area", options: this.salesAreas(), values: f.sales, onChange: (v) => this.setForm({ sales: v }) }), e.sales ? h("div", { style: { fontSize: 12, color: "var(--error-500)", marginTop: 4 } }, e.sales) : null)),
+          target(this.check("Untuk semua Tipe Outlet", f.allOutlet, (v) => this.setForm({ allOutlet: v })), null,
+            f.allOutlet ? null : h("div", { key: "ot" }, this.multiSelect({ label: "Outlet Type Tertentu", placeholder: "Pilih Outlet Type", options: this.outletTypes(), values: f.outlets, onChange: (v) => this.setForm({ outlets: v }) }), e.outlets ? h("div", { style: { fontSize: 12, color: "var(--error-500)", marginTop: 4 } }, e.outlets) : null)),
+          target(this.check("Semua Partner diikutsertakan", f.allPartner, (v) => this.setForm({ allPartner: v })), null,
+            f.allPartner ? null : h("div", { key: "ip", style: { display: "flex", flexDirection: "column", gap: 12 } },
+              edit ? this.check("Update Partner Tertentu yang Mendapat Konten (import ulang included partner)", f.updInc, (v) => this.setForm({ updInc: v })) : null,
+              (!edit || f.updInc) ? this.field("Partner Tertentu yang Mendapat Konten", this.dropzone(f.incFile, pick("incFile", "partner-include.csv"), () => this.setForm({ incFile: "" }), "Import included partner (CSV)")) : h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "File saat ini: " + (f.incFile || "—")))),
+          target(this.check("Ada Partner yang tidak diikutsertakan", f.anyExc, (v) => this.setForm({ anyExc: v })), null,
+            !f.anyExc ? null : h("div", { key: "ep", style: { display: "flex", flexDirection: "column", gap: 12 } },
+              edit ? this.check("Update Partner Tertentu yang Tidak Mendapat Konten (import ulang excluded partner)", f.updExc, (v) => this.setForm({ updExc: v })) : null,
+              (!edit || f.updExc) ? this.field("Partner Tertentu yang Tidak Mendapat Konten", this.dropzone(f.excFile, pick("excFile", "partner-exclude.csv"), () => this.setForm({ excFile: "" }), "Import excluded partner (CSV)")) : h("span", { style: { fontSize: 12, color: "var(--color-text-tertiary)" } }, "File saat ini: " + (f.excFile || "—"))))),
+        h("div", { style: { marginTop: 20 } }, h("a", { href: "#", onClick: (ev) => { ev.preventDefault(); this.toast("success", "Template diunduh", "import_partner_content.csv siap diisi."); }, style: { fontSize: 14, fontWeight: 600 } }, "Download Template Import Include/Exclude Partner"))))
+    );
+  }
+
+  /* ---------------- modal + toasts ---------------- */
+  buildModal() {
+    const h = React.createElement; const { Button, Alert } = this.ns(); const m = this.state.modal; if (!m) return null;
+    const close = () => this.setState({ modal: null });
+    const foot = (secLabel, priLabel, onPri, danger) => h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } },
+      h(Button, { variant: "secondary", size: "s", onClick: close }, secLabel),
+      h(Button, { variant: "primary", size: "s", style: danger ? { background: "var(--error-500)", borderColor: "var(--error-500)" } : undefined, onClick: onPri }, priLabel));
+    const txt = (t) => h("div", { style: { fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, t);
+    if (m.type === "save") return { open: true, onClose: close, closeOnOverlay: true, title: "Simpan", size: "m", children: txt(this.state.mode === "edit" ? "Simpan perubahan data yang kamu lakukan?" : "Simpan data yang kamu masukkan?"), footer: foot("Batalkan", "Simpan", () => this.commitSave()) };
+    if (m.type === "delete") { const r = this.state.rows.find(x => x.id === this.state.detailId);
+      return { open: true, onClose: close, closeOnOverlay: true, title: this.isC() ? "Hapus Konten" : "Hapus Content Type", size: "m",
+        children: h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } }, txt("Menghapus " + (r ? r.name : "") + "?"), h(Alert, { state: "warning", title: "Tindakan permanen" }, "Data yang sudah dihapus tidak dapat dikembalikan.")),
+        footer: foot("Batalkan", "Hapus", () => this.commitDelete(), true) }; }
+    return { open: true, onClose: close, closeOnOverlay: true, title: "Batalkan Perubahan?", size: "m",
+      children: h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } }, txt("Yakin ingin keluar tanpa menyimpan?"), h(Alert, { state: "warning", title: "Perubahan belum disimpan" }, "Perubahan yang sudah Anda buat akan hilang jika keluar sekarang.")),
+      footer: h("div", { style: { display: "flex", justifyContent: "flex-end", gap: 12, width: "100%" } }, h(Button, { variant: "secondary", size: "s", onClick: close }, "Lanjut Edit"), h(Button, { variant: "primary", size: "s", style: { background: "var(--error-500)", borderColor: "var(--error-500)" }, onClick: () => this.leaveForm(true) }, "Ya, Batalkan")) };
+  }
+  buildToasts() {
+    const h = React.createElement;
+    const FILLED = { info: { bg: "var(--info-100)", accent: "var(--info-500)", title: "var(--info-800)", msg: "var(--info-500)", icon: "InfoFilledIcon" }, success: { bg: "var(--success-100)", accent: "var(--success-600)", title: "var(--success-800)", msg: "var(--success-600)", icon: "CheckFilledIcon" } };
+    return h("div", { style: { position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", zIndex: 9999, display: "flex", flexDirection: "column", gap: 10, alignItems: "center" } },
+      this.state.toasts.map(t => { const f = FILLED[t.state] || FILLED.info;
+        return h("div", { key: t.id, role: "status", style: { display: "flex", gap: 10, alignItems: "center", minWidth: 340, maxWidth: 560, padding: "10px 14px", background: f.bg, border: "1px solid " + f.accent, borderRadius: "var(--radius-base)", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-md)", boxSizing: "border-box", animation: "prm-fade .18s ease" } },
+          h("span", { style: { display: "inline-flex", flexShrink: 0 } }, this.iconColored(f.icon, 20, f.accent)),
+          h("div", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px" } }, h("span", { style: { fontWeight: 700, color: f.title } }, t.title + " "), h("span", { style: { color: f.msg } }, t.msg)),
+          h("button", { type: "button", "aria-label": "Tutup", onClick: () => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== t.id) })), style: { background: "none", border: "none", cursor: "pointer", padding: 2, display: "inline-flex" } }, this.iconColored("CloseIcon", 18, f.accent))); }));
+  }
+
+  renderVals() {
+    const s = this.state, h = React.createElement, { Modal } = this.ns();
+    const key = this.isC() ? "manage-content" : "content-type";
+    const region = s.view === "detail" ? this.detailScreen() : s.view === "form" ? this.formScreen() : this.listScreen();
+    const mp = this.buildModal();
+    return {
+      pageRegion: h("div", { style: { width: "100%", animation: "prm-fade .2s ease" } }, region, this.buildDrawer(), mp ? h(Modal, mp) : null, this.buildToasts()),
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: this.icon("SearchOutlineIcon") },
+      sideClass: "cmp-side" + (s.sideCollapsed ? " is-collapsed" : ""),
+      sideCollapsed: !!s.sideCollapsed, sideExpanded: !s.sideCollapsed,
+      sideToggleLabel: s.sideCollapsed ? "Perluas menu" : "Tutup menu",
+      toggleSidebar: () => this.setState(st => ({ sideCollapsed: !st.sideCollapsed })),
+      sidebarProps: {
+        collapsed: !!s.sideCollapsed, activeKey: key, defaultExpanded: ["content-management"],
+        onSelect: (k) => { const go = { "manage-roles": "Account Management.dc.html#roles", "manage-users": "Account Management.dc.html#users", "md-bp": "Master Data.dc.html#bp", "product-list": "Master Data.dc.html#product", "product-rule": "Master Data.dc.html#rule", "standar-stok": "Standard Stock Management.dc.html", "npd-setting": "NPD Setting.dc.html", "mhs-setting": "MHS Setting.dc.html", "target-sku-setting": "Target SKU Setting.dc.html", "order": "Order.dc.html", "retur": "Retur.dc.html", "bp": "Business Partner Management.dc.html", "parameter": "Parameter.dc.html", "manage-project": "Manage Project.dc.html", "target-management": "Target Management.dc.html", "target-management-sl": "Target Management SL.dc.html", "target-mvp": "Target Mngmt MVP.dc.html", "manage-content": "Manage Content.dc.html", "content-type": "Content Type.dc.html" }[k]; if (go) window.location.href = go; },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [
+            { key: "manage-roles", label: "Manage Roles" }, { key: "manage-users", label: "Manage Users" } ] },
+          { key: "project", label: "Project", icon: "project-plus", children: [ { key: "project-list", label: "Coming Soon" } ] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [
+            { key: "md-bp", label: "Business Partner" },
+            { key: "product", label: "Product", children: [ { key: "product-list", label: "Product List" }, { key: "product-rule", label: "Product Rule" } ] },
+            { key: "employee", label: "Employee" }, { key: "holiday", label: "Holiday" }, { key: "consumer-data", label: "Consumer Data" } ] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [
+            { key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" } ] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [
+            { key: "product-configuration", label: "Product Configuration", children: [ { key: "standar-stok", label: "Standar Stok" }, { key: "npd-setting", label: "NPD Setting" }, { key: "mhs-setting", label: "MHS Setting" }, { key: "target-sku-setting", label: "Target SKU Setting" } ] } ] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [ { key: "order", label: "Order" }, { key: "retur", label: "Retur" } ] },
+          { key: "bp", label: "BP Management", icon: "account-mgmt" },
+          { key: "parameter", label: "Parameter", icon: "note-list" },
+          { key: "manage-project", label: "Manage Project", icon: "project-plus" },
+          { key: "target-management", label: "Target Management", icon: "visit-list" },
+          { key: "target-management-sl", label: "Target Management MVP", icon: "visit-list" },
+          { key: "target-mvp", label: "Target Mngmt MVP", icon: "visit-list" },
+          { key: "content-management", label: "Content Management", icon: "note-list", children: [ { key: "manage-content", label: "Manage Content" }, { key: "content-type", label: "Content Type" } ] },
+        ],
+      },
+      navProps: {
+        left: h("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, h("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "var(--color-text-primary)" } }, this.navDateText()), h("span", { style: { fontWeight: 400, fontSize: 12, lineHeight: "18px", color: "var(--color-text-tertiary)", fontVariantNumeric: "tabular-nums" } }, this.navClock())),
+        user: { name: "M. Lutfi Maulana", role: "Technology Solution", status: "active" },
+      },
+    };
+  }
+}</script>
+</body>
+</html>

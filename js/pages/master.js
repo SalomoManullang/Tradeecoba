@@ -69,8 +69,8 @@
       (!q.q || (s.name + ' ' + s.customer_id).toLowerCase().includes(q.q.toLowerCase())));
     const so12 = (cid) => months.reduce((t, m) => t + Object.values((DB.state.sales[cid] || {})[m] || {}).reduce((a, v) => a + v[0], 0), 0);
     return {
-      title: 'Master Toko', html: `<div class="page-head"><div><h1>Master Toko</h1><div class="sub">${stores.length} toko dalam scope Anda</div></div></div>
-      <form class="card card-body py-2 mb-3 d-flex flex-row gap-2" data-action="filter" data-path="/master/stores">
+      title: 'Master Toko', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Master Toko</h1><div class="sub">${stores.length} toko dalam scope Anda</div></div></div>
+      <form class="card card-body py-2 mb-3 d-flex flex-row gap-2 cps-filter" data-action="filter" data-path="/master/stores">
         <select name="channel" class="form-control form-control-sm" style="width:auto"><option value="">Semua channel</option>
           ${DB.t('channels').map((c) => `<option value="${c.code}" ${h.sel(q.channel === c.code)}>${esc(c.name)}</option>`).join('')}</select>
         <input name="q" class="form-control form-control-sm" style="max-width:260px" placeholder="Cari nama / ID" value="${esc(q.q)}">
@@ -78,7 +78,7 @@
       <div class="card"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
         <thead><tr><th>ID</th><th>Nama</th><th>Channel</th><th>DC</th><th>Kota</th><th class="num">Sell out 12 bln</th></tr></thead>
         <tbody>${stores.map((s) => `<tr><td><code>${s.customer_id}</code></td><td>${esc(s.name)}</td><td>${esc((DB.t('channels').find((c) => c.code === s.channel_code) || {}).name)}</td>
-          <td>${esc((DB.t('dcs').find((d) => d.code === s.dc_code) || {}).name)}</td><td>${esc(s.city)}</td><td class="num">${h.rpShort(so12(s.customer_id))}</td></tr>`).join('')}</tbody></table></div></div>`,
+          <td>${esc((DB.t('dcs').find((d) => d.code === s.dc_code) || {}).name)}</td><td>${esc(s.city)}</td><td class="num">${h.rpShort(so12(s.customer_id))}</td></tr>`).join('')}</tbody></table></div></div></div></div>`,
     };
   });
 

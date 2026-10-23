@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#304DDE">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#304DDE"/>
+    <g transform="translate(430,230)">
+      <rect x="0" y="0" width="340" height="340" rx="28" fill="#ffffff"/>
+      <rect x="44" y="66" width="252" height="40" rx="10" fill="#304DDE"/>
+      <rect x="44" y="138" width="180" height="26" rx="8" fill="#C7D0F5"/>
+      <rect x="44" y="188" width="252" height="26" rx="8" fill="#E5E9EF"/>
+      <rect x="44" y="238" width="220" height="26" rx="8" fill="#E5E9EF"/>
+      <rect x="44" y="288" width="140" height="26" rx="8" fill="#E5E9EF"/>
+    </g>
+  </svg>
+</template>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/tokens/effects.css">
+<link rel="stylesheet" href="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/styles.css">
+<script src="_ds/compass-design-system-2e97fc3c-3134-4598-933e-af0570fce67d/_ds_bundle.js"></script>
+<style>
+  html, body { margin:0; padding:0; }
+  *::-webkit-scrollbar { width:10px; height:10px; }
+  *::-webkit-scrollbar-thumb { background:#D6D6D6; border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
+  @keyframes ssm-fade { from { opacity:0; } to { opacity:1; } }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { opacity:1; height:36px; }
+</style>
+</helmet>
+<div data-screen-label="COMPASS — Standar Stok" style="display:flex; height:100vh; font-family:'Lato',-apple-system,sans-serif; background:#F8F9FD; color:#2A3D4A; overflow:hidden;">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div style="width:240px; flex-shrink:0; border-right:1px solid #D6D6D6; background:#FFFFFF; display:flex; flex-direction:column; box-sizing:border-box;">
+    <div style="height:64px; display:flex; align-items:center; justify-content:space-between; padding:20px 16px 12px 20px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.CompassLogo" variant="color" style="width:148px" hint-size="148px,30px"></x-import>
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.DoubleChevron" direction="left" size="s" hint-size="20px,20px"></x-import>
+    </div>
+    <div style="padding:12px 20px 4px; box-sizing:border-box;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ menuSearchProps }}" hint-size="200px,36px"></x-import>
+    </div>
+    <div style="flex:1; overflow-y:auto;">
+      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.SidebarMenu" dc-props="{{ sidebarProps }}" hint-size="240px,420px"></x-import>
+    </div>
+  </div>
+
+  <!-- ============ MAIN ============ -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.NavigationTop" dc-props="{{ navProps }}" hint-size="100%,76px"></x-import>
+
+    <div style="flex: 1; overflow: auto; background: #F8F9FD; padding: 24px 24px 48px; box-sizing: border-box; width: 100%">
+
+      <!-- ==================== LIST VIEW ==================== -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}" style="width: 100%">
+      <div style="max-width:1600px; margin:0 auto; animation:ssm-fade .2s ease;">
+
+        <!-- Content card -->
+        <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; display:flex; flex-direction:column; gap:20px; box-sizing:border-box;">
+
+          <!-- Title -->
+          <div style="margin-bottom:8px;">
+            <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:24px; line-height:32px; color:#1F1F1F;">Standar Stok</div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="margin-bottom:12px;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Tab" dc-props="{{ levelTabProps }}" hint-size="100%,44px"></x-import>
+          </div>
+
+          <!-- Toolbar -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ searchProps }}" style="width:300px" hint-size="300px,44px"></x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ filterProps }}" hint-size="116px,44px">{{ filterLabel }}</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ importBtnProps }}" hint-size="104px,44px">Impor</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ exportBtnProps }}" hint-size="104px,44px">Ekspor</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ copyBtnProps }}" hint-size="160px,44px">Salin Pengaturan</x-import>
+            </div>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ addBtnProps }}" hint-size="140px,44px">Tambah Item</x-import>
+          </div>
+
+          <!-- Active filter chips -->
+          <sc-if value="{{ filterBar }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:16px;">{{ filterBar }}</div>
+          </sc-if>
+
+          <!-- Bulk action bar -->
+          <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#EEF1FE; border:1px solid #D9E0FB; border-radius:8px; animation:ssm-fade .18s ease; flex-wrap:wrap;">
+              <span style="font-size:14px; font-weight:700; color:#304DDE;">{{ selectionLabel }}</span>
+              <div style="width:1px; height:20px; background:#C7D0F5;"></div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ bulkActivateProps }}" hint-size="108px,36px">Aktifkan</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ bulkDeactivateProps }}" hint-size="116px,36px">Nonaktifkan</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ bulkEditProps }}" hint-size="150px,36px">Ubah Stok Massal</x-import>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ revampProps }}" hint-size="132px,36px">Revamp / Ganti</x-import>
+              <div style="flex:1;"></div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ clearSelProps }}" hint-size="130px,36px">Batalkan pilihan</x-import>
+            </div>
+          </sc-if>
+
+          <!-- Table / states -->
+          <div style="min-height:360px;">
+            {{ tableRegion }}
+          </div>
+
+          <!-- Pagination -->
+          <sc-if value="{{ showPagination }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-family:'Lato'; font-size:14px; line-height:20px; color:#2A3D4A;">Item per halaman</span>
+                <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ perPageProps }}" style="width:84px" hint-size="84px,38px"></x-import>
+                <span style="font-family:'Lato'; font-size:14px; line-height:20px; letter-spacing:0.25px; color:#2A3D4A;">{{ totalLabel }}</span>
+              </div>
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.PageNumbers" dc-props="{{ pageProps }}" hint-size="260px,34px"></x-import>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ==================== DETAIL VIEW ==================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Detail Standar Stok" style="max-width:1600px; margin:0 auto; animation:ssm-fade .2s ease;">
+
+        <!-- Detail header -->
+        <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; display:flex; align-items:flex-start; justify-content:space-between; gap:24px; box-sizing:border-box; margin-bottom:24px;">
+          <div style="display:flex; align-items:center; gap:16px; min-width:0;">
+            <a href="#" onClick="{{ backToList }}" style="display:inline-flex; align-items:center; gap:6px; color:#304DDE; font-family:'Lato'; font-weight:600; font-size:14px; line-height:20px; text-decoration:none; white-space:nowrap;">
+              <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Icon" name="ChevronLeftIcon" size="18" color="#304DDE" hint-size="18px,18px"></x-import>Kembali
+            </a>
+            <div style="width:1px; align-self:stretch; background:#D6D6D6;"></div>
+            <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-family:'Lato'; font-weight:700; font-size:22px; line-height:28px; color:#2A3D4A;">{{ dCode }}</span>
+                {{ dHeaderTags }}
+              </div>
+              <div style="font-family:'Lato'; font-weight:600; font-size:14px; line-height:20px; color:#2A3D4A;">{{ dProduct }}</div>
+              <div style="font-family:'Lato'; font-weight:400; font-size:12px; line-height:16px; color:#ADADAD;">{{ dCaption }}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ dToggleActiveProps }}" hint-size="120px,36px">{{ dToggleActiveLabel }}</x-import>
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ dSaveProps }}" hint-size="150px,36px">Simpan Perubahan</x-import>
+          </div>
+        </div>
+
+        <!-- Tabbed info card -->
+        <div style="background:#FFFFFF; border-radius:8px; box-shadow:0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -1px rgba(0,0,0,0.06); padding:24px; box-sizing:border-box; margin-bottom:24px;">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Tab" dc-props="{{ detailTabProps }}" hint-size="100%,44px"></x-import>
+
+          <!-- Tab: Detail & Ubah -->
+          <sc-if value="{{ detailTabInfo }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:32px;">
+              <div style="margin-bottom:24px;">{{ dEditAlert }}</div>
+              <div style="font-family:'Lato'; font-weight:700; font-size:16px; line-height:24px; color:#2A3D4A; padding-bottom:16px; border-bottom:1px solid #D6D6D6; margin-bottom:24px;">Informasi Record</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px 64px; margin-bottom:32px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">ID</span><span style="font-weight:700; font-size:14px; color:#2A3D4A;">{{ dId }}</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">{{ dKeyLabel }}</span><span style="font-weight:700; font-size:14px; color:#2A3D4A;">{{ dEntity }}</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">Default Code</span><span style="font-weight:700; font-size:14px; color:#304DDE;">{{ dCode }}</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">Produk</span><span style="font-weight:700; font-size:14px; color:#2A3D4A;">{{ dProduct }}</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">Kategori</span><div>{{ dCategoryTag }}</div></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:16px;"><span style="font-size:14px; color:#5E6C77;">Write Date</span><span style="font-weight:700; font-size:14px; color:#2A3D4A;">{{ dWriteDate }}</span></div>
+              </div>
+
+              <div style="font-family:'Lato'; font-weight:700; font-size:16px; line-height:24px; color:#2A3D4A; padding-bottom:16px; border-bottom:1px solid #D6D6D6; margin-bottom:24px;">Pengaturan Stok</div>
+              <div style="display:grid; grid-template-columns:320px 280px; gap:24px 64px; align-items:flex-start;">
+                <div>
+                  <div style="display:flex; align-items:flex-start; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                      <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Input" dc-props="{{ dStockInputProps }}" hint-size="260px,64px"></x-import>
+                    </div>
+                    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.IconButton" dc-props="{{ dStockResetProps }}" hint-size="44px,44px"></x-import>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:13px; font-weight:600; color:#2A3D4A; margin-bottom:6px;">Status</div>
+                  <div style="display:flex; align-items:center; gap:10px; height:44px;">
+                    <span style="font-size:14px; font-weight:600; color:{{ dActiveColor }};">{{ dActiveText }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- Tab: Riwayat Perubahan -->
+          <sc-if value="{{ detailTabHistory }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:32px; display:flex; flex-direction:column; gap:24px;">
+              <div style="font-family:'Lato'; font-weight:700; font-size:16px; line-height:24px; color:#2A3D4A;">Riwayat Perubahan Record</div>
+              {{ dHistoryTable }}
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <!-- ============ FILTER DRAWER ============ -->
+  <div onClick="{{ closeFilter }}" style="{{ backdropStyle }}">
+    <div onClick="{{ stopProp }}" style="{{ drawerStyle }}">
+      <div style="flex:1; min-height:0; overflow:auto; padding:24px; display:flex; flex-direction:column; gap:24px; box-sizing:border-box;">
+        <div style="height:28px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+          <span style="font-family:'Lato'; font-weight:700; font-size:22px; line-height:28px; color:#2A3D4A;">Filter</span>
+          <span onClick="{{ closeFilter }}" style="cursor:pointer; display:inline-flex;">
+            <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Icon" name="CloseIcon" size="24" color="#2A3D4A" hint-size="24px,24px"></x-import>
+          </span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Select" dc-props="{{ drawerStatusProps }}" hint-size="100%,64px"></x-import>
+          <div>
+            <div style="font-size:13px; font-weight:600; color:#2A3D4A; margin-bottom:6px;">Rentang Standard Stock</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="flex:1; display:flex; align-items:center; gap:8px; height:44px; border:1px solid #D6D6D6; border-radius:4px; padding:0 12px; background:#fff;">
+                <span style="font-size:13px; color:#78868F;">Min</span>
+                <input value="{{ drawerMin }}" onInput="{{ onDrawerMin }}" placeholder="0" style="border:none; outline:none; width:100%; font-size:14px; color:#2A3D4A; font-family:'Lato';">
+              </div>
+              <span style="color:#B9C2C7;">–</span>
+              <div style="flex:1; display:flex; align-items:center; gap:8px; height:44px; border:1px solid #D6D6D6; border-radius:4px; padding:0 12px; background:#fff;">
+                <span style="font-size:13px; color:#78868F;">Max</span>
+                <input value="{{ drawerMax }}" onInput="{{ onDrawerMax }}" placeholder="∞" style="border:none; outline:none; width:100%; font-size:14px; color:#2A3D4A; font-family:'Lato';">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0; padding:24px; display:flex; gap:12px; align-items:center; box-sizing:border-box; border-top:1px solid #EBEBEB;">
+        <sc-if value="{{ drawerAnyFilled }}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ hapusFilterProps }}" hint-size="120px,36px">Hapus Filter</x-import>
+        </sc-if>
+        <div style="flex:1;"></div>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ batalFilterProps }}" hint-size="64px,36px">Batal</x-import>
+        <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Button" dc-props="{{ terapkanFilterProps }}" hint-size="90px,36px">Terapkan</x-import>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal host -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="COMPASSDesignSystem_2e97fc.Modal" dc-props="{{ modalProps }}" hint-size="0,0"></x-import>
+  </sc-if>
+
+  <!-- Toast host -->
+  <div style="position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; align-items:center;">
+    {{ toastStack }}
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;tableDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;xs&quot;,&quot;s&quot;,&quot;m&quot;],&quot;default&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tabel&quot;},&quot;simulateEmpty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Page States&quot;},&quot;simulateError&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Page States&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const mk = this.buildData();
+    this.state = {
+      view: "list", level: "account",
+      accountData: mk.account, storeData: mk.store,
+      search: "", filterCategory: "", filterActive: "All", filterMin: "", filterMax: "",
+      selAccount: [], selStore: [],
+      page: 1, perPage: "10", sortKey: "", sortDir: null,
+      loading: false,
+      filterOpen: false, filterDraft: {},
+      detailId: null, detailTab: "info", detailForm: {},
+      modal: null, form: {}, toasts: [],
+      audit: mk.audit,
+    };
+    this._tid = 0;
+  }
+
+  /* ---------------- data ---------------- */
+  buildData() {
+    const products = [
+      ["WD-CF-014", "Wardah Colorfit Velvet Lip Mousse", "NPD / Promo"],
+      ["WD-LT-002", "Wardah Lightening Day Cream", "Regular"],
+      ["WD-UV-030", "Wardah UV Shield Essential SPF35", "Regular"],
+      ["WD-ND-041", "Wardah Nature Daily Aloe Serum", "Regular"],
+      ["MO-PS-021", "Make Over Powerstay Matte Powder", "Regular"],
+      ["MO-HM-007", "Make Over Ultra Hi-Matte Lipstick", "NPD / Promo"],
+      ["MO-HE-033", "Make Over Hydrastylo Eyeliner", "Regular"],
+      ["EM-BS-005", "Emina Bright Stuff Face Wash", "Regular"],
+      ["EM-SB-011", "Emina Sun Battle SPF45", "Event"],
+      ["EM-CL-018", "Emina Cheeklit Pressed Blush", "NPD / Promo"],
+      ["EM-CM-027", "Emina Creamatte Lip Cream", "Regular"],
+      ["KF-OA-003", "Kahf Oil & Acne Face Wash", "Regular"],
+      ["KF-EN-009", "Kahf Energizing Facial Wash", "Event"],
+      ["KF-DE-015", "Kahf Triple Action Deodorant", "Regular"],
+      ["IP-MS-022", "Instaperfect Mattesetter Lip Matte", "NPD / Promo"],
+      ["PT-HT-006", "Putri Hair Tonic Ginseng", "Regular"],
+    ];
+    const accounts = [
+      ["ACC-1001", "Guardian"], ["ACC-1002", "Watsons"], ["ACC-1003", "Alfamart"],
+      ["ACC-1004", "Indomaret"], ["ACC-1005", "Transmart"], ["ACC-1006", "Hypermart"],
+    ];
+    const partners = [
+      ["BP-50821", "Guardian Grand Indonesia"], ["BP-50822", "Watsons Central Park"],
+      ["BP-50823", "Alfamart Kemang Raya"], ["BP-50824", "Indomaret Sudirman 12"],
+      ["BP-50825", "Transmart Cempaka Putih"], ["BP-50826", "Guardian Pondok Indah Mall"],
+    ];
+    const M = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    const dt = (d, mo) => `${d} ${M[mo]} 2024`;
+    let idc = 4400;
+    const gen = (keys, count) => {
+      const out = []; let ki = 0, pi = 0;
+      for (let i = 0; i < count; i++) {
+        const k = keys[ki % keys.length];
+        const p = products[pi % products.length];
+        const stock = [4, 6, 8, 10, 12, 15, 18, 20, 24, 30][(i * 7) % 10];
+        const active = (i % 5 !== 0);
+        out.push({ id: "SS-" + (++idc), key: k[0], keyName: k[1], code: p[0], product: p[1], category: p[2], stock, active, writeDate: dt(1 + (i * 3) % 27, (i * 2) % 12) });
+        pi++; if (pi % products.length === 0) ki++;
+      }
+      return out;
+    };
+    const audit = [
+      { action: "Bulk Deactivate", by: "M. Lutfi Maulana", when: "02 Jul 2024 14:20", field: "Active", oldv: "true (×12)", newv: "false (×12)", summary: "Nonaktifkan 12 record produk revamp-out" },
+      { action: "Import", by: "Fajar Wibowo", when: "01 Jul 2024 09:05", field: "—", oldv: "—", newv: "128 rows", summary: "Impor Excel Account Item — 128 valid" },
+    ];
+    return { account: gen(accounts, 44), store: gen(partners, 44), audit };
+  }
+
+  /* ---------------- helpers ---------------- */
+  ns() { return window.COMPASSDesignSystem_2e97fc || {}; }
+  icon(name, size) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20 }) : null; }
+  cycleSort(key) {
+    this.setState(s => {
+      if (s.sortKey !== key) return { sortKey: key, sortDir: "asc", page: 1 };
+      if (s.sortDir === "asc") return { sortDir: "desc", page: 1 };
+      if (s.sortDir === "desc") return { sortKey: "", sortDir: null, page: 1 };
+      return { sortDir: "asc", page: 1 };
+    });
+  }
+  iconColored(name, size, color) { const { Icon } = this.ns(); return Icon ? React.createElement(Icon, { name, size: size || 20, color }) : null; }
+  minusCircleSvg(size, color) {
+    return React.createElement("svg", { width: size || 20, height: size || 20, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
+      React.createElement("path", { d: "M12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1ZM12 3C7.02943 3 3 7.02943 3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3ZM16 11C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H8C7.44772 13 7 12.5523 7 12C7 11.4477 7.44772 11 8 11H16Z", fill: color || "#2A3D4A" }));
+  }
+  copySvg(size, color) {
+    const s = size || 20; const c = color || "#2A3D4A";
+    return React.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
+      React.createElement("rect", { x: "9", y: "9", width: "11", height: "12", rx: "2", stroke: c, strokeWidth: "2" }),
+      React.createElement("path", { d: "M5 15H4C3.44772 15 3 14.5523 3 14V5C3 4.44772 3.44772 4 4 4H13C13.5523 4 14 4.44772 14 5V6", stroke: c, strokeWidth: "2", strokeLinecap: "round" }));
+  }
+  curData() { return this.state.level === "account" ? this.state.accountData : this.state.storeData; }
+  setData(rows) { this.setState(this.state.level === "account" ? { accountData: rows } : { storeData: rows }); }
+  curSel() { return this.state.level === "account" ? this.state.selAccount : this.state.selStore; }
+  setSel(keys) { this.setState(this.state.level === "account" ? { selAccount: keys } : { selStore: keys }); }
+  keyLabel() { return this.state.level === "account" ? "Account ID" : "Partner Ref"; }
+  entityLabel() { return this.state.level === "account" ? "Account" : "Business Partner"; }
+  catScheme(c) { return ({ "Regular": "neutral", "NPD / Promo": "blue", "Event": "yellow" })[c] || "neutral"; }
+  fmtDate() { return "02 Jul 2024"; }
+
+  toast(state, title, msg) {
+    const id = ++this._tid;
+    this.setState(s => ({ toasts: [...s.toasts, { id, state, title, msg }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+  addAudit(entry) { this.setState(s => ({ audit: [{ when: this.fmtDate() + " 15:30", by: "M. Lutfi Maulana", ...entry }, ...s.audit] })); }
+
+  /* ---------------- filtering ---------------- */
+  filtered() {
+    const s = this.state;
+    let rows = this.curData().slice();
+    const q = s.search.trim().toLowerCase();
+    if (q) rows = rows.filter(r => (r.id + " " + r.key + " " + r.keyName + " " + r.code + " " + r.product).toLowerCase().includes(q));
+    if (s.filterActive === "Active") rows = rows.filter(r => r.active);
+    if (s.filterActive === "Inactive") rows = rows.filter(r => !r.active);
+    const mn = parseFloat(s.filterMin), mx = parseFloat(s.filterMax);
+    if (!isNaN(mn)) rows = rows.filter(r => r.stock >= mn);
+    if (!isNaN(mx)) rows = rows.filter(r => r.stock <= mx);
+    if (s.sortKey && s.sortDir) {
+      const k = s.sortKey, dir = s.sortDir === "desc" ? -1 : 1;
+      rows.sort((a, b) => { let av = a[k], bv = b[k]; if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); } return av < bv ? -dir : av > bv ? dir : 0; });
+    }
+    return rows;
+  }
+  activeFilterCount() {
+    const s = this.state; let n = 0;
+    if (s.filterActive !== "All") n++;
+    if (s.filterMin) n++; if (s.filterMax) n++;
+    return n;
+  }
+
+  /* ---------------- table region ---------------- */
+  buildTableRegion(filtered, paged) {
+    const NS = this.ns();
+    const { Table, EmptyState, Loader, ErrorState, Tag, Button } = NS;
+    if (this.props.simulateError) {
+      return React.createElement("div", { style: { padding: "48px 0" } },
+        React.createElement(ErrorState, { illustration: this.errorBoxIllustration(200), title: "Gagal Memuat Data", description: "Terjadi kesalahan saat mengambil daftar standar stok. Silakan coba lagi.", actions: React.createElement(Button, { variant: "primary", size: "s", onClick: () => this.refresh() }, "Coba Lagi") }));
+    }
+    if (this.state.loading) {
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, padding: "110px 0", color: "#78868F" } },
+        Loader ? React.createElement(Loader, { size: "l" }) : "Memuat…", React.createElement("div", { style: { fontSize: 14 } }, "Memuat data standar stok…"));
+    }
+    if (this.props.simulateEmpty || this.curData().length === 0) {
+      return React.createElement("div", { style: { padding: "40px 0" } },
+        React.createElement(EmptyState, { colour: "neutral", illustration: this.emptyBoxIllustration(200), icon: "AddPlusOutlineIcon", title: "Belum Ada Standar Stok", description: "Belum ada record dalam cakupan akses Anda. Tambahkan item atau impor dari Excel untuk memulai.",
+          actions: React.createElement("div", { style: { display: "flex", gap: 10 } },
+            React.createElement(Button, { variant: "secondary", size: "s", leftIcon: this.icon("download"), onClick: () => this.openImport() }, "Impor Excel")) }));
+    }
+    if (filtered.length === 0) {
+      return React.createElement("div", { style: { padding: "40px 0" } },
+        React.createElement(EmptyState, { colour: "neutral", icon: "SearchOutlineIcon", title: "Tidak ada hasil", description: "Tidak ada record yang cocok dengan pencarian atau filter Anda.", actions: React.createElement(Button, { variant: "tertiary", size: "s", onClick: () => this.resetFilters() }, "Bersihkan Filter") }));
+    }
+    const columns = [
+      { key: "id", header: "ID", sortable: true, width: 96, render: (r) => React.createElement("span", { style: { fontWeight: 600, color: "#5C6B75", fontVariantNumeric: "tabular-nums" } }, r.id) },
+      { key: "key", header: this.keyLabel(), sortable: true, render: (r) => React.createElement("div", null, React.createElement("div", { style: { fontWeight: 600, color: "#2A3D4A" } }, r.keyName), React.createElement("div", { style: { fontSize: 12, color: "#78868F", fontVariantNumeric: "tabular-nums" } }, r.key)) },
+      { key: "code", header: "Default Code", sortable: true, render: (r) => React.createElement("div", null, React.createElement("div", { style: { fontWeight: 600, color: "#2A3D4A", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, r.product), React.createElement("div", { style: { fontSize: 12, color: "#78868F", fontVariantNumeric: "tabular-nums" } }, r.code)) },
+      { key: "stock", header: "Standard Stock", sortable: true, align: "right", render: (r) => React.createElement("span", { style: { fontWeight: 700, color: "#1F1F1F", fontVariantNumeric: "tabular-nums" } }, r.stock) },
+      { key: "active", header: "Status", sortable: true, align: "center", render: (r) => React.createElement(Tag, { colorScheme: r.active ? "green" : "neutral", size: "s", dot: true }, r.active ? "Aktif" : "Nonaktif") },
+      { key: "writeDate", header: "Write Date", sortable: true, render: (r) => React.createElement("span", { style: { color: "#5C6B75", whiteSpace: "nowrap" } }, r.writeDate) },
+      { key: "action", header: "Action", align: "left", width: 110, render: (r) => React.createElement(Button, { variant: "secondary", size: "xs", onClick: () => this.openDetail(r) }, "Detail") },
+    ];
+    return React.createElement("div", { style: { animation: "ssm-fade .2s ease" } },
+      React.createElement(Table, { columns, data: paged, size: this.props.tableDensity || "s", selectable: true, rowKey: "id", selectedKeys: this.curSel(), onSelectionChange: (keys) => this.setSel(keys), sortKey: this.state.sortKey, sortDir: this.state.sortDir, onSort: (key) => this.cycleSort(key), hoverable: true, style: { border: "none", borderRadius: 0 } }));
+  }
+
+  /* ---------------- generic actions ---------------- */
+  refresh() { this.setState({ loading: true }); setTimeout(() => this.setState({ loading: false }), 700); }
+  switchLevel(level) {
+    if (level === this.state.level) return;
+    this.setState({ level, loading: true, page: 1, search: "", filterCategory: "", filterActive: "All", filterMin: "", filterMax: "" });
+    setTimeout(() => this.setState({ loading: false }), 450);
+  }
+  resetFilters() { this.setState({ search: "", filterCategory: "", filterActive: "All", filterMin: "", filterMax: "", page: 1 }); }
+  removeFilter(kind) {
+    if (kind === "status") this.setState({ filterActive: "All", page: 1 });
+    if (kind === "stock") this.setState({ filterMin: "", filterMax: "", page: 1 });
+  }
+  buildFilterBar() {
+    const s = this.state, chips = [];
+    const chip = (kind, label, value) => React.createElement("div", { key: kind, style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 8px 6px 12px", background: "#EBEBEB", borderRadius: 4, fontFamily: "'Lato',sans-serif", fontSize: 14, lineHeight: "20px", color: "#2A3D4A" } },
+      React.createElement("span", null, React.createElement("span", { style: { fontWeight: 700 } }, label), ": ", value),
+      React.createElement("button", { type: "button", "aria-label": "Hapus filter " + label, onClick: () => this.removeFilter(kind), style: { display: "inline-flex", background: "none", border: "none", cursor: "pointer", padding: 2, color: "#5C6B75" } }, this.icon("CloseIcon", 16)));
+    if (s.filterActive !== "All") chips.push(chip("status", "Status", s.filterActive === "Active" ? "Aktif" : "Nonaktif"));
+    if (s.filterMin || s.filterMax) {
+      const v = s.filterMin && s.filterMax ? s.filterMin + "–" + s.filterMax : s.filterMin ? "≥ " + s.filterMin : "≤ " + s.filterMax;
+      chips.push(chip("stock", "Stok", v));
+    }
+    if (!chips.length) return null;
+    return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", animation: "ssm-fade .18s ease" } },
+      React.createElement("span", { style: { fontFamily: "'Lato',sans-serif", fontSize: 14, fontWeight: 700, color: "#2A3D4A" } }, "Filters by:"),
+      chips,
+      React.createElement("button", { type: "button", onClick: () => this.resetFilters(), style: { display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "4px 4px", fontFamily: "'Lato',sans-serif", fontSize: 14, fontWeight: 700, color: "#304DDE" } }, this.iconColored("RefreshIcon", 18, "#304DDE"), "Hapus Filter"));
+  }
+  clearSelection() { this.setSel([]); }
+  selectedRows() { const set = new Set(this.curSel()); return this.curData().filter(r => set.has(r.id)); }
+  doExport() { const n = this.filtered().length; this.addAudit({ action: "Export", field: "—", oldv: "—", newv: n + " rows", summary: `Ekspor ${this.entityLabel()} sesuai filter` }); this.toast("success", "Ekspor dimulai", `${n} record diekspor ke Excel sesuai filter & cakupan akses.`); }
+
+  /* ---- filter drawer ---- */
+  openFilter() { const s = this.state; this.setState({ filterOpen: true, filterDraft: { category: s.filterCategory, active: s.filterActive, min: s.filterMin, max: s.filterMax } }); }
+  closeFilter() { this.setState({ filterOpen: false }); }
+  setDraft(patch) { this.setState({ filterDraft: { ...this.state.filterDraft, ...patch } }); }
+  clearDraft() { this.setState({ filterDraft: { category: "", active: "All", min: "", max: "" } }); }
+  applyFilter() { const d = this.state.filterDraft; this.setState({ filterCategory: d.category || "", filterActive: d.active || "All", filterMin: d.min || "", filterMax: d.max || "", page: 1, filterOpen: false }); }
+
+  /* ---- detail ---- */
+  detailRow() { return this.curData().find(r => r.id === this.state.detailId) || null; }
+  openDetail(r) { this.setState({ view: "detail", detailId: r.id, detailTab: "info", detailForm: { stock: String(r.stock), active: r.active } }); }
+  backToList(e) { if (e && e.preventDefault) e.preventDefault(); this.setState({ view: "list", detailId: null }); }
+  detailDirty() { const r = this.detailRow(); const f = this.state.detailForm; if (!r) return false; return String(r.stock) !== String(f.stock) || r.active !== f.active; }
+  saveDetail() {
+    const r = this.detailRow(); const f = this.state.detailForm;
+    const stock = parseFloat(f.stock);
+    if (f.stock === "" || isNaN(stock) || stock < 0) { this.toast("error", "Nilai tidak valid", "Standard Stock harus angka ≥ 0."); return; }
+    const rows = this.curData().map(x => x.id === r.id ? { ...x, stock, active: f.active, writeDate: this.fmtDate() } : x);
+    this.setData(rows);
+    this.addAudit({ action: "Edit", field: "Standard Stock / Active", oldv: `${r.stock} / ${r.active}`, newv: `${stock} / ${f.active}`, summary: `Ubah ${r.code} pada ${r.key}` });
+    this.toast("success", "Perubahan tersimpan", `${r.code} pada ${r.key} berhasil diperbarui.`);
+    this.setState({ detailForm: { stock: String(stock), active: f.active } });
+  }
+  toggleDetailActive() {
+    const r = this.detailRow(); const to = !this.state.detailForm.active;
+    const rows = this.curData().map(x => x.id === r.id ? { ...x, active: to, writeDate: this.fmtDate() } : x);
+    this.setData(rows);
+    this.addAudit({ action: to ? "Activate" : "Deactivate", field: "Active", oldv: String(!to), newv: String(to), summary: `${to ? "Aktifkan" : "Nonaktifkan"} ${r.code} pada ${r.key}` });
+    this.setState({ detailForm: { ...this.state.detailForm, active: to } });
+    this.toast("success", to ? "Record diaktifkan" : "Record dinonaktifkan", `${r.code} kini ${to ? "Active" : "Nonaktif"}.`);
+  }
+  detailHistory() {
+    const r = this.detailRow(); if (!r) return [];
+    const base = [
+      { action: "Edit", by: "M. Lutfi Maulana", when: r.writeDate + " 15:30", field: "Standard Stock", oldv: String(Math.max(0, r.stock - 2)), newv: String(r.stock), summary: "Penyesuaian standar stok rutin" },
+      { action: r.active ? "Activate" : "Deactivate", by: "Fajar Wibowo", when: "18 Jun 2024 10:12", field: "Active", oldv: String(!r.active), newv: String(r.active), summary: r.active ? "Aktifkan untuk order suggestion" : "Nonaktifkan (revamp-out)" },
+      { action: "Create", by: "System Import", when: "01 Jun 2024 09:00", field: "—", oldv: "—", newv: String(r.stock), summary: "Dibuat via impor Excel awal" },
+    ];
+    const extra = this.state.audit.filter(a => a.summary && a.summary.includes(r.code)).map(a => ({ ...a }));
+    return [...extra, ...base];
+  }
+
+  /* ---- add ---- */
+  openAdd() { this.setState({ modal: { type: "add" }, form: { key: "", code: "", stock: "", active: true, errors: {} } }); }
+  openImport() { this.setState({ modal: { type: "import" }, form: { attempt: 0, phase: "idle", fileName: "", rows: [], dragOver: false } }); }
+  openCopy() { this.setState({ modal: { type: "copy", step: 1 }, form: { source: "", targets: [], conflict: "skip" } }); }
+  openBulkActivate() { this.setState({ modal: { type: "bulkToggle", to: true } }); }
+  openBulkDeactivate() { this.setState({ modal: { type: "bulkToggle", to: false } }); }
+  openBulkEdit() { this.setState({ modal: { type: "bulkEdit" }, form: { mode: "set", value: "", errors: {} } }); }
+  openRevamp() { const rows = this.selectedRows(); const map = {}; rows.forEach(r => { map[r.id] = { code: "", stock: String(r.stock), carry: true }; }); this.setState({ modal: { type: "revamp", step: 1 }, form: { map } }); }
+  closeModal() { this.setState({ modal: null, form: {} }); }
+
+  productByCode(code) { const seen = {}; this.curData().forEach(r => { seen[r.code] = { name: r.product, category: r.category }; }); return seen[code]; }
+  entityByKey(key) { const seen = {}; this.curData().forEach(r => { seen[r.key] = { name: r.keyName }; }); return seen[key]; }
+  allProducts() { const seen = {}; [...this.state.accountData, ...this.state.storeData].forEach(r => { seen[r.code] = r.product; }); return Object.entries(seen).map(([value, label]) => ({ value, label: value + " — " + label })); }
+  allKeys() { const seen = {}; this.curData().forEach(r => { seen[r.key] = r.keyName; }); return Object.entries(seen).map(([value, name]) => ({ value, label: value + " — " + name })); }
+
+  saveItem() {
+    const f = this.state.form;
+    const errors = {};
+    if (!f.key) errors.key = "Wajib dipilih";
+    if (!f.code) errors.code = "Wajib dipilih";
+    const stock = parseFloat(f.stock);
+    if (f.stock === "" || isNaN(stock)) errors.stock = "Wajib diisi angka";
+    else if (stock < 0) errors.stock = "Tidak boleh negatif";
+    if (f.key && f.code && this.curData().some(r => r.key === f.key && r.code === f.code)) errors.code = "Kombinasi " + this.entityLabel() + " + Produk sudah ada";
+    if (Object.keys(errors).length) { this.setState({ form: { ...f, errors } }); return; }
+    const prod = this.productByCode(f.code), ent = this.entityByKey(f.key);
+    const rec = { id: "SS-" + (5000 + this.curData().length + 1), key: f.key, keyName: ent ? ent.name : f.key, code: f.code, product: prod ? prod.name : f.code, category: prod ? prod.category : "Regular", stock, active: f.active, writeDate: this.fmtDate() };
+    this.setData([rec, ...this.curData()]);
+    this.addAudit({ action: "Create", field: "—", oldv: "—", newv: `${stock}`, summary: `Tambah ${f.code} pada ${f.key}` });
+    this.toast("success", "Item ditambahkan", `Standar stok baru untuk ${f.code} berhasil dibuat.`);
+    this.closeModal();
+  }
+
+  commitBulkToggle() {
+    const to = this.state.modal.to; const ids = new Set(this.curSel());
+    this.setData(this.curData().map(r => ids.has(r.id) ? { ...r, active: to, writeDate: this.fmtDate() } : r));
+    const n = ids.size;
+    this.addAudit({ action: to ? "Bulk Activate" : "Bulk Deactivate", field: "Active", oldv: (!to) + ` (×${n})`, newv: to + ` (×${n})`, summary: `${to ? "Aktifkan" : "Nonaktifkan"} ${n} record` });
+    this.setState({ modal: { type: "result", title: (to ? "Aktivasi" : "Nonaktivasi") + " selesai", rows: [["Total dipilih", n], ["Berhasil", n], ["Gagal", 0]] } });
+    this.setSel([]); this.toast("success", "Bulk action selesai", `${n} record berhasil di${to ? "aktifkan" : "nonaktifkan"}.`);
+  }
+  commitBulkEdit() {
+    const f = this.state.form; const val = parseFloat(f.value); const errors = {};
+    if (f.value === "" || isNaN(val)) errors.value = "Wajib diisi angka";
+    else if (f.mode === "set" && val < 0) errors.value = "Tidak boleh negatif";
+    if (Object.keys(errors).length) { this.setState({ form: { ...f, errors } }); return; }
+    const ids = new Set(this.curSel());
+    this.setData(this.curData().map(r => { if (!ids.has(r.id)) return r; const ns = f.mode === "set" ? val : Math.max(0, r.stock + val); return { ...r, stock: ns, writeDate: this.fmtDate() }; }));
+    const n = ids.size;
+    this.addAudit({ action: "Bulk Edit", field: "Standard Stock", oldv: "(various)", newv: f.mode === "set" ? String(val) : (val >= 0 ? "+" : "") + val, summary: `Ubah stok massal ${n} record` });
+    this.setState({ modal: { type: "result", title: "Ubah stok massal selesai", rows: [["Total dipilih", n], ["Berhasil", n], ["Gagal", 0]] } });
+    this.setSel([]); this.toast("success", "Stok diperbarui", `${n} record berhasil diubah.`);
+  }
+  commitRevamp() {
+    const map = this.state.form.map; const olds = this.selectedRows();
+    let data = this.curData().slice(); const deactIds = new Set(olds.map(o => o.id));
+    data = data.map(r => deactIds.has(r.id) ? { ...r, active: false, writeDate: this.fmtDate() } : r);
+    let added = 0;
+    olds.forEach(o => { const m = map[o.id]; const prod = this.allProducts().find(p => p.value === m.code); const stock = m.carry ? o.stock : Math.max(0, parseFloat(m.stock) || 0); data.unshift({ id: "SS-" + (6000 + (added++)), key: o.key, keyName: o.keyName, code: m.code, product: prod ? prod.label.split(" — ").slice(1).join(" — ") : m.code, category: "NPD / Promo", stock, active: true, writeDate: this.fmtDate() }); });
+    this.setData(data);
+    this.addAudit({ action: "Revamp", field: "Active / Create", oldv: `deactivate ×${olds.length}`, newv: `add ×${added}`, summary: `Revamp: nonaktifkan ${olds.length}, tambah ${added} pengganti (all-or-nothing)` });
+    this.setState({ modal: { type: "result", title: "Revamp selesai", rows: [["Dinonaktifkan", olds.length], ["Ditambahkan", added], ["Gagal", 0], ["Status", "Committed"]] } });
+    this.setSel([]); this.toast("success", "Revamp selesai", `${olds.length} produk lama dinonaktifkan, ${added} pengganti ditambahkan.`);
+  }
+  revampReady() { const map = this.state.form.map || {}; return this.selectedRows().every(o => map[o.id] && map[o.id].code); }
+
+  // ---- File-based import: download template → upload → validate → (fix in file & reupload) → import ----
+  downloadBlob(name, content, mime) {
+    try {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    } catch (e) { /* noop */ }
+  }
+  importKeyCol() { return this.state.level === "store" ? "Business Partner Code" : "Account ID"; }
+  downloadTemplate() {
+    const store = this.state.level === "store"; const keyCol = this.importKeyCol();
+    const ex = store
+      ? [["BP-50821", "WD-LT-002", "12", "Y"], ["BP-50822", "MO-PS-021", "8", "Y"], ["BP-50823", "EM-BS-005", "10", "N"]]
+      : [["ACC-1001", "WD-LT-002", "12", "Y"], ["ACC-1002", "MO-PS-021", "8", "Y"], ["ACC-1003", "EM-BS-005", "10", "N"]];
+    const csv = "\ufeff" + [[keyCol, "Default Code", "Standard Stock", "Active"].join(","), ...ex.map(r => r.join(","))].join("\r\n");
+    this.downloadBlob(`template-standar-stok-${store ? "store-item" : "account-item"}.csv`, csv, "text/csv;charset=utf-8");
+    this.toast("success", "Template diunduh", "Isi template dengan data Anda, lalu unggah kembali di halaman ini.");
+  }
+  // Rows carry a baked validation status for display + error report (fixing happens in the file).
+  importSeed(clean) {
+    const store = this.state.level === "store"; const k = (n) => store ? "BP-508" + n : "ACC-100" + n;
+    const nameOf = (code) => { const p = this.productByCode(code); return p ? p.name : "Produk tidak dikenal"; };
+    const mk = (row, key, code, stock, active, extra) => ({ row, key, code, product: nameOf(code), stock: String(stock), active, status: "valid", ...(extra || {}) });
+    if (clean) {
+      return [
+        mk(2, k(21), "WD-LT-002", 12, "Y"), mk(3, k(21), "MO-PS-021", 8, "Y"),
+        mk(4, k(22), "EM-BS-005", 10, "N"), mk(5, k(23), "KF-OA-003", 6, "Y"),
+        mk(6, k(24), "EM-SB-011", 15, "Y"), mk(7, k(24), "IP-MS-022", 9, "Y"),
+      ];
+    }
+    return [
+      mk(2, k(2), "WD-LT-002", 12, "Y"),
+      mk(3, k(2), "MO-PS-021", 8, "Y"),
+      mk(4, store ? "BP-59999" : "ACC-1099", "EM-BS-005", 10, "Y", { status: "invalid", issue: this.entityLabel(), msg: this.keyLabel() + " tidak ditemukan / di luar cakupan akses", product: "Emina Bright Stuff Face Wash" }),
+      mk(5, k(3), "ZZ-00-000", 6, "Y", { status: "invalid", issue: "Produk", msg: "Default Code tidak dikenal" }),
+      mk(6, k(3), "KF-OA-003", -3, "Y", { status: "invalid", issue: "Standard Stock", msg: "Nilai tidak boleh negatif" }),
+      mk(7, k(4), "EM-SB-011", 15, "Y"),
+      mk(8, k(2), "WD-LT-002", 9, "X", { status: "invalid", issue: "Active", msg: "Nilai Active harus Y atau N" }),
+    ];
+  }
+  pickImportFile() { if (this._impFile) this._impFile.click(); }
+  handleImportFile(fileName) {
+    if (!fileName) return;
+    this.setState({ form: { ...this.state.form, phase: "validating", fileName } });
+    clearTimeout(this._impTid);
+    this._impTid = setTimeout(() => {
+      const attempt = (this.state.form.attempt || 0) + 1;
+      // Simulation: first upload contains invalid rows; after the user fixes the file and re-uploads, it validates clean.
+      const clean = attempt >= 2;
+      const rows = this.importSeed(clean);
+      const invalid = rows.filter(r => r.status === "invalid").length;
+      this.setState({ form: { ...this.state.form, attempt, phase: invalid ? "invalid" : "valid", rows } });
+      if (invalid) this.toast("warning", "Validasi gagal", `${invalid} baris tidak valid. Perbaiki file lalu unggah ulang.`);
+      else this.toast("success", "Validasi berhasil", `${rows.length} baris valid dan siap diimpor.`);
+    }, 1600);
+  }
+  downloadErrorReport() {
+    const rows = (this.state.form.rows || []).filter(r => r.status === "invalid");
+    const keyCol = this.importKeyCol();
+    const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+    const csv = "\ufeff" + [
+      ["Row", keyCol, "Default Code", "Standard Stock", "Active", "Kolom Bermasalah", "Keterangan"].join(","),
+      ...rows.map(r => [r.row, esc(r.key), esc(r.code), esc(r.stock), esc(r.active), esc(r.issue), esc(r.msg)].join(",")),
+    ].join("\r\n");
+    this.downloadBlob(`laporan-error-standar-stok-${this.state.level}.csv`, csv, "text/csv;charset=utf-8");
+    this.toast("info", "Laporan error diunduh", "Perbaiki baris yang ditandai, lalu unggah ulang file.");
+  }
+  commitImport() {
+    const rows = (this.state.form.rows || []).filter(r => r.status === "valid");
+    let data = this.curData().slice(); let added = 0, overwritten = 0;
+    rows.forEach(r => {
+      const stock = parseFloat(r.stock); const active = String(r.active).toUpperCase() !== "N";
+      const idx = data.findIndex(x => x.key === r.key && x.code === r.code);
+      if (idx >= 0) { data[idx] = { ...data[idx], stock, active, writeDate: this.fmtDate() }; overwritten++; }
+      else { const ent = this.entityByKey(r.key), prod = this.productByCode(r.code); data.unshift({ id: "SS-" + (8000 + added), key: r.key, keyName: ent ? ent.name : r.key, code: r.code, product: prod ? prod.name : r.product, category: prod ? prod.category : "Regular", stock, active, writeDate: this.fmtDate() }); added++; }
+    });
+    this.setData(data);
+    this.addAudit({ action: "Import", field: "—", oldv: "—", newv: rows.length + " rows", summary: `Impor Excel ${this.entityLabel()} — ${added} baru, ${overwritten} ditimpa` });
+    this.setState({ modal: { type: "result", title: "Impor selesai", rows: [["Total baris valid", rows.length], ["Ditambahkan", added], ["Ditimpa (update)", overwritten]] } });
+    this.toast("success", "Impor selesai", `${rows.length} record berhasil diimpor.`);
+  }
+
+  copyPreview() {
+    const f = this.state.form; if (!f.source) return { items: [], conflicts: 0 };
+    const src = this.curData().filter(r => r.key === f.source); let items = [], conflicts = 0;
+    f.targets.forEach(tk => { const existing = new Set(this.curData().filter(r => r.key === tk).map(r => r.code)); src.forEach(s => { const conflict = existing.has(s.code); if (conflict) conflicts++; items.push({ target: tk, code: s.code, product: s.product, stock: s.stock, conflict }); }); });
+    return { items, conflicts };
+  }
+  commitCopy() {
+    const f = this.state.form; const { items } = this.copyPreview();
+    let copied = 0, skipped = 0, overwritten = 0; let data = this.curData().slice();
+    items.forEach(it => { const idx = data.findIndex(r => r.key === it.target && r.code === it.code); if (idx >= 0) { if (f.conflict === "overwrite") { data[idx] = { ...data[idx], stock: it.stock, writeDate: this.fmtDate() }; overwritten++; } else skipped++; } else { const ent = this.entityByKey(it.target); data.unshift({ id: "SS-" + (7000 + copied), key: it.target, keyName: ent ? ent.name : it.target, code: it.code, product: it.product, category: "Regular", stock: it.stock, active: true, writeDate: this.fmtDate() }); copied++; } });
+    this.setData(data);
+    this.addAudit({ action: "Copy", field: "—", oldv: "src " + f.source, newv: "tgt " + f.targets.join(", "), summary: `Salin ${items.length} setting → ${f.targets.length} ${this.entityLabel()}` });
+    this.setState({ modal: { type: "result", title: "Salin pengaturan selesai", rows: [["Disalin", copied], ["Dilewati", skipped], ["Ditimpa", overwritten], ["Gagal", 0]] } });
+    this.toast("success", "Salin selesai", `${copied} disalin, ${skipped} dilewati, ${overwritten} ditimpa.`);
+  }
+
+  /* ---------------- render ---------------- */
+  renderVals() {
+    const NS = this.ns(); const { Tag } = NS;
+    const icon = (n, sz) => this.icon(n, sz);
+    const s = this.state;
+    const data = this.curData();
+    const filtered = this.filtered();
+    const per = parseInt(s.perPage, 10);
+    const pageCount = Math.max(1, Math.ceil(filtered.length / per));
+    const page = Math.min(s.page, pageCount);
+    const paged = filtered.slice((page - 1) * per, (page - 1) * per + per);
+    const sel = this.curSel();
+    const statActiveN = data.filter(r => r.active).length;
+    const fcount = this.activeFilterCount();
+    const catOptions = ["Regular", "NPD / Promo", "Event"];
+
+    const FILLED = {
+      info:    { bg: "#CCDDF5", accent: "#0056CC", title: "#002252", msg: "#0056CC", icon: "InfoFilledIcon" },
+      success: { bg: "#D9F2E3", accent: "#33995E", title: "#1A4C2F", msg: "#33995E", icon: "CheckFilledIcon" },
+      warning: { bg: "#FFFBE4", accent: "#9D7B00", title: "#695200", msg: "#9D7B00", icon: "HazardFilledIcon" },
+      error:   { bg: "#FFEDEF", accent: "#E6001C", title: "#5C000B", msg: "#8A0011", icon: "close-circle-filled" },
+    };
+    const toastStack = React.createElement(React.Fragment, null, s.toasts.map(t => {
+      const f = FILLED[t.state] || FILLED.info;
+      const close = () => this.setState(st => ({ toasts: st.toasts.filter(x => x.id !== t.id) }));
+      return React.createElement("div", { key: t.id, role: "status", style: { display: "flex", gap: 10, alignItems: "center", minWidth: 340, maxWidth: 560, padding: "10px 14px", background: f.bg, border: "1px solid " + f.accent, borderRadius: 4, fontFamily: "'Lato',sans-serif", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", boxSizing: "border-box", animation: "ssm-fade .18s ease" } },
+        React.createElement("span", { style: { display: "inline-flex", flexShrink: 0 } }, this.iconColored(f.icon, 20, f.accent)),
+        React.createElement("div", { style: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: "20px" } },
+          t.title ? React.createElement("span", { style: { fontWeight: 700, color: f.title } }, t.title + " ") : null,
+          React.createElement("span", { style: { fontWeight: 400, color: f.msg } }, t.msg)),
+        React.createElement("button", { type: "button", "aria-label": "Tutup", onClick: close, style: { background: "none", border: "none", cursor: "pointer", padding: 2, display: "inline-flex", flexShrink: 0 } }, this.iconColored("CloseIcon", 18, f.accent)));
+    }));
+
+    const vals = {
+      isList: s.view === "list", isDetail: s.view === "detail",
+      backToList: (e) => this.backToList(e),
+      pageSubtitle: s.level === "account"
+        ? "Kelola standar stok tingkat Account Item (customer group). Standar stok membatasi distribusi & menjadi dasar order suggestion (standar − input) saat kunjungan."
+        : "Kelola standar stok tingkat Store Item (business partner). Standar stok membatasi distribusi & menjadi dasar order suggestion (standar − input) saat kunjungan.",
+      statTotal: data.length, statActive: statActiveN, statInactive: data.length - statActiveN, statCategories: new Set(data.map(r => r.category)).size,
+
+      menuSearchProps: { placeholder: "Cari menu...", size: "s", leftIcon: icon("SearchOutlineIcon") },
+      sidebarProps: {
+        activeKey: "standar-stok", defaultExpanded: ["sales-planning", "product-configuration"],
+        onSelect: (k) => { if (k === "order") window.location.href = "Order.dc.html"; },
+        items: [
+          { key: "dashboard", label: "Dashboard", icon: "dashboard-grid" },
+          { key: "account-management", label: "Account Management", icon: "account-mgmt", children: [
+            { key: "users", label: "Manage Roles" }, { key: "roles", label: "Manage Users" },
+          ] },
+          { key: "project", label: "Project", icon: "project-plus", children: [
+            { key: "project-list", label: "Coming Soon" },
+          ] },
+          { key: "master-data", label: "Master Data", icon: "database", children: [
+            { key: "products", label: "Business Partner" }, { key: "business-partners", label: "Product" },
+          ] },
+          { key: "visit-management", label: "Visit Management", icon: "map-pin", children: [
+            { key: "visit-plan", label: "Master Call Plan" }, { key: "visit-report", label: "Visit Report" },
+          ] },
+          { key: "sales-planning", label: "Sales Planning", icon: "visit-list", children: [
+            { key: "product-configuration", label: "Product Configuration", children: [
+              { key: "standar-stok", label: "Standar Stok" },
+            ] },
+          ] },
+          { key: "sales-execution", label: "Sales Execution", icon: "cart", children: [
+            { key: "order", label: "Order" },
+          ] },
+        ],
+      },
+      navProps: {
+        left: React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } },
+          React.createElement("span", { style: { fontWeight: 600, fontSize: 14, lineHeight: "20px", color: "#2A3D4A" } }, "Sel, 2 Juli 2024"),
+          React.createElement("span", { style: { fontWeight: 400, fontSize: 13, lineHeight: "18px", color: "#78868F" } }, "Sales Planning › Product Configuration › " + (s.level === "account" ? "Account Item" : "Store Item"))),
+        user: { name: "M. Lutfi Maulana", role: "Technology Solution", status: "active" },
+      },
+
+      levelTabProps: { variant: "grey", value: s.level, onChange: (k) => this.switchLevel(k), items: [ { key: "account", label: "Account Item" }, { key: "store", label: "Store Item" } ] },
+
+      searchProps: { placeholder: "Cari ID, " + this.keyLabel() + ", Default Code…", size: "s", value: s.search, leftIcon: icon("SearchOutlineIcon"), onChange: (e) => this.setState({ search: e.target.value, page: 1 }) },
+      filterLabel: "Filter",
+      filterProps: fcount
+        ? { variant: "secondary", size: "s", leftIcon: React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "#304DDE", color: "#FFFFFF", fontSize: 11, fontWeight: 700, fontFamily: "'Lato',sans-serif", lineHeight: 1 } }, fcount), style: { gap: 10, background: "#D6DBF8", borderColor: "#304DDE", color: "#304DDE" }, onClick: () => this.openFilter() }
+        : { variant: "tertiary", size: "s", leftIcon: icon("FilterOutlineIcon", 16), style: { gap: 6 }, onClick: () => this.openFilter() },
+      importBtnProps: { variant: "tertiary", size: "s", leftIcon: icon("download"), onClick: () => this.openImport() },
+      exportBtnProps: { variant: "tertiary", size: "s", leftIcon: icon("export-up", 14), onClick: () => this.doExport() },
+      copyBtnProps: { variant: "tertiary", size: "s", leftIcon: this.copySvg(18), onClick: () => this.openCopy() },
+      addBtnProps: { variant: "primary", size: "s", leftIcon: icon("plus-thin", 16), onClick: () => this.openAdd() },
+      filterBar: this.buildFilterBar(),
+
+      hasSelection: sel.length > 0, selectionLabel: sel.length + " dipilih",
+      bulkActivateProps: { variant: "tertiary", size: "s", leftIcon: this.iconColored("check-circle", 18, "#33995E"), style: { color: "#33995E" }, onClick: () => this.openBulkActivate() },
+      bulkDeactivateProps: { variant: "tertiary", size: "s", leftIcon: this.minusCircleSvg(18, "#E6001C"), style: { color: "#E6001C" }, onClick: () => this.openBulkDeactivate() },
+      bulkEditProps: { variant: "tertiary", size: "s", onClick: () => this.openBulkEdit() },
+      revampProps: { variant: "primary", size: "s", leftIcon: icon("RefreshIcon", 18), onClick: () => this.openRevamp() },
+      clearSelProps: { variant: "ghost", size: "s", onClick: () => this.clearSelection() },
+
+      tableRegion: this.buildTableRegion(filtered, paged),
+      showPagination: !s.loading && !this.props.simulateError && filtered.length > 0,
+      perPageProps: { options: ["10", "25", "50"], value: s.perPage, size: "s", onChange: (v) => this.setState({ perPage: v, page: 1 }) },
+      totalLabel: `dari total ${filtered.length} item`,
+      pageProps: { page, pageCount, onPageChange: (p) => this.setState({ page: p }) },
+
+      // filter drawer
+      backdropStyle: { position: "fixed", inset: 0, background: "rgba(42,61,74,0.45)", display: "flex", justifyContent: "flex-end", zIndex: 50, opacity: s.filterOpen ? 1 : 0, pointerEvents: s.filterOpen ? "auto" : "none", transition: "opacity 260ms ease" },
+      drawerStyle: { width: 440, height: "100%", background: "#FFFFFF", display: "flex", flexDirection: "column", boxSizing: "border-box", fontFamily: "'Lato',sans-serif", transform: s.filterOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 280ms cubic-bezier(0.4,0,0.2,1)" },
+      closeFilter: () => this.closeFilter(), stopProp: (e) => e.stopPropagation(),
+      drawerStatusProps: { label: "Status", placeholder: "Semua Status", size: "m", options: [ { value: "All", label: "Semua Status" }, { value: "Active", label: "Active" }, { value: "Inactive", label: "Nonaktif" } ], value: s.filterDraft.active || "All", onChange: (v) => this.setDraft({ active: v }) },
+      drawerMin: s.filterDraft.min || "", onDrawerMin: (e) => this.setDraft({ min: e.target.value }),
+      drawerMax: s.filterDraft.max || "", onDrawerMax: (e) => this.setDraft({ max: e.target.value }),
+      drawerAnyFilled: !!((s.filterDraft.active && s.filterDraft.active !== "All") || s.filterDraft.min || s.filterDraft.max),
+      hapusFilterProps: { variant: "ghost", size: "s", leftIcon: icon("RefreshIcon", 16), onClick: () => this.clearDraft() },
+      batalFilterProps: { variant: "secondary", size: "s", onClick: () => this.closeFilter() },
+      terapkanFilterProps: { variant: "primary", size: "s", onClick: () => this.applyFilter() },
+
+      modalOpen: !!s.modal, modalProps: this.buildModal(), toastStack,
+    };
+
+    // ---- detail view values ----
+    const r = this.detailRow();
+    if (r) {
+      const f = s.detailForm;
+      vals.dId = r.id; vals.dCode = r.code; vals.dProduct = r.product; vals.dEntity = r.key + " — " + r.keyName;
+      vals.dKeyLabel = this.keyLabel(); vals.dWriteDate = r.writeDate;
+      vals.dCaption = `${r.id} · ${this.keyLabel()} ${r.key} · Terakhir diubah ${r.writeDate}`;
+      vals.dStockLive = f.stock === "" ? "—" : f.stock;
+      vals.dHeaderTags = React.createElement("span", { style: { display: "inline-flex", gap: 8 } },
+        React.createElement(Tag, { colorScheme: f.active ? "green" : "neutral", size: "s", dot: true }, f.active ? "Active" : "Nonaktif"));
+      vals.dStatusTag = React.createElement(Tag, { colorScheme: f.active ? "green" : "neutral", size: "m", dot: true }, f.active ? "Active" : "Nonaktif");
+      vals.dCategoryTag = React.createElement(Tag, { colorScheme: this.catScheme(r.category), size: "m" }, r.category);
+      vals.detailTabProps = { variant: "grey", value: s.detailTab, onChange: (k) => this.setState({ detailTab: k }), items: [ { key: "info", label: "Detail & Ubah" }, { key: "history", label: "Riwayat Perubahan" } ] };
+      vals.detailTabInfo = s.detailTab === "info"; vals.detailTabHistory = s.detailTab === "history";
+      const dStockNum = parseFloat(f.stock);
+      const dStockInvalid = f.stock === "" || isNaN(dStockNum) || dStockNum < 0;
+      vals.dStockInputProps = { label: "Standard Stock", required: true, type: "number", size: "m", value: f.stock, error: dStockInvalid, errorText: dStockInvalid ? "Standard Stock tidak boleh negatif atau kosong — tidak dapat disimpan." : undefined, helpText: dStockInvalid ? undefined : "Dasar order suggestion (standar − input). Tidak boleh negatif.", onChange: (e) => this.setState({ detailForm: { ...this.state.detailForm, stock: e.target.value } }) };
+      vals.dStockDirty = String(r.stock) !== String(f.stock);
+      vals.dStockResetProps = { variant: "tertiary", size: "m", disabled: !vals.dStockDirty, "aria-label": "Kembalikan ke nilai sebelumnya (" + r.stock + ")", icon: icon("RefreshIcon", 24), style: { marginTop: 26 }, onClick: () => this.setState({ detailForm: { ...this.state.detailForm, stock: String(r.stock) } }) };
+      vals.dActiveToggleProps = { checked: f.active, variant: "success", onChange: (v) => this.setState({ detailForm: { ...this.state.detailForm, active: v } }) };
+      vals.dActiveText = f.active ? "Aktif" : "Nonaktif"; vals.dActiveColor = f.active ? "#33995E" : "#78868F";
+      vals.dToggleActiveLabel = f.active ? "Nonaktifkan" : "Aktifkan";
+      vals.dToggleActiveProps = { variant: "secondary", size: "s", leftIcon: f.active ? this.minusCircleSvg(18, "#E6001C") : this.iconColored("check-circle", 18, "#33995E"), onClick: () => this.toggleDetailActive(), style: f.active ? { color: "#E6001C", borderColor: "#E6001C" } : { color: "#33995E", borderColor: "#33995E" } };
+      vals.dSaveProps = { variant: "primary", size: "s", disabled: !this.detailDirty() || dStockInvalid, leftIcon: icon("CheckIcon", 18), onClick: () => this.saveDetail() };
+      vals.dEditAlert = NS.Alert ? React.createElement(NS.Alert, { state: "info", title: "Validasi" }, "Hanya record Active yang dipakai order suggestion mobile. Perubahan tercatat pada tab Riwayat Perubahan.") : null;
+      // history table
+      const hist = this.detailHistory();
+      const scheme = { "Create": "green", "Edit": "blue", "Activate": "green", "Deactivate": "yellow", "Bulk Activate": "green", "Bulk Deactivate": "yellow", "Bulk Edit": "blue", "Revamp": "yellow", "Import": "blue", "Export": "neutral", "Copy": "blue" };
+      const hcols = [
+        { key: "action", header: "Action", render: (a) => React.createElement(Tag, { colorScheme: scheme[a.action] || "neutral", size: "s" }, a.action) },
+        { key: "by", header: "Oleh", render: (a) => React.createElement("div", null, React.createElement("div", { style: { fontWeight: 600, color: "#2A3D4A" } }, a.by), React.createElement("div", { style: { fontSize: 12, color: "#78868F" } }, a.when)) },
+        { key: "field", header: "Field", render: (a) => React.createElement("span", { style: { color: "#5C6B75" } }, a.field) },
+        { key: "change", header: "Old → New", render: (a) => React.createElement("span", { style: { fontSize: 13, color: "#5C6B75", fontVariantNumeric: "tabular-nums" } }, a.oldv + " → " + a.newv) },
+        { key: "summary", header: "Ringkasan", render: (a) => React.createElement("span", { style: { color: "#5C6B75" } }, a.summary) },
+      ];
+      vals.dHistoryTable = NS.Table ? React.createElement(NS.Table, { columns: hcols, data: hist.map((h, i) => ({ ...h, id: i })), size: "s", rowKey: "id" }) : null;
+    }
+
+    return vals;
+  }
+
+  /* ---------------- modals ---------------- */
+  buildModal() {
+    const m = this.state.modal; if (!m) return { open: false };
+    const base = { open: true, onClose: () => this.closeModal(), closeOnOverlay: true };
+    switch (m.type) {
+      case "add": return { ...base, ...this.modalAdd() };
+      case "bulkToggle": return { ...base, ...this.modalBulkToggle() };
+      case "bulkEdit": return { ...base, ...this.modalBulkEdit() };
+      case "revamp": return { ...base, ...this.modalRevamp() };
+      case "import": return { ...base, ...this.modalImport() };
+      case "copy": return { ...base, ...this.modalCopy() };
+      case "result": return { ...base, ...this.modalResult() };
+      default: return { open: false };
+    }
+  }
+  _foot(buttons) { return React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: 10 } }, ...buttons); }
+  _lbl(t) { return React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: "#2A3D4A", marginBottom: 6 } }, t); }
+  _lblReq(t) { return React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: "#2A3D4A", marginBottom: 6 } }, t, React.createElement("span", { style: { color: "#E6001C" } }, " *")); }
+  _cancel(label) { const { Button } = this.ns(); return React.createElement(Button, { variant: "secondary", size: "s", onClick: () => this.closeModal() }, label || "Batal"); }
+
+  /* Searchable product combobox — filters options by Default Code & product name */
+  searchSelect(props) {
+    if (!this._SearchSelect) {
+      const NS = this.ns(); const h = React.createElement; const Icon = NS.Icon;
+      const SIZES = { s: 36, m: 44, l: 52 };
+      this._SearchSelect = function SearchSelect({ options = [], value, onChange, placeholder = "Cari…", size = "m", error = false, disabled = false }) {
+        const H = SIZES[size] || SIZES.m;
+        const [open, setOpen] = React.useState(false);
+        const [q, setQ] = React.useState("");
+        const ref = React.useRef(null); const inputRef = React.useRef(null);
+        React.useEffect(() => {
+          const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setQ(""); } };
+          document.addEventListener("mousedown", onDoc);
+          return () => document.removeEventListener("mousedown", onDoc);
+        }, []);
+        React.useEffect(() => { if (open && inputRef.current) inputRef.current.focus(); }, [open]);
+        const sel = options.find(o => o.value === value);
+        const parse = (o) => { const i = o.label.indexOf(" — "); return i >= 0 ? { code: o.label.slice(0, i), name: o.label.slice(i + 3) } : { code: o.value, name: o.label }; };
+        const query = q.trim().toLowerCase();
+        const list = query ? options.filter(o => (o.value + " " + o.label).toLowerCase().includes(query)) : options;
+        const hi = (text) => {
+          if (!query) return text; const t = String(text); const idx = t.toLowerCase().indexOf(query);
+          if (idx < 0) return text;
+          return h(React.Fragment, null, t.slice(0, idx), h("mark", { style: { background: "#FFF1B8", color: "inherit", padding: 0, borderRadius: 2 } }, t.slice(idx, idx + query.length)), t.slice(idx + query.length));
+        };
+        return h("div", { ref, style: { position: "relative", width: "100%", fontFamily: "'Lato',sans-serif" } },
+          h("button", { type: "button", disabled, onClick: () => !disabled && setOpen(o => !o), style: { display: "flex", alignItems: "center", gap: 8, width: "100%", height: H, padding: "0 10px", background: disabled ? "#F4F6FA" : "#fff", border: "1px solid " + (error ? "#E6001C" : open ? "#304DDE" : "#D6D6D6"), borderRadius: 4, boxShadow: open && !error ? "0 0 0 3px rgba(48,77,222,0.15)" : "none", cursor: disabled ? "not-allowed" : "pointer", boxSizing: "border-box", outline: "none" } },
+            h("span", { style: { display: "inline-flex", flexShrink: 0 } }, Icon ? h(Icon, { name: "SearchOutlineIcon", size: 18, color: "#78868F" }) : null),
+            h("span", { style: { flex: 1, textAlign: "left", fontSize: 14, lineHeight: "20px", letterSpacing: "0.25px", color: sel ? "#2A3D4A" : "#9AA6AE", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, sel ? sel.label : placeholder),
+            Icon ? h(Icon, { name: "ChevronDownIcon", size: 18, color: "#78868F", style: { transform: open ? "rotate(180deg)" : "none", transition: "transform 120ms ease" } }) : null),
+          open ? h("div", { style: { position: "absolute", top: H + 4, left: 0, right: 0, zIndex: 60, background: "#fff", border: "1px solid #E5E9EF", borderRadius: 6, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden" } },
+            h("div", { style: { padding: 8, borderBottom: "1px solid #F0F2F5" } },
+              h("div", { style: { display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 10px", border: "1px solid #D6D6D6", borderRadius: 4, background: "#fff" } },
+                Icon ? h(Icon, { name: "SearchOutlineIcon", size: 16, color: "#9AA6AE" }) : null,
+                h("input", { ref: inputRef, value: q, placeholder: "Cari kode atau nama produk…", onChange: (e) => setQ(e.target.value), style: { flex: 1, border: "none", outline: "none", fontSize: 14, color: "#2A3D4A", fontFamily: "'Lato',sans-serif", background: "transparent" } }),
+                q ? h("span", { role: "button", "aria-label": "Bersihkan", onClick: () => { setQ(""); if (inputRef.current) inputRef.current.focus(); }, style: { display: "inline-flex", cursor: "pointer" } }, Icon ? h(Icon, { name: "CloseOutlineIcon", size: 16, color: "#9AA6AE" }) : "×") : null)),
+            h("div", { style: { maxHeight: 240, overflowY: "auto", padding: 4 } },
+              list.length === 0
+                ? h("div", { style: { padding: "20px 12px", textAlign: "center", color: "#78868F", fontSize: 13 } }, "Tidak ada produk yang cocok dengan \u201C" + q + "\u201D")
+                : list.map(o => { const p = parse(o); const isSel = o.value === value; return h("div", { key: o.value, onClick: () => { onChange && onChange(o.value); setOpen(false); setQ(""); }, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 4, cursor: "pointer", background: isSel ? "#F3F5FE" : "transparent" }, onMouseEnter: (e) => e.currentTarget.style.background = isSel ? "#F3F5FE" : "#F4F6FA", onMouseLeave: (e) => e.currentTarget.style.background = isSel ? "#F3F5FE" : "transparent" },
+                    h("span", { style: { fontWeight: 700, fontSize: 13, color: "#304DDE", fontVariantNumeric: "tabular-nums", flexShrink: 0, minWidth: 84 } }, hi(p.code)),
+                    h("span", { style: { flex: 1, fontSize: 13, color: "#2A3D4A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, hi(p.name)),
+                    isSel && Icon ? h(Icon, { name: "CheckIcon", size: 16, color: "#304DDE" }) : null); }))) : null);
+      };
+    }
+    return React.createElement(this._SearchSelect, props);
+  }
+
+  modalAdd() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Input, Select, Toggle, Alert } = NS;
+    const f = this.state.form; const set = (patch) => this.setState({ form: { ...this.state.form, ...patch } });
+    const body = h("div", { style: { display: "flex", flexDirection: "column", gap: 16, width: "100%" } },
+      h(Alert, { state: "info", title: "Validasi" }, "Sistem memvalidasi " + this.entityLabel() + " & produk aktif dalam cakupan akses, dan mencegah duplikat kombinasi."),
+      h("div", null, this._lblReq(this.entityLabel()), h(Select, { options: this.allKeys(), value: f.key, placeholder: "Pilih " + this.entityLabel(), size: "m", error: !!f.errors.key, onChange: (v) => set({ key: v }) }), f.errors.key ? h("div", { style: { color: "#E6001C", fontSize: 12, marginTop: 4 } }, f.errors.key) : null),
+      h("div", null, this._lblReq("Produk (Default Code)"), this.searchSelect({ options: this.allProducts(), value: f.code, placeholder: "Cari kode atau nama produk…", size: "m", error: !!f.errors.code, onChange: (v) => set({ code: v }) }), f.errors.code ? h("div", { style: { color: "#E6001C", fontSize: 12, marginTop: 4 } }, f.errors.code) : null),
+      h("div", { style: { display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "flex-start" } },
+        h("div", null, h(Input, { label: "Standard Stock", required: true, type: "number", value: f.stock, size: "m", error: !!f.errors.stock, errorText: f.errors.stock, helpText: f.errors.stock ? undefined : "Target qty; dasar order suggestion.", onChange: (e) => set({ stock: e.target.value }) })),
+        h("div", null, this._lbl("Active"), h("div", { style: { display: "flex", alignItems: "center", gap: 10, height: 44 } }, h(Toggle, { checked: f.active, variant: "success", onChange: (v) => set({ active: v }) }), h("span", { style: { fontSize: 14, color: f.active ? "#33995E" : "#78868F", fontWeight: 600 } }, f.active ? "Active" : "Nonaktif")))));
+    return { title: "Tambah Standar Stok", size: "m", bodyOverflow: "visible", children: body, footer: this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", onClick: () => this.saveItem() }, "Simpan")]) };
+  }
+
+  modalBulkToggle() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Alert, Tag } = NS;
+    const to = this.state.modal.to; const rows = this.selectedRows();
+    const body = h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } },
+      h(Alert, { state: to ? "info" : "warning", title: to ? "Aktivasi massal" : "Nonaktivasi massal" }, to ? "Record yang diaktifkan akan langsung dipakai order suggestion mobile." : "Record yang dinonaktifkan tidak lagi dipakai order suggestion mobile."),
+      h("div", { style: { fontSize: 14, color: "#2A3D4A" } }, "Anda akan ", h("b", null, to ? "mengaktifkan" : "menonaktifkan"), " ", h("b", null, rows.length + " record"), " berikut. Perubahan tercatat di audit trail."),
+      h("div", { style: { maxHeight: 240, overflowY: "auto", border: "1px solid #EBEBEB", borderRadius: 6 } }, rows.map((r, i) => h("div", { key: r.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderTop: i ? "1px solid #F2F2F2" : "none" } }, h("span", { style: { fontSize: 13, fontWeight: 600, color: "#304DDE", width: 90 } }, r.code), h("span", { style: { fontSize: 13, color: "#5C6B75", flex: 1 } }, r.key + " · " + r.product), h(Tag, { colorScheme: r.active ? "green" : "neutral", size: "xs", dot: true }, r.active ? "Active" : "Nonaktif")))));
+    return { title: (to ? "Aktifkan" : "Nonaktifkan") + " Record", size: "m", children: body, footer: this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", destructive: !to, onClick: () => this.commitBulkToggle() }, to ? "Aktifkan" : "Nonaktifkan")]) };
+  }
+
+  modalBulkEdit() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Input, RadioButton, Alert } = NS;
+    const f = this.state.form; const rows = this.selectedRows(); const set = (patch) => this.setState({ form: { ...this.state.form, ...patch } });
+    const val = parseFloat(f.value); const previewRows = rows.slice(0, 4).map(r => ({ r, next: f.value === "" || isNaN(val) ? null : (f.mode === "set" ? val : Math.max(0, r.stock + val)) }));
+    const body = h("div", { style: { display: "flex", flexDirection: "column", gap: 16, minWidth: 460 } },
+      h(Alert, { state: "info" }, "Operasi diproses batch; ringkasan hasil (Total, Berhasil, Gagal) ditampilkan setelah commit."),
+      h("div", null, this._lbl("Mode perubahan"), h("div", { style: { display: "flex", gap: 20 } }, h(RadioButton, { name: "bem", checked: f.mode === "set", label: "Set ke nilai", onChange: () => set({ mode: "set" }) }), h(RadioButton, { name: "bem", checked: f.mode === "adjust", label: "Sesuaikan (+/−)", onChange: () => set({ mode: "adjust" }) }))),
+      h(Input, { label: f.mode === "set" ? "Standard Stock baru" : "Penyesuaian (mis. 5 atau -3)", required: true, type: "number", value: f.value, size: "m", error: !!(f.errors && f.errors.value), errorText: f.errors && f.errors.value, onChange: (e) => set({ value: e.target.value }) }),
+      h("div", { style: { border: "1px solid #EBEBEB", borderRadius: 6, overflow: "hidden" } }, h("div", { style: { padding: "8px 12px", background: "#F4F6FA", fontSize: 12, fontWeight: 700, color: "#78868F", letterSpacing: "0.3px" } }, "Pratinjau — " + rows.length + " record terpilih"), previewRows.map((p, i) => h("div", { key: p.r.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderTop: i ? "1px solid #F2F2F2" : "none", fontSize: 13 } }, h("span", { style: { fontWeight: 600, color: "#304DDE", width: 90 } }, p.r.code), h("span", { style: { color: "#5C6B75", flex: 1 } }, p.r.key), h("span", { style: { color: "#78868F", fontVariantNumeric: "tabular-nums" } }, p.r.stock), h("span", { style: { color: "#B9C2C7" } }, "→"), h("span", { style: { fontWeight: 700, color: p.next === null ? "#B9C2C7" : "#33995E", fontVariantNumeric: "tabular-nums" } }, p.next === null ? "?" : p.next))), rows.length > 4 ? h("div", { style: { padding: "8px 12px", fontSize: 12, color: "#78868F", borderTop: "1px solid #F2F2F2" } }, "+ " + (rows.length - 4) + " record lainnya") : null));
+    return { title: "Ubah Standard Stock Massal", size: "m", children: body, footer: this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", onClick: () => this.commitBulkEdit() }, "Terapkan ke " + rows.length + " record")]) };
+  }
+
+  modalRevamp() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Select, Input, Checkbox, Alert } = NS;
+    const step = this.state.modal.step; const olds = this.selectedRows(); const map = this.state.form.map;
+    const setMap = (id, patch) => this.setState({ form: { ...this.state.form, map: { ...map, [id]: { ...map[id], ...patch } } } });
+    let body, footer;
+    if (step === 1) {
+      body = h("div", { style: { display: "flex", flexDirection: "column", gap: 14, minWidth: 720 } },
+        h(Alert, { state: "warning" }, "Jika ada kegagalan sebagian, seluruh operasi dibatalkan (Rolled Back) agar state tetap konsisten."),
+        h("div", { style: { fontSize: 14, color: "#2A3D4A" } }, "Untuk tiap produk lama (revamp-out) yang akan dinonaktifkan, pilih produk pengganti & tentukan standard stock-nya. Nonaktifkan & tambah dijalankan sebagai satu aksi all-or-nothing."),
+        h("div", { style: { border: "1px solid #EBEBEB", borderRadius: 6, overflow: "hidden" } }, h("div", { style: { display: "grid", gridTemplateColumns: "1.3fr 24px 1.6fr 120px 110px", gap: 10, padding: "9px 12px", background: "#F4F6FA", fontSize: 12, fontWeight: 700, color: "#78868F", letterSpacing: "0.3px" } }, h("span", null, "Nonaktifkan (lama)"), h("span", null, ""), h("span", null, "Produk pengganti"), h("span", null, "Std Stock"), h("span", null, "Carry-over")), h("div", { style: { maxHeight: 300, overflowY: "auto" } }, olds.map((o, i) => h("div", { key: o.id, style: { display: "grid", gridTemplateColumns: "1.3fr 24px 1.6fr 120px 110px", gap: 10, padding: "10px 12px", borderTop: i ? "1px solid #F2F2F2" : "none", alignItems: "center" } }, h("div", null, h("div", { style: { fontWeight: 600, color: "#304DDE", fontSize: 13 } }, o.code), h("div", { style: { fontSize: 12, color: "#78868F", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, o.key + " · " + o.product)), h("span", { style: { color: "#B9C2C7", textAlign: "center" } }, "→"), this.searchSelect({ options: this.allProducts().filter(p => p.value !== o.code), value: map[o.id].code, placeholder: "Cari pengganti…", size: "s", onChange: (v) => setMap(o.id, { code: v }) }), h(Input, { type: "number", size: "s", value: map[o.id].carry ? String(o.stock) : map[o.id].stock, disabled: map[o.id].carry, onChange: (e) => setMap(o.id, { stock: e.target.value }) }), h("div", { style: { display: "flex", justifyContent: "center" } }, h(Checkbox, { checked: map[o.id].carry, onChange: (v) => setMap(o.id, { carry: v }) })))))));
+      footer = this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", disabled: !this.revampReady(), rightIcon: this.icon("ChevronRightIcon", 18), onClick: () => this.setState({ modal: { ...this.state.modal, step: 2 } }) }, "Lanjut ke Pratinjau")]);
+    } else {
+      const adds = olds.map(o => { const mm = map[o.id]; const p = this.allProducts().find(x => x.value === mm.code); return { key: o.key, code: mm.code, product: p ? p.label : mm.code, stock: mm.carry ? o.stock : (parseFloat(mm.stock) || 0) }; });
+      body = h("div", { style: { display: "flex", flexDirection: "column", gap: 14, minWidth: 620 } },
+        h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } }, h("div", { style: { border: "1px solid #F3D3D3", borderRadius: 6, overflow: "hidden" } }, h("div", { style: { padding: "9px 12px", background: "#FCEDED", fontSize: 12, fontWeight: 700, color: "#C0001C" } }, "Dinonaktifkan (" + olds.length + ")"), h("div", { style: { maxHeight: 220, overflowY: "auto" } }, olds.map((o, i) => h("div", { key: o.id, style: { padding: "8px 12px", borderTop: i ? "1px solid #F7E4E4" : "none", fontSize: 13 } }, h("b", { style: { color: "#304DDE" } }, o.code), " · ", o.key)))), h("div", { style: { border: "1px solid #CDE7D8", borderRadius: 6, overflow: "hidden" } }, h("div", { style: { padding: "9px 12px", background: "#E9F6EF", fontSize: 12, fontWeight: 700, color: "#237A47" } }, "Ditambahkan sebagai Active (" + adds.length + ")"), h("div", { style: { maxHeight: 220, overflowY: "auto" } }, adds.map((a, i) => h("div", { key: i, style: { padding: "8px 12px", borderTop: i ? "1px solid #E4F1EA" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" } }, h("span", null, h("b", { style: { color: "#304DDE" } }, a.code), " · ", a.key), h("b", { style: { color: "#33995E", fontVariantNumeric: "tabular-nums" } }, a.stock)))))),
+        h(Alert, { state: "info", title: "All-or-nothing commit" }, "Deactivate + Add di-commit sebagai satu transaksi. Audit trail menautkan record lama & penggantinya."));
+      footer = this._foot([h(Button, { variant: "tertiary", size: "s", leftIcon: this.icon("ChevronLeftIcon", 18), onClick: () => this.setState({ modal: { ...this.state.modal, step: 1 } }) }, "Kembali"), h(Button, { variant: "primary", size: "s", leftIcon: this.icon("RefreshIcon", 18), onClick: () => this.commitRevamp() }, "Konfirmasi Revamp")]);
+    }
+    return { title: "Revamp / Ganti Produk — Langkah " + step + " dari 2", size: "l", children: body, footer };
+  }
+
+  modalImport() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Alert, Tag, Loader } = NS;
+    const f = this.state.form; const phase = f.phase || "idle";
+    const store = this.state.level === "store"; const keyCol = this.importKeyCol();
+    const cols = "48px 104px minmax(150px,1fr) 96px 80px 1.4fr";
+    const fileInput = h("input", { type: "file", accept: ".xlsx,.xls,.csv", ref: (el) => { this._impFile = el; }, style: { display: "none" }, onChange: (e) => { const file = e.target.files && e.target.files[0]; if (file) this.handleImportFile(file.name); e.target.value = ""; } });
+
+    // ---- Step 1: template ----
+    const stepOneLabel = h("div", { style: { fontWeight: 700, color: "#2A3D4A", fontSize: 14, display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, h("span", { style: { display: "inline-flex", width: 22, height: 22, borderRadius: "50%", background: "#304DDE", color: "#fff", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 } }, "1"), "Unduh template " + this.entityLabel() + " Item");
+    const templateBox = h("div", null, stepOneLabel,
+      h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "14px 16px", border: "1px solid #E5E9EF", borderRadius: 8, background: "#F8F9FD" } },
+        h("div", { style: { fontSize: 12, color: "#78868F" } }, "Kolom: " + keyCol + ", Default Code, Standard Stock, Active. Template berisi contoh baris untuk diisi."),
+        h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("download", 18), onClick: () => this.downloadTemplate() }, "Unduh Template")));
+
+    // ---- Step 2: upload + state ----
+    let uploadRegion;
+    if (phase === "validating") {
+      uploadRegion = h("div", { style: { border: "1px solid #E5E9EF", borderRadius: 10, padding: "34px 18px", background: "#FAFBFD", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 } },
+        Loader ? h(Loader, { size: "l" }) : h("div", null, "Memvalidasi…"),
+        h("div", { style: { fontSize: 14, fontWeight: 600, color: "#2A3D4A" } }, "Memvalidasi file…"),
+        h("div", { style: { fontSize: 12, color: "#78868F", display: "flex", alignItems: "center", gap: 6 } }, this.icon("image", 15), f.fileName || "file.xlsx"),
+        h("div", { style: { fontSize: 12, color: "#9AA6AE" } }, "Memeriksa struktur kolom lalu memvalidasi tiap baris."));
+    } else if (phase === "invalid") {
+      const invalid = (f.rows || []).filter(r => r.status === "invalid");
+      const valid = (f.rows || []).length - invalid.length;
+      const tile = (label, val, color) => h("div", { style: { flex: 1, border: "1px solid #EBEBEB", borderRadius: 6, padding: "10px 14px" } }, h("div", { style: { fontSize: 12, color: "#78868F", fontWeight: 700, letterSpacing: "0.3px" } }, label), h("div", { style: { fontSize: 22, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" } }, val));
+      uploadRegion = h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#5C6B75" } }, this.icon("image", 16), h("b", { style: { color: "#2A3D4A" } }, f.fileName), h("span", { style: { color: "#B9C2C7" } }, "·"), "diunggah"),
+        h(Alert, { state: "error", title: "Validasi gagal — " + invalid.length + " baris tidak valid" }, "File tidak dapat diimpor selama masih ada baris tidak valid. Unduh laporan error, perbaiki data pada file Anda, lalu unggah ulang."),
+        h("div", { style: { display: "flex", gap: 12 } }, tile("Total Baris", (f.rows || []).length, "#1F1F1F"), tile("Valid", valid, "#33995E"), tile("Tidak Valid", invalid.length, "#E6001C")),
+        h("div", { style: { border: "1px solid #F1D5D5", borderRadius: 6, overflow: "hidden" } },
+          h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 12px", background: "#FCEDED", fontSize: 12, fontWeight: 700, color: "#B4232F", letterSpacing: "0.3px" } }, h("span", null, "Row"), h("span", null, keyCol), h("span", null, "Produk"), h("span", null, "Std Stock"), h("span", null, "Active"), h("span", null, "Keterangan")),
+          h("div", { style: { maxHeight: 220, overflowY: "auto" } }, invalid.map((r, i) => h("div", { key: r.row, style: { display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 12px", borderTop: i ? "1px solid #F7E4E4" : "none", alignItems: "center", fontSize: 13, background: "#FFFBFB" } },
+            h("span", { style: { color: "#78868F", fontVariantNumeric: "tabular-nums" } }, r.row),
+            h("span", { style: { fontWeight: 600, color: "#2A3D4A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.key),
+            h("span", { style: { minWidth: 0 } }, h("span", { style: { fontWeight: 600, color: "#2A3D4A", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, r.product), h("span", { style: { display: "block", fontSize: 11, color: "#9AA6AE" } }, r.code)),
+            h("span", { style: { fontVariantNumeric: "tabular-nums", color: "#2A3D4A" } }, r.stock),
+            h("span", { style: { color: "#2A3D4A" } }, r.active),
+            h("span", { style: { fontSize: 12, color: "#C0001C" } }, h("b", null, r.issue + ": "), r.msg)))) ),
+        h("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
+          h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("download", 18), onClick: () => this.downloadErrorReport() }, "Unduh Laporan Error"),
+          h("span", { style: { fontSize: 12, color: "#78868F" } }, "Perbaiki baris di atas pada file Anda, lalu unggah ulang.")));
+    } else if (phase === "valid") {
+      const rows = f.rows || [];
+      const tile = (label, val, color) => h("div", { style: { flex: 1, border: "1px solid #EBEBEB", borderRadius: 6, padding: "10px 14px" } }, h("div", { style: { fontSize: 12, color: "#78868F", fontWeight: 700, letterSpacing: "0.3px" } }, label), h("div", { style: { fontSize: 22, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" } }, val));
+      uploadRegion = h("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+        h("div", { style: { display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#5C6B75" } }, this.icon("image", 16), h("b", { style: { color: "#2A3D4A" } }, f.fileName), h("span", { style: { color: "#B9C2C7" } }, "·"), "diunggah"),
+        h(Alert, { state: "success", title: "Validasi berhasil" }, "Semua baris valid. Tinjau ringkasan lalu jalankan impor."),
+        h("div", { style: { display: "flex", gap: 12 } }, tile("Total Baris", rows.length, "#1F1F1F"), tile("Valid", rows.length, "#33995E"), tile("Tidak Valid", 0, "#78868F")),
+        h("div", { style: { border: "1px solid #EBEBEB", borderRadius: 6, overflow: "hidden" } },
+          h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 12px", background: "#F4F6FA", fontSize: 12, fontWeight: 700, color: "#78868F", letterSpacing: "0.3px" } }, h("span", null, "Row"), h("span", null, keyCol), h("span", null, "Produk"), h("span", null, "Std Stock"), h("span", null, "Active"), h("span", null, "Status")),
+          h("div", { style: { maxHeight: 220, overflowY: "auto" } }, rows.map((r, i) => h("div", { key: r.row, style: { display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 12px", borderTop: i ? "1px solid #F2F2F2" : "none", alignItems: "center", fontSize: 13 } },
+            h("span", { style: { color: "#78868F", fontVariantNumeric: "tabular-nums" } }, r.row),
+            h("span", { style: { fontWeight: 600, color: "#2A3D4A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.key),
+            h("span", { style: { minWidth: 0 } }, h("span", { style: { fontWeight: 600, color: "#2A3D4A", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, r.product), h("span", { style: { display: "block", fontSize: 11, color: "#9AA6AE" } }, r.code)),
+            h("span", { style: { fontVariantNumeric: "tabular-nums", color: "#2A3D4A", fontWeight: 700 } }, r.stock),
+            h("span", { style: { color: "#2A3D4A" } }, r.active),
+            h(Tag, { colorScheme: "green", size: "xs" }, "Valid")))) ));
+    } else {
+      // idle — drop zone
+      const drag = !!f.dragOver;
+      uploadRegion = h("div", {
+        onClick: () => this.pickImportFile(),
+        onDragOver: (e) => { e.preventDefault(); if (!f.dragOver) this.setState({ form: { ...this.state.form, dragOver: true } }); },
+        onDragLeave: (e) => { e.preventDefault(); if (f.dragOver) this.setState({ form: { ...this.state.form, dragOver: false } }); },
+        onDrop: (e) => { e.preventDefault(); const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; this.setState({ form: { ...this.state.form, dragOver: false } }); if (file) this.handleImportFile(file.name); else this.handleImportFile("standar-stok.xlsx"); },
+        style: { cursor: "pointer", border: "2px dashed " + (drag ? "#304DDE" : "#C9D0D6"), borderRadius: 10, padding: "34px 18px", background: drag ? "#EEF1FE" : "#FAFBFD", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center", transition: "background 120ms ease, border-color 120ms ease" }
+      },
+        h("span", { style: { display: "inline-flex", width: 48, height: 48, borderRadius: "50%", background: "#EEF1FE", color: "#304DDE", alignItems: "center", justifyContent: "center" } }, this.icon("upload", 24)),
+        h("div", { style: { fontSize: 15, color: "#2A3D4A", fontWeight: 700 } }, "Tarik & lepas file di sini, atau klik untuk memilih"),
+        h("div", { style: { fontSize: 12, color: "#9AA6AE" } }, "Format .xlsx / .csv · maksimal 5.000 baris"),
+        h("div", { style: { marginTop: 6 } }, h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("upload", 18), onClick: (e) => { e.stopPropagation(); this.pickImportFile(); } }, "Pilih File")));
+    }
+
+    const stepTwoLabel = h("div", { style: { fontWeight: 700, color: "#2A3D4A", fontSize: 14, display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, h("span", { style: { display: "inline-flex", width: 22, height: 22, borderRadius: "50%", background: "#304DDE", color: "#fff", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 } }, "2"), "Unggah file terisi & validasi");
+
+    const body = h("div", { style: { display: "flex", flexDirection: "column", gap: 18, width: "100%" } },
+      fileInput,
+      phase === "idle" ? h(Alert, { state: "info" }, "Struktur kolom divalidasi lebih dulu, lalu setiap baris. Bila ada baris tidak valid, perbaiki pada file dan unggah ulang — impor hanya berjalan bila seluruh baris valid.") : null,
+      templateBox,
+      h("div", null, stepTwoLabel, uploadRegion));
+
+    // ---- footer per phase ----
+    let footer;
+    if (phase === "valid") {
+      footer = this._foot([
+        h(Button, { variant: "tertiary", size: "s", leftIcon: this.icon("upload", 18), onClick: () => this.pickImportFile() }, "Unggah Ulang"),
+        h(Button, { variant: "primary", size: "s", onClick: () => this.commitImport() }, "Impor " + (f.rows || []).length + " baris"),
+      ]);
+    } else if (phase === "invalid") {
+      footer = this._foot([
+        this._cancel("Tutup"),
+        h(Button, { variant: "primary", size: "s", leftIcon: this.icon("upload", 18), onClick: () => this.pickImportFile() }, "Unggah Ulang File"),
+      ]);
+    } else if (phase === "validating") {
+      footer = this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", disabled: true }, "Memvalidasi…")]);
+    } else {
+      footer = this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", disabled: true }, "Impor")]);
+    }
+    return { title: "Impor Standard Stock — " + this.entityLabel() + " Item", size: "l", children: body, footer };
+  }
+
+  modalCopy() {
+    const NS = this.ns(); const h = React.createElement; const { Button, Select, RadioButton, Alert, Tag } = NS;
+    const step = this.state.modal.step; const f = this.state.form; const set = (patch) => this.setState({ form: { ...this.state.form, ...patch } });
+    let body, footer;
+    if (step === 1) {
+      const keys = this.allKeys();
+      body = h("div", { style: { display: "flex", flexDirection: "column", gap: 16, width: "100%" } },
+        h(Alert, { state: "info" }, "Konflik (produk sudah ada di target) dideteksi di langkah pratinjau dengan opsi skip / overwrite."),
+        h("div", { style: { fontSize: 14, color: "#2A3D4A" } }, "Salin konfigurasi standar stok (produk, nilai, status) dari satu " + this.entityLabel() + " ke satu atau beberapa " + this.entityLabel() + " lain dalam cakupan akses Anda."),
+        h("div", null, this._lblReq("Sumber (source)"), h(Select, { options: keys, value: f.source, placeholder: "Pilih " + this.entityLabel() + " sumber", size: "m", onChange: (v) => set({ source: v, targets: f.targets.filter(t => t !== v) }) })),
+        h("div", null, this._lblReq("Tujuan (target)"), h(Select, { multi: true, options: keys.filter(k => k.value !== f.source), value: f.targets, placeholder: "Pilih satu atau lebih target", size: "m", onChange: (v) => set({ targets: v }) })));
+      footer = this._foot([this._cancel(), h(Button, { variant: "primary", size: "s", disabled: !f.source || f.targets.length === 0, rightIcon: this.icon("ChevronRightIcon", 18), onClick: () => this.setState({ modal: { ...this.state.modal, step: 2 } }) }, "Pratinjau")]);
+    } else {
+      const pv = this.copyPreview();
+      body = h("div", { style: { display: "flex", flexDirection: "column", gap: 14, width: "100%" } },
+        h("div", { style: { display: "flex", gap: 16, fontSize: 13, color: "#5C6B75", flexWrap: "wrap" } }, h("span", null, "Sumber: ", h("b", { style: { color: "#2A3D4A" } }, f.source)), h("span", null, "Target: ", h("b", { style: { color: "#2A3D4A" } }, f.targets.join(", "))), h("span", null, "Total: ", h("b", { style: { color: "#2A3D4A" } }, pv.items.length)), h("span", null, "Konflik: ", h("b", { style: { color: pv.conflicts ? "#C0001C" : "#33995E" } }, pv.conflicts))),
+        h("div", { style: { border: "1px solid #EBEBEB", borderRadius: 6, overflow: "hidden" } }, h("div", { style: { display: "grid", gridTemplateColumns: "1fr 110px 90px 90px", gap: 8, padding: "8px 12px", background: "#F4F6FA", fontSize: 12, fontWeight: 700, color: "#78868F", letterSpacing: "0.3px" } }, h("span", null, "Target · Produk"), h("span", null, "Default Code"), h("span", null, "Stock"), h("span", null, "Status")), h("div", { style: { maxHeight: 240, overflowY: "auto" } }, pv.items.map((it, i) => h("div", { key: i, style: { display: "grid", gridTemplateColumns: "1fr 110px 90px 90px", gap: 8, padding: "8px 12px", borderTop: i ? "1px solid #F2F2F2" : "none", alignItems: "center", fontSize: 13 } }, h("span", { style: { color: "#5C6B75", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, h("b", { style: { color: "#2A3D4A" } }, it.target), " · ", it.product), h("span", { style: { fontWeight: 600, color: "#304DDE" } }, it.code), h("span", { style: { fontVariantNumeric: "tabular-nums", color: "#2A3D4A" } }, it.stock), h(Tag, { colorScheme: it.conflict ? "yellow" : "green", size: "xs" }, it.conflict ? "Konflik" : "Baru"))))),
+        pv.conflicts > 0 ? h("div", null, this._lbl("Penanganan konflik"), h("div", { style: { display: "flex", gap: 20 } }, h(RadioButton, { name: "cf", checked: f.conflict === "skip", label: "Lewati yang sudah ada (skip)", onChange: () => set({ conflict: "skip" }) }), h(RadioButton, { name: "cf", checked: f.conflict === "overwrite", label: "Timpa yang sudah ada (overwrite)", onChange: () => set({ conflict: "overwrite" }) }))) : null);
+      footer = this._foot([h(Button, { variant: "secondary", size: "s", leftIcon: this.icon("ChevronLeftIcon", 18), onClick: () => this.setState({ modal: { ...this.state.modal, step: 1 } }) }, "Kembali"), h(Button, { variant: "primary", size: "s", onClick: () => this.commitCopy() }, "Konfirmasi Salin")]);
+    }
+    return { title: "Salin Pengaturan Standar Stok — Langkah " + step + " dari 2", size: "l", bodyOverflow: step === 1 ? "visible" : undefined, children: body, footer };
+  }
+
+  emptyBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="#EBEBEB"/><path d="M73.6599 211.452V157.942H205.86V212.162L138.68 224L73.6599 211.452Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M74.1399 211.162V153.713L138.78 162.671V223.43L74.1399 211.162Z" fill="#EBEBEB"/><path d="M74.1399 153.713L138.78 162.671V223.43" stroke="#999999" stroke-width="2"/><path d="M139.23 161.561L119.96 182.267L54.9399 162.011L72.4299 144.514L54.9899 127.067L120.02 112L139.27 124.988L160.92 112L224.93 129.417L206.53 144.514L225.02 159.682L165.72 182.267L139.23 161.561Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M74.5801 144.484L139.28 124.918L204.45 144.484L139.28 161.721L74.5801 144.484Z" fill="#C2C2C2" stroke="#999999" stroke-width="2"/><path d="M74.5801 144.484L138.78 125.068V161.591L74.5801 144.484Z" fill="#EBEBEB" stroke="#999999" stroke-width="2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M191.71 128C210.648 128 226 112.648 226 93.7099C226 74.7721 210.648 59.4199 191.71 59.4199C172.772 59.4199 157.42 74.7721 157.42 93.7099C157.42 112.648 172.772 128 191.71 128Z" fill="#7A7A7A"/></g><path d="M188.29 124.58C207.228 124.58 222.58 109.228 222.58 90.29C222.58 71.3522 207.228 56 188.29 56C169.352 56 154 71.3522 154 90.29C154 109.228 169.352 124.58 188.29 124.58Z" fill="#7A7A7A"/><path d="M188.29 105.16C190.66 105.16 192.58 107.08 192.58 109.45V109.5C192.58 111.87 190.66 113.79 188.29 113.79C185.92 113.79 184 111.87 184 109.5V109.45C184 107.08 185.92 105.16 188.29 105.16ZM188.29 66.7803C190.66 66.7803 192.58 68.7003 192.58 71.0703V96.1797C192.58 98.5497 190.66 100.47 188.29 100.47C185.92 100.47 184 98.5497 184 96.1797V71.0703C184 68.7003 185.92 66.7803 188.29 66.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  errorBoxIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="#EBEBEB"/><path d="M84.1078 218L44.4178 107.689C43.6478 105.549 43.9578 103.11 45.2178 101.3C46.2478 99.8399 47.7678 99 49.3978 99H94.5078C96.6278 99 98.6478 99.9199 100.208 101.6L107.838 109.849H163.068C166.478 109.849 169.518 112.219 170.798 115.879L205.978 216.14C206.128 216.57 206.068 217.03 205.798 217.41C205.538 217.78 205.118 218 204.668 218H84.1078Z" fill="#C2C2C2" stroke="#999999" stroke-width="2"/><path d="M84.1778 218L64.6078 115.509C64.5178 115.089 64.6078 114.669 64.8578 114.369C65.0378 114.139 65.2878 114.019 65.5478 114.019H186.848L206.418 216.34C206.498 216.75 206.388 217.17 206.128 217.49C205.868 217.81 205.468 217.99 205.058 217.99L84.1878 216.99L84.1778 218Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M81.9377 106.809C81.9177 106.419 82.0477 106.069 82.2777 105.819C82.4577 105.629 82.6777 105.529 82.9077 105.529H203.528C204.048 105.529 204.468 106.019 204.498 106.649L206.818 209.241L84.2377 216.95L81.9277 106.789L81.9377 106.809Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M101.568 112.669C101.758 111.249 102.778 110.219 103.988 110.219L227.698 109.669C227.938 109.669 228.178 109.779 228.358 109.989C228.598 110.259 228.708 110.659 228.658 111.049L208.498 209.171L84.3477 216.96L101.558 112.669H101.568Z" fill="white" stroke="#999999" stroke-width="2"/><path d="M84.998 218L112.628 125.578C113.758 121.588 116.948 118.908 120.568 118.908H229.598C231.168 118.908 232.608 119.658 233.648 121.038C234.928 122.728 235.328 124.998 234.728 127.128L207.678 215.67C207.258 217.06 205.988 218 204.538 218H84.998Z" fill="#EBEBEB" stroke="#999999" stroke-width="2"/><path d="M200.378 203.861H161.288C160.148 203.861 159.538 202.941 159.928 201.801L167.668 179.023C168.058 177.883 169.288 176.963 170.428 176.963H209.518C210.658 176.963 211.268 177.883 210.878 179.023L203.138 201.801C202.748 202.941 201.518 203.861 200.378 203.861Z" fill="#C2C2C2"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M193.71 134C212.648 134 228 118.648 228 99.7099C228 80.7721 212.648 65.4199 193.71 65.4199C174.772 65.4199 159.42 80.7721 159.42 99.7099C159.42 118.648 174.772 134 193.71 134Z" fill="#7A7A7A"/></g><path d="M190.29 130.58C209.228 130.58 224.58 115.228 224.58 96.29C224.58 77.3522 209.228 62 190.29 62C171.352 62 156 77.3522 156 96.29C156 115.228 171.352 130.58 190.29 130.58Z" fill="#7A7A7A"/><path d="M190.29 111.16C192.66 111.16 194.58 113.08 194.58 115.45V115.5C194.58 117.87 192.66 119.79 190.29 119.79C187.92 119.79 186 117.87 186 115.5V115.45C186 113.08 187.92 111.16 190.29 111.16ZM190.29 72.7803C192.66 72.7803 194.58 74.7003 194.58 77.0703V102.18C194.58 104.55 192.66 106.47 190.29 106.47C187.92 106.47 186 104.55 186 102.18V77.0703C186 74.7003 187.92 72.7803 190.29 72.7803Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  titleCase(s) { return String(s || "").replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1)); }
+  successIllustration(size) {
+    const svg = '<svg viewBox="0 0 280 280" width="' + size + '" height="' + size + '" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.6711 76C18.6894 76 6.89452 87.8925 8.08249 101.801L14.9746 182.011C16.04 194.429 27.1749 204 40.5632 204H239.436C252.814 204 263.949 194.429 265.024 182.011L271.916 101.801C273.114 87.9021 261.309 76 246.328 76H33.6711Z" fill="#D9F2E3"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M158.451 66.3917L168.091 73.447C169.678 74.6091 171.525 75.3769 173.465 75.6777L185.273 77.4934C191.116 78.3916 196.52 81.1294 200.7 85.309C204.88 89.4886 207.618 94.8922 208.516 100.734L210.321 112.552C210.622 114.492 211.39 116.339 212.552 117.927L219.608 127.555C223.111 132.323 225 138.084 225 144C225 149.916 223.111 155.677 219.608 160.445L212.552 170.073C211.385 171.658 210.62 173.503 210.321 175.448L208.506 187.255C207.609 193.101 204.87 198.508 200.688 202.69C196.506 206.871 191.099 209.61 185.253 210.507L173.445 212.322C171.499 212.619 169.654 213.385 168.07 214.553L158.441 221.608C153.673 225.111 147.911 227 141.995 227C136.078 227 130.317 225.111 125.549 221.608L115.92 214.553C114.335 213.386 112.49 212.621 110.545 212.322L98.7369 210.507C92.8943 209.608 87.4904 206.871 83.3105 202.691C79.1306 198.511 76.3927 193.108 75.4945 187.266L73.6787 175.458C73.3818 173.512 72.6162 171.668 71.4478 170.084L64.3921 160.455C60.8891 155.688 59 149.926 59 144.01C59 138.094 60.8891 132.333 64.3921 127.565L71.4478 117.937C72.6099 116.349 73.3778 114.503 73.6787 112.562L75.4945 100.734C76.3927 94.8922 79.1306 89.4886 83.3105 85.309C87.4904 81.1294 92.8943 78.3916 98.7369 77.4934L110.555 75.6777C112.496 75.3769 114.343 74.6091 115.93 73.447L125.559 66.3917C130.327 62.889 136.089 61 142.005 61C147.922 61 153.683 62.889 158.451 66.3917Z" fill="#1A4C2F"/></g><path d="M140.005 58C145.708 58 151.263 59.8206 155.859 63.1973L155.86 63.1982L165.5 70.2539C167.216 71.51 169.213 72.3404 171.312 72.666H171.313L183.121 74.4814C188.753 75.3472 193.964 77.9874 197.993 82.0166C201.896 85.9198 204.496 90.93 205.441 96.3594L205.527 96.8867L207.333 108.703V108.705C207.638 110.673 208.387 112.551 209.515 114.192L209.745 114.518L216.802 124.146V124.147C220.179 128.743 222 134.297 222 140C222 145.703 220.179 151.257 216.802 155.853V155.854L209.745 165.482C208.483 167.197 207.656 169.192 207.333 171.296L205.518 183.104H205.517C204.652 188.739 202.013 193.951 197.981 197.982C193.95 202.014 188.737 204.654 183.102 205.519H183.101L171.293 207.334C169.188 207.655 167.192 208.483 165.479 209.746L155.85 216.802L155.849 216.803C151.253 220.179 145.698 222 139.995 222C134.292 222 128.737 220.179 124.141 216.803L124.14 216.802L114.511 209.746H114.51C112.795 208.485 110.801 207.657 108.697 207.334L96.8887 205.519C91.2564 204.653 86.047 202.013 82.0176 197.983C77.9883 193.954 75.3483 188.745 74.4824 183.113L72.667 171.307C72.3657 169.333 71.6184 167.455 70.4844 165.815L70.2529 165.49L63.1982 155.864V155.863L62.8857 155.43C59.709 150.92 58.0001 145.535 58 140.011C58 134.308 59.8214 128.753 63.1982 124.157V124.156L70.2549 114.528V114.527C71.5109 112.812 72.3414 110.815 72.667 108.716V108.714L74.4824 96.8867C75.3483 91.2549 77.9883 86.0458 82.0176 82.0166C86.047 77.9874 91.2564 75.3473 96.8887 74.4814L108.707 72.666H108.709C110.808 72.3404 112.805 71.5098 114.521 70.2539H114.521L124.15 63.1982L124.151 63.1973C128.747 59.8208 134.302 58.0001 140.005 58Z" fill="white" stroke="#267346" stroke-width="2"/><path d="M154.667 70.8071L163.262 77.0974C164.677 78.1334 166.324 78.8179 168.054 79.0862L178.581 80.705C183.79 81.5057 188.608 83.9467 192.335 87.6731C196.061 91.3995 198.503 96.2171 199.303 101.426L200.913 111.962C201.181 113.692 201.866 115.338 202.902 116.754L209.193 125.338C212.316 129.589 214 134.725 214 140C214 145.275 212.316 150.411 209.193 154.662L202.902 163.246C201.862 164.659 201.179 166.303 200.913 168.038L199.294 178.565C198.495 183.777 196.053 188.597 192.324 192.326C188.596 196.054 183.775 198.496 178.563 199.295L168.035 200.914C166.3 201.178 164.656 201.861 163.243 202.903L154.658 209.193C150.407 212.316 145.27 214 139.995 214C134.721 214 129.583 212.316 125.333 209.193L116.748 202.903C115.335 201.862 113.69 201.18 111.956 200.914L101.428 199.295C96.219 198.494 91.4011 196.053 87.6744 192.327C83.9478 188.601 81.5067 183.783 80.7059 178.574L79.087 168.047C78.8223 166.312 78.1397 164.668 77.098 163.255L70.8074 154.671C67.6842 150.421 66 145.284 66 140.009C66 134.735 67.6842 129.598 70.8074 125.347L77.098 116.763C78.1342 115.348 78.8187 113.701 79.087 111.971L80.7059 101.426C81.5067 96.2171 83.9478 91.3995 87.6744 87.6731C91.4011 83.9467 96.219 81.5057 101.428 80.705L111.965 79.0862C113.695 78.8179 115.342 78.1334 116.757 77.0974L125.342 70.8071C129.593 67.6841 134.73 66 140.005 66C145.279 66 150.417 67.6841 154.667 70.8071Z" fill="#33995E"/><g opacity="0.2" style="mix-blend-mode:multiply"><path d="M129.563 174.991H129.49C128.368 175.009 127.265 174.808 126.226 174.395C125.177 173.974 124.249 173.36 123.449 172.582L105.538 155.021C104.747 154.252 104.113 153.336 103.681 152.31C103.239 151.293 103.009 150.212 103 149.104C102.991 147.995 103.193 146.905 103.616 145.879C104.039 144.844 104.646 143.919 105.428 143.131C106.218 142.334 107.138 141.711 108.158 141.29C109.179 140.859 110.282 140.676 111.386 140.63C112.507 140.63 113.592 140.832 114.631 141.253C115.661 141.675 116.59 142.288 117.381 143.076L129.168 154.636L166.479 115.604C168.033 113.983 170.129 113.058 172.373 113.003C174.616 112.948 176.759 113.772 178.386 115.311C180.014 116.859 180.942 118.948 180.997 121.183C181.053 123.427 180.225 125.552 178.671 127.174L135.448 172.398C134.675 173.205 133.765 173.846 132.735 174.295C131.724 174.734 130.657 174.973 129.554 175L129.563 174.991Z" fill="#1A4C2F"/></g><path d="M128.563 170.991H128.49C127.368 171.009 126.265 170.808 125.226 170.395C124.177 169.974 123.249 169.36 122.449 168.582L104.538 151.021C103.747 150.252 103.113 149.336 102.681 148.31C102.239 147.293 102.009 146.212 102 145.104C101.991 143.995 102.193 142.905 102.616 141.879C103.039 140.844 103.646 139.919 104.428 139.131C105.218 138.334 106.138 137.711 107.158 137.29C108.179 136.859 109.282 136.676 110.386 136.63C111.507 136.63 112.592 136.832 113.631 137.253C114.661 137.675 115.59 138.288 116.381 139.076L128.168 150.636L165.479 111.604C167.033 109.983 169.129 109.058 171.373 109.003C173.616 108.948 175.759 109.772 177.386 111.311C179.014 112.859 179.942 114.948 179.997 117.183C180.053 119.427 179.225 121.552 177.671 123.174L134.448 168.398C133.675 169.205 132.765 169.846 131.735 170.295C130.724 170.734 129.657 170.973 128.554 171L128.563 170.991Z" fill="white"/></svg>';
+    return React.createElement("div", { style: { width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  modalResult() {
+    const NS = this.ns(); const h = React.createElement; const { Button } = NS; const m = this.state.modal;
+    const body = h("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, width: "100%", padding: "8px 0" } },
+      this.successIllustration(140),
+      h("div", { style: { fontSize: 18, fontWeight: 700, color: "#1F1F1F", textAlign: "center" } }, this.titleCase(m.title)),
+      h("div", { style: { width: "100%", border: "1px solid #EBEBEB", borderRadius: 6, overflow: "hidden" } }, m.rows.map((r, i) => h("div", { key: i, style: { display: "flex", justifyContent: "space-between", padding: "10px 14px", borderTop: i ? "1px solid #F2F2F2" : "none", fontSize: 14 } }, h("span", { style: { color: "#5C6B75" } }, r[0]), h("b", { style: { color: "#1F1F1F", fontVariantNumeric: "tabular-nums" } }, r[1])))));
+    return { title: "", size: "s", children: body, footer: this._foot([h(Button, { variant: "primary", size: "s", onClick: () => this.closeModal() }, "Selesai")]) };
+  }
+}
+</script>
+</body>
+</html>

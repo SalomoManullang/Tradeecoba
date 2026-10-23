@@ -257,49 +257,61 @@
       </div></div>`;
   }
 
+  // Sidebar bisa diperkecil (240 ↔ 58px); pilihan diingat per browser (bukan data program)
+  const SIDEBAR_KEY = 'tradee-sidebar-collapsed';
+  function sidebarCollapsed() { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch (e) { return false; } }
+
+  // Kerangka COMPASS: Sidebar (240px, 58px saat diperkecil) + NavigationTop (76px) + konten.
+  // Menu header & aside tetap dibangun headerMenu() / asideMenu() dengan hook yang sama (bindMenus).
   function layout(path, user, year, content) {
     const logo = 'assets/paragon/tradee1.png';
+    const now = new Date();
+    const today = `${['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+    const initials = String(user.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
     return `
     <div id="kt_header_mobile" class="kt-header-mobile kt-header-mobile--fixed">
       <div class="kt-header-mobile__logo"><a href="#/"><img alt="Logo" src="${logo}" style="height:30px" /></a></div>
       <div class="kt-header-mobile__toolbar"><button class="kt-header-mobile__toolbar-toggler kt-header-mobile__toolbar-toggler--left" data-click="toggleAside"><span></span></button></div>
     </div>
-    <div class="kt-grid kt-grid--hor kt-grid--root">
-      <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
+    <div class="cmp-shell${sidebarCollapsed() ? ' is-collapsed' : ''}">
 
-        <div class="kt-aside kt-aside--fixed kt-grid__item kt-grid kt-grid--desktop kt-grid--hor-desktop" id="kt_aside">
-          <div class="kt-grid__item" id="kt_aside_brand">
-            <div class="kt-aside__brand-logo">
-              <a href="#/"><img style="width:100px; margin-top:20px; margin-bottom:10px; padding:0px" alt="Logo" src="${logo}" /></a>
-              <button class="btn btn-info btn-elevate kt-login__btn-primary" style="width:100%; padding:inherit; background-color:lightgrey; border-color:lightgrey" data-click="goLobby" title="Ganti tahun">
-                <p style="font-size:20px; margin:0px; font-weight:600">${year}</p>
-              </button>
+        <div class="cmp-side" id="kt_aside">
+          <div class="cmp-side-head" id="kt_aside_brand">
+            <div class="cmp-side-top">
+              <a href="#/" class="cmp-side-logo"><img alt="Logo" src="${logo}" /></a>
+              <button type="button" class="cmp-side-toggle" data-click="toggleSidebar" title="Perkecil / perlebar sidebar" aria-label="Perkecil / perlebar sidebar"><i class="bi bi-chevron-double-left"></i></button>
             </div>
+            <button class="btn btn-info btn-elevate kt-login__btn-primary cmp-year" data-click="goLobby" title="Ganti tahun">
+              <i class="bi bi-calendar3"></i><p>${year}</p>
+            </button>
           </div>
-          <div class="kt-aside-menu-wrapper kt-grid__item kt-grid__item--fluid" id="kt_aside_menu_wrapper">
-            <div id="kt_aside_menu" class="kt-aside-menu kt-aside-menu--dropdown" data-ktmenu-vertical="1" data-ktmenu-dropdown="1" data-ktmenu-scroll="0">
+          <div class="cmp-side-menu" id="kt_aside_menu_wrapper">
+            <div id="kt_aside_menu" data-ktmenu-vertical="1" data-ktmenu-dropdown="1" data-ktmenu-scroll="0">
               <ul class="kt-menu__nav">${asideMenu(user)}</ul>
             </div>
           </div>
         </div>
 
-        <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
-          <div id="kt_header" class="kt-header kt-grid kt-grid--ver kt-header--fixed">
-            <div class="kt-header-menu-wrapper kt-grid__item kt-grid__item--fluid" id="kt_header_menu_wrapper">
-              <div id="kt_header_menu" class="kt-header-menu kt-header-menu-mobile kt-header-menu--layout-">
+        <div class="cmp-main" id="kt_wrapper">
+          <div id="kt_header" class="cmp-top">
+            <div class="cmp-top-menu" id="kt_header_menu_wrapper">
+              <div id="kt_header_menu">
                 <ul class="kt-menu__nav">${headerMenu(user, year, path).map(renderHeaderItem).join('')}</ul>
               </div>
             </div>
-            <div class="kt-header__topbar">
-              <div class="kt-header__topbar-item kt-header__topbar-item--user">
-                <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="10px,0px" title="Ganti tahun">
-                  <span class="kt-header__topbar-icon" style="background-color:coral"><i class="flaticon2-calendar-1"></i></span>
+            <div class="cmp-top-right">
+              <span class="cmp-date">${today}</span>
+              <div class="cmp-top-item">
+                <div class="kt-header__topbar-wrapper cmp-icon-btn" data-toggle="dropdown" data-offset="10px,0px" title="Ganti tahun">
+                  <i class="bi bi-calendar3"></i>
                 </div>
                 <div class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-xl">${yearDropdown()}</div>
               </div>
-              <div class="kt-header__topbar-item kt-header__topbar-item--user">
-                <div class="kt-header__topbar-wrapper" data-toggle="dropdown" data-offset="10px,0px">
-                  <span class="kt-header__topbar-icon"><i class="flaticon2-user-outline-symbol"></i></span>
+              <div class="cmp-top-item">
+                <div class="kt-header__topbar-wrapper cmp-user" data-toggle="dropdown" data-offset="10px,0px">
+                  <span class="cmp-avatar">${esc(initials)}</span>
+                  <span class="cmp-user-text"><span class="cmp-user-name">${esc(user.name)}</span><span class="cmp-user-role">${ROLE_LABEL[user.role]}</span></span>
+                  <i class="bi bi-chevron-down"></i>
                 </div>
                 <div class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-xl">
                   <div class="kt-user-card kt-user-card--skin-light kt-notification-item-padding-x">
@@ -333,7 +345,6 @@
             </div>
           </div>
         </div>
-      </div>
     </div>`;
   }
 
@@ -359,6 +370,13 @@
   // ---------------------------------------------------------------- form & aksi
   const actions = {};
   const clicks = {};
+
+  clicks.toggleSidebar = () => {
+    const shell = document.querySelector('.cmp-shell');
+    if (!shell) return;
+    const on = shell.classList.toggle('is-collapsed');
+    try { localStorage.setItem(SIDEBAR_KEY, on ? '1' : '0'); } catch (e) { /* abaikan */ }
+  };
 
   function formData(form, submitter) {
     const fd = new FormData(form);
@@ -542,6 +560,15 @@
         </div></form></div></div>`;
   }
 
+  // Kepala halaman detail gaya COMPASS, sama dengan Program Setup (nav() di setup.js):
+  // ← Kembali · divider · judul (+ tag) · keterangan · kotak ringkasan [label, nilai] · aksi di kanan
+  function detailHead({ back, crumb = '', title, sub = '', facts = [], actions = '' }) {
+    return `<div class="cps-head"><div class="page-head cps-detail"><a href="#${back}" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span>
+      <div class="cps-detail-main"><div>${crumb ? `<div class="small text-muted">${crumb}</div>` : ''}<h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div></div>
+      ${facts.length ? `<div class="cps-facts">${facts.map(([l, v]) => `<div class="cps-fact"><span class="cps-fact-label">${l}</span><span class="cps-fact-value">${v}</span></div>`).join('')}</div>` : ''}
+      ${actions ? `<div class="cps-head-act">${actions}</div>` : ''}</div></div>`;
+  }
+
   function errorsHtml(errors) {
     return errors && errors.length ? `<div class="alert alert-danger"><ul class="mb-0">${errors.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
   }
@@ -568,7 +595,7 @@
 
   window.UI = {
     h, session, currentUser, currentYear, inScope, store, route, go, render, flash, redirect, fail, requireRole, requireSetup,
-    actions, clicks, download, parseCsv, toCsv, fieldInput, readFieldValues, logHtml, layerPath, approvalBox, errorsHtml, done, parseHash, pendingFor,
+    actions, clicks, download, parseCsv, toCsv, fieldInput, readFieldValues, logHtml, layerPath, approvalBox, errorsHtml, detailHead, done, parseHash, pendingFor,
     retry, takePending,
   };
 })();

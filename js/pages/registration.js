@@ -7,25 +7,27 @@
   const C = window.Catalog;
 
   const canSeeChannel = (user, code) => !user.channel_codes || !user.channel_codes.length || user.channel_codes.includes(code);
+  // Pendaftaran dibuka per channel: fase Pendaftaran channel itu harus PUBLISHED (status per channel × fase)
+  const regOpen = (c) => window.SetupModel.isPublished(c, 'REGISTRATION');
 
   function ctx(programId, pcId, user, year) {
     UI.requireRole('CBD');
     const program = E.loadProgram(Number(programId));
     if (!program || program.year !== year) fail('Program tidak ditemukan');
-    if (program.status !== 'PUBLISHED') fail('Program belum dipublish', 'Registration hanya membaca program PUBLISHED.');
     const ch = program.channels.find((c) => c.id === Number(pcId));
     if (!ch || !canSeeChannel(user, ch.channel_code)) fail('Channel tidak ditemukan', 'Channel tidak ada atau di luar scope Anda.');
+    if (!regOpen(ch)) fail('Pendaftaran belum dipublish', 'Registration hanya membaca channel yang fase Pendaftarannya PUBLISHED.');
     return { program, ch };
   }
 
   // ---------------------------------------------------------------- pilih program & channel
   route('/registration', ({}, q, { user, year }) => {
     UI.requireRole('CBD');
-    const programs = DB.where('programs', (p) => p.year === year && p.status === 'PUBLISHED').map((x) => E.loadProgram(x.id));
+    const programs = DB.where('programs', (p) => p.year === year && window.SetupModel.programHas(p.id, 'REGISTRATION', window.SetupModel.isPublished)).map((x) => E.loadProgram(x.id));
     return {
       title: 'Registration', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Registration ${year}</h1><div class="sub">Pilih program & channel. Saran toko mengikuti aturan eligibility yang diatur Admin HO.</div></div></div>
       ${programs.map((p) => `<div class="card mb-3"><div class="card-header">${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)} · ${h.date(p.period_start)} – ${h.date(p.period_end)}</span></div>
-        <div class="card-body"><div class="row g-3">${p.channels.filter((c) => canSeeChannel(user, c.channel_code)).map((c) => {
+        <div class="card-body"><div class="row g-3">${p.channels.filter((c) => canSeeChannel(user, c.channel_code) && regOpen(c)).map((c) => {
           const regs = DB.where('registrations', (x) => x.program_channel_id === c.id);
           return `<div class="col-md-4"><div class="border rounded p-3 h-100 d-flex flex-column cps-tile">
             <div class="fw-semibold">${esc(c.channel_name)}</div>
@@ -55,7 +57,7 @@
         actions: `<a href="#/registration/program/${program.id}/${ch.id}?all=${showAll ? '0' : '1'}" class="small btn btn-sm btn-outline-secondary">${showAll ? 'Sembunyikan yang tidak eligible' : 'Tampilkan juga yang tidak eligible'}</a>` })}
       <div class="cps-work">
       <div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-diagram-3"></i> Channel</div>
-        <div class="d-flex flex-wrap gap-2 align-items-center">${program.channels.filter((c) => canSeeChannel(user, c.channel_code)).map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/registration/program/${program.id}/${c.id}">${esc(c.channel_name)}</a>`).join('')}</div></div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">${program.channels.filter((c) => canSeeChannel(user, c.channel_code) && regOpen(c)).map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/registration/program/${program.id}/${c.id}">${esc(c.channel_name)}</a>`).join('')}</div></div>
       <div class="card mb-2"><div class="card-body"><p class="small text-muted mb-0"><span class="text-muted">Aturan eligibility:</span>
         ${ch.elig_min_sell_out_months ? `<span>Min ${ch.elig_min_sell_out_months} bulan sell out</span>` : ''}
         ${ch.elig_ratio_at_registration && ch.elig_ratio_min !== null ? `<span>· SO:SI ${ch.elig_ratio_min}–${ch.elig_ratio_max === null ? '∞' : ch.elig_ratio_max}%</span>` : ''}

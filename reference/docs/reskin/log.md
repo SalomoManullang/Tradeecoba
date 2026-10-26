@@ -142,3 +142,34 @@ Keputusan (ditanyakan dulu): semua halaman yang bisa dibuka CDT, termasuk halama
 - CSS: aksi DetailHeader, tile, action bar, statistik, approval box, `dl`, `details`, segmented komponen/periode, tabel brand form daftar (hasil hitung menonjol), panel samping `col-lg`, checkbox tabel, kolom aksi selebar isi, alert sederhana block, label brand inline-block, tabel padat sedikit lebih rapat di < 1440.
 - Tooling: capture modul 48 halaman (Admin HO, CBD, Admin DC, ABL, Finance, termasuk form & detail) + 12 skenario CDT/approver (daftar toko + hitung otomatis + error, approve dari detail, kembalikan → revisi → kirim ulang, inbox bulk + konfirmasi, monitoring dengan validasi bawaan & 11 evidence, filter peserta & toko, ajukan payout, dashboard 3 role). Baseline dari worktree HEAD; pra-cek pada kode sebelum perubahan CDT identik.
 - Verifikasi: skenario CDT & `localStorage` identik dengan kode asli; 0 hook modul hilang/berubah; perbedaan konten hanya Kembali, kotak ringkasan berlabel (nilai sama), link toko di ringkasan, link channel di pemilih; overflow 0; console 0; Program Setup tidak berubah. Di 1280 tabel saran toko "tampilkan semua" bisa digeser di dalam kartu (tabel lebar).
+
+## Model Program Setup 2027: status channel × fase, skema kelas, growth, Vision Compass, termin (26 Okt 2026)
+
+Keputusan (ditanyakan dulu): runtime baru hanya Setup + Simulasi (Registration / Monitoring / Payout tetap memakai perhitungan lama, hanya gerbangnya membaca status channel × fase) · editor Monitoring/Pencairan lama tetap ada, berlabel "Menyusul" · nilai kelas lama tetap tersimpan, editornya disembunyikan · data contoh deck di channel CS 2027 ("Cosmetics Store & GT Other", semua fase DRAFT); Locomm PUBLISHED; 2026 tidak berubah.
+
+- `js/setup-model.js` (baru): status per `programChannels.phase_status`, konfigurasi per `programChannels.setup` (ikut clone/hapus); pratinjau form CBD; validasi per fase; ringkasan status program; data contoh deck.
+- `js/pages/setup3.js` (baru): Sub-channel & role, Skema kelas + rentang baseline (ikut skema brand lain), Target growth (generator + sel), Vision Compass, Batas & exception, Termin & conditional rebate, kerangka Monitoring.
+- `setup.js` / `setup2.js`: kunci per channel × fase; tab fase di kartu kerja; matriks status di Header; Simulasi = pratinjau form CBD (sandbox rumus lama dilipat); Validasi = matriks + publish/close per fase; threshold di Eligibility; dokumen wajib + pilihan template MoU di Dokumen.
+- Gerbang runtime: Registration hanya channel dengan Pendaftaran PUBLISHED; Monitoring/Payout hanya fase yang bukan DRAFT. Dashboard: tombol "Program baru" dihapus, status = ringkasan matriks.
+- Store key `tradee2027-fe-v3` (data lama di browser otomatis diganti seed baru).
+- Verifikasi: 22 route tanpa error konsol / overflow; simpan ulang 10 form tanpa perubahan data; termin ≠ 100% (error langsung + blokir publish Pencairan); ganti kode kelas memindahkan baseline/growth/target LM; exception total & plafon VC; threshold; penurunan conditional; publish → read-only (server juga menolak), fase lain tetap bisa diedit; close; audit; gerbang Registration CS; clone → semua fase DRAFT. Skenario CDT/approver identik kecuali navigasi Payout tanpa CS (Pencairan DRAFT) dan dashboard Admin HO tanpa link Program baru.
+
+## Revisi model 2027: channel Active/Passive, tanpa role, growth & tab Vision Compass (26 Okt 2026)
+
+Keputusan (ditanyakan dulu): target growth dihapus (kelas tetap dari baseline) · aturan role pindah ke tiap channel · CS 2027 dipecah: Passive = aturan Full Experience, Active = aturan Hub · exception "alokasi VC > plafon" tetap, alokasi per pilar JTBD.
+
+- Channel program punya `channel_type` ACTIVE / PASSIVE (`Engine.CHANNEL_TYPES`, `Engine.channelName`); form tambah channel wajib pilih tipe; master yang sama dengan tipe berbeda = channel berbeda. `Engine.cloneChannel` (dipakai clone program & seed).
+- Dihapus: tab Sub-channel & role, Target growth, Vision Compass (route lama diarahkan ke Eligibility / Skema kelas / Pilar). Toggle contoh teks saran lead measure pindah ke halaman Pilar.
+- Batas & exception: rentang semester / yearly benefit + batas total per channel. Termin hanya per channel.
+- Label: "semester rebate / full year rebate" → "semester benefit / yearly benefit".
+- Simulasi: growth per tier diisi CBD (tanpa saran), alokasi Vision Compass per pilar JTBD.
+- Store key `tradee2027-fe-v4`.
+- Verifikasi: 37 route tanpa error / overflow; 7 form simpan ulang tanpa perubahan data; rentang terbalik ditolak; exception Active (total 4,75% > 4,25%; alokasi 400 jt > plafon 324 jt) dan Passive (hanya alokasi); toggle saran LM; termin 90%; tambah channel Locomm Active + tolak dobel; skenario CDT/approver identik dengan run sebelumnya.
+
+## Skema kelas per brand, tanpa potensial store (26 Okt 2026)
+
+Keputusan (ditanyakan dulu): satu tab per brand berisi satu tabel kelas + rentang baseline + tier + rebate + Vision Compass · kelas, tier, rebate, VC bisa berbeda per brand · "Ikuti skema brand lain" tetap di tabel, mengikuti seluruh skema brand acuan (read-only) · label "rebate" hanya di tabel skema kelas.
+
+- Data: `setup.schemes[brand].classes = [{ code, min, max, vc_pct, tiers }]` menggantikan `scheme` + `baselines`; `potential_store` dihapus. `SM.schemeOf / hasSchemes`; `classOf`, validasi, editor target lead measure (`lmClasses`), simulasi, dan Batas & exception membaca skema brand (atau brand acuannya).
+- Halaman `/setup/:id/ch/:pc/scheme/:brand` (tanpa brand → brand pertama); form `setup.saveScheme` per brand; `setup.saveBaselines` dihapus. Brand yang diikuti brand lain tidak bisa ikut brand lain; ganti kode kelas memindah target lead measure brand itu & pengikutnya.
+- Verifikasi: skenario per brand (simpan ulang tanpa perubahan, ubah rebate Wardah tidak mengubah Emina, rentang terbalik → error validasi, Light+ ikut Wardah → kelas dari rentang Wardah & tab read-only, kembali skema sendiri memulihkan data, rename kelas, kelas baru), smoke 37 route tanpa error/overflow (juga 1280), uji fungsional sebelumnya lulus, skenario CDT/approver identik.

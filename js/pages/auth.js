@@ -128,17 +128,18 @@
     const programs = DB.where('programs', (p) => p.year === year);
     const isHo = h.SETUP_ROLES.includes(user.role);
     const pending = UI.pendingFor(user, year);
+    const SM = window.SetupModel;
     const cards = programs.map((p) => {
+      const phaseSum = SM.programSummary(p.id);
       const regs = DB.where('registrations', (x) => x.program_id === p.id);
       const pays = DB.where('payouts', (d) => regs.some((x) => x.id === d.registration_id));
       const sum = (st, comp) => pays.filter((d) => d.status === st && (!comp || d.component === comp)).reduce((s, d) => s + d.amount, 0);
       const chs = DB.where('programChannels', (c) => c.program_id === p.id).map((c) => {
-        const ch = DB.t('channels').find((x) => x.code === c.channel_code) || {};
-        return `<span class="mr-2">${esc(ch.name)} (${regs.filter((x) => x.program_channel_id === c.id && x.status !== 'rejected').length})</span>`;
+        return `<span class="mr-2">${esc(window.Engine.channelName(c))} (${regs.filter((x) => x.program_channel_id === c.id && x.status !== 'rejected').length})</span>`;
       }).join('');
       const stat = (label, val) => `<div class="col-6 col-lg-3"><div class="stat bg-light rounded"><div class="label">${label}</div><div class="value">${val}</div></div></div>`;
       return `<div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center"><span>${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)}</span></span>${h.badge(p.status)}</div>
+        <div class="card-header d-flex justify-content-between align-items-center"><span>${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)}</span></span><span class="badge badge-light">${SM.summaryLabel(p.id)}</span></div>
         <div class="card-body">
           <div class="row g-3">${stat('Registrasi disetujui', regs.filter((x) => x.status === 'approved').length)}${stat('Menunggu approval', regs.filter((x) => x.status === 'in_review').length)}
             ${stat('Dibayar · Conditional', h.rpShort(sum('paid', 'CONDITIONAL')))}${stat('Dibayar · Fix', h.rpShort(sum('paid', 'FIX')))}</div>
@@ -148,8 +149,8 @@
           </div>
           <div class="mt-3 d-flex gap-2 flex-wrap">
             ${isHo ? `<a class="btn btn-sm btn-outline-brand" href="#/setup/${p.id}/header"><i class="bi bi-sliders"></i> Program Setup</a>` : ''}
-            ${user.role === 'CBD' && p.status === 'PUBLISHED' ? '<a class="btn btn-sm btn-outline-brand" href="#/registration"><i class="bi bi-shop"></i> Registrasi toko</a><a class="btn btn-sm btn-outline-brand" href="#/monitoring"><i class="bi bi-camera"></i> Monitoring</a>' : ''}
-            ${p.status !== 'DRAFT' ? `<a class="btn btn-sm btn-outline-brand" href="#/registration/participants?program=${p.id}"><i class="bi bi-people"></i> Peserta</a>
+            ${user.role === 'CBD' && SM.programHas(p.id, 'REGISTRATION', SM.isPublished) ? '<a class="btn btn-sm btn-outline-brand" href="#/registration"><i class="bi bi-shop"></i> Registrasi toko</a><a class="btn btn-sm btn-outline-brand" href="#/monitoring"><i class="bi bi-camera"></i> Monitoring</a>' : ''}
+            ${phaseSum.anyRunning ? `<a class="btn btn-sm btn-outline-brand" href="#/registration/participants?program=${p.id}"><i class="bi bi-people"></i> Peserta</a>
               <a class="btn btn-sm btn-outline-brand" href="#/payout/program/${p.id}"><i class="bi bi-cash-coin"></i> Payout</a>` : ''}
           </div>
         </div></div>`;
@@ -168,7 +169,7 @@
     return {
       title: 'Dashboard', html: `<div class="cps cps-app"><div class="cps-list">
       <div class="page-head"><div><h1>Dashboard ${year}</h1><div class="sub">Ringkasan program loyalty tahun ${year}</div></div>
-        ${isHo ? '<a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Program baru</a>' : n ? `<a href="#/inbox" class="btn btn-brand"><i class="bi bi-inbox"></i> ${n} menunggu Anda</a>` : ''}</div>
+        ${!isHo && n ? `<a href="#/inbox" class="btn btn-brand"><i class="bi bi-inbox"></i> ${n} menunggu Anda</a>` : ''}</div>
       <div class="alert alert-light alert-elevate py-2 small"><i class="flaticon2-light kt-font-brand mr-2"></i> ${tips[user.role] || ''} Gunakan <a href="#/switch">Ganti role</a> untuk melihat alur dari sisi lain.</div>
       ${cards || `<div class="card"><div class="card-body text-center py-5"><i class="bi bi-inboxes fs-1 text-muted"></i><p class="mt-2 mb-3">Belum ada program di tahun ${year}.</p>
         ${isHo ? '<a href="#/setup/new" class="btn btn-brand">Buat program</a> <a href="#/setup" class="btn btn-outline-brand">Clone dari tahun lain</a>' : '<p class="text-muted small">Program dibuat oleh Admin HO lewat Program Setup.</p>'}</div></div>`}</div></div>`,

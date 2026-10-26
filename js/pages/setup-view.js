@@ -8,8 +8,9 @@
 (function () {
   const { h } = UI;
   // Form konfigurasi yang punya mode lihat; form aksi cepat (clone, tipe, channel, exception, publish) selalu bisa diisi
-  const VIEW_FORMS = ['setup.header', 'setup.saveBrands', 'setup.saveClasses', 'setup.savePillars', 'setup.saveLmTargets', 'setup.saveFormulas',
-    'setup.savePhaseForm', 'setup.saveLayers', 'setup.saveEligibility', 'setup.saveDoc'];
+  const VIEW_FORMS = ['setup.header', 'setup.saveBrands', 'setup.savePillars', 'setup.saveLmTargets', 'setup.saveFormulas',
+    'setup.savePhaseForm', 'setup.saveLayers', 'setup.saveEligibility', 'setup.saveThreshold', 'setup.saveDoc', 'setup.saveDocsConfig',
+    'setup.saveLmExample', 'setup.saveScheme', 'setup.saveLimits', 'setup.saveTerms'];
   const NOTE_MIN = 140; // catatan sependek ini tidak dilipat
 
   let audit = false; // dipakai tooling verifikasi: semua form mode edit, semua bagian terbuka

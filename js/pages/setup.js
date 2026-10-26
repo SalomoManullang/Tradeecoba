@@ -19,55 +19,86 @@
     if (!ch) fail('Channel tidak ditemukan');
     return ch;
   }
-  // Semua penulisan konfigurasi hanya untuk DRAFT; template dokumen boleh DRAFT & PUBLISHED (FR1, FR10)
-  function assertDraft(pid) {
+  // Status publish per CHANNEL × FASE (Pendaftaran · Monitoring · Pencairan), bukan per program (js/setup-model.js).
+  // Halaman konfigurasi terkunci bila fase miliknya di channel itu sudah PUBLISHED / CLOSED; fase lain tetap bisa diedit.
+  // Header program & daftar channel terkunci begitu ada satu fase yang tidak lagi DRAFT.
+  const SM = window.SetupModel;
+  const PL = SM.PHASE_LABEL;
+  const programLocked = (pid) => DB.where('programChannels', (c) => c.program_id === pid).some((c) => SM.PHASES.some(([ph]) => SM.isRunning(c, ph)));
+  function assertDraft(pid, pcId, phase) {
     const p = DB.byId('programs', pid);
-    if (!p || p.status !== 'DRAFT') throw new Error(`Program ${p ? p.status : ''} terkunci. Hanya template MOU/SKN yang masih bisa diubah setelah publish.`);
+    if (!p) throw new Error('Program tidak ditemukan.');
+    if (pcId) {
+      const st = SM.phaseStatus(DB.byId('programChannels', pcId), phase);
+      if (st !== 'DRAFT') throw new Error(`Fase ${PL[phase]} channel ini ${st}: read-only. Fase lain di channel yang sama tetap bisa diedit.`);
+      return p;
+    }
+    if (programLocked(pid)) throw new Error('Sudah ada fase yang PUBLISHED: header program & daftar channel terkunci.');
     return p;
   }
-  function assertDocsEditable(pid) {
+  // Template dokumen tetap bisa diubah setelah Pendaftaran PUBLISHED (revisi baru); terkunci saat CLOSED
+  function assertDocsEditable(pid, pcId) {
     const p = DB.byId('programs', pid);
-    if (!p || p.status === 'CLOSED') throw new Error('Program CLOSED sepenuhnya read-only, termasuk template dokumen.');
+    if (!p || SM.phaseStatus(DB.byId('programChannels', pcId), 'REGISTRATION') === 'CLOSED') throw new Error('Fase Pendaftaran channel ini CLOSED: template dokumen read-only.');
     return p;
   }
   function touch(pid) { const p = DB.byId('programs', pid); p.updated_at = new Date().toISOString(); p.lock_version = (p.lock_version || 1) + 1; }
-  const editable = (p) => p.status === 'DRAFT';
-  const fs = (p) => (editable(p) ? '' : 'disabled'); // <fieldset ${fs(p)}> → read-only setelah publish
+  const editable = (p, ch, phase) => (ch ? SM.phaseStatus(ch, phase) === 'DRAFT' : !programLocked(p.id));
+  const fs = (p, ch, phase) => (editable(p, ch, phase) ? '' : 'disabled'); // <fieldset ${fs(p, ch, fase)}> → read-only setelah fase PUBLISHED
+  const confirmTag = '<span class="cps-confirm" title="Belum dipastikan user, dibahas saat review">Perlu konfirmasi</span>';
+  const soonTag = '<span class="cps-soon">Menyusul</span>';
 
-  const CH_TABS = [['eligibility', '3a', 'Eligibility & jadwal'], ['brands', '3b', 'Brand'], ['classes', '3c', 'Kelas & tier'], ['pillars', '3d', 'Pilar'], ['formulas', '3e', 'Rumus'],
-    ['phases', '3f–g', 'Fase: form & approval'], ['documents', '3h', 'Dokumen']];
+  // Bagian konfigurasi channel dikelompokkan per fase; Monitoring & Pencairan masih kerangka ("Menyusul") kecuali termin pencairan
+  const PHASE_TABS = {
+    REGISTRATION: [['eligibility', 'Eligibility & threshold'], ['brands', 'Brand'], ['scheme', 'Skema kelas'],
+      ['pillars', 'Pilar & saran lead measure'], ['limits', 'Batas & exception'], ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
+    MONITORING: [['monitoring', 'Kerangka', true], ['phases/MONITORING', 'Form & approval', true]],
+    PAYOUT: [['terms', 'Termin & conditional rebate'], ['formulas', 'Rumus', true], ['phases/PAYOUT', 'Form & approval', true]],
+  };
+  const phaseOfSub = (sub) => (Object.entries(PHASE_TABS).find(([, tabs]) => tabs.some(([k]) => k === sub)) || ['REGISTRATION'])[0];
+  const statusTag = (st) => `<span class="cps-phase-st st-${st.toLowerCase()}">${h.STATUS[st][0]}</span>`;
 
-  // Header program + stepper alur setup (step 1–8) + sub-tab per channel (step 3, diulang per channel)
+  // Matriks status channel × fase (halaman detail program & validasi)
+  function phaseMatrix(p, cell) {
+    return `<div class="table-responsive"><table class="table mb-0 cps-matrix"><thead><tr><th>Channel</th>${SM.PHASES.map(([, l]) => `<th>${l}</th>`).join('')}</tr></thead><tbody>
+      ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)}</td>${SM.PHASES.map(([ph]) => `<td>${cell ? cell(ch, ph) : statusTag(SM.phaseStatus(ch, ph))}</td>`).join('')}</tr>`).join('')
+        || `<tr><td colspan="${SM.PHASES.length + 1}" class="text-center text-muted py-4">Belum ada channel.</td></tr>`}</tbody></table></div>`;
+  }
+
+  // Header program + stepper alur setup + kartu kerja channel (pemilih channel → tab fase → bagian fase)
   function nav(p, step, ch, sub) {
-    const st = p.status;
     const first = p.channels[0];
     const steps = [
       ['header', '1', 'Header', `#/setup/${p.id}/header`],
       ['channels', '2', 'Channel', `#/setup/${p.id}/channels`],
       ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/eligibility` : `#/setup/${p.id}/channels`],
       ['simulate', '4', 'Simulasi', `#/setup/${p.id}/simulate`],
-      ['validate', '5–6', st === 'DRAFT' ? 'Validasi & publish' : 'Validasi', `#/setup/${p.id}/validate`],
-      ...(st !== 'DRAFT' ? [['docs', '7', 'Edit MOU / SKN', first ? `#/setup/${p.id}/ch/${first.id}/documents` : '#'], ['close', '8', 'Close', `#/setup/${p.id}/validate?focus=close`]] : []),
+      ['validate', '5', 'Validasi & publish', `#/setup/${p.id}/validate`],
       ['audit', '', 'Audit log', `#/setup/${p.id}/audit`],
     ];
-    const lock = st === 'PUBLISHED'
-      ? `<div class="alert alert-success py-2 small mb-3"><i class="bi bi-lock"></i>&nbsp;<span>PUBLISHED: kelas, tier, rumus, pilar, form, approval & aturan <strong>read-only</strong>. Hanya template MOU / SKN yang masih bisa diubah (revisi baru).</span></div>`
-      : st === 'CLOSED' ? '<div class="alert alert-dark py-2 small mb-3"><i class="bi bi-archive"></i>&nbsp;<span>CLOSED: seluruh program read-only, termasuk template dokumen. Tetap tersedia untuk audit & laporan.</span></div>' : '';
-    // Kartu kerja channel (pemilih channel + tab 3a–3h + isi halaman); ditutup di akhir template tiap route channel
+    const phase = ch ? phaseOfSub(sub) : null;
+    const st = ch ? SM.phaseStatus(ch, phase) : null;
+    const lock = !ch || st === 'DRAFT' ? ''
+      : st === 'PUBLISHED' ? `<div class="alert alert-success py-2 small mb-3"><i class="bi bi-lock"></i>&nbsp;<span>Fase <strong>${PL[phase]}</strong> channel ${esc(ch.channel_name)} PUBLISHED: bagian fase ini <strong>read-only</strong>${phase === 'REGISTRATION' ? ' (template MoU / SKN tetap bisa direvisi)' : ''}. Fase lain di channel ini tetap bisa diedit.</span></div>`
+      : `<div class="alert alert-dark py-2 small mb-3"><i class="bi bi-archive"></i>&nbsp;<span>Fase <strong>${PL[phase]}</strong> channel ${esc(ch.channel_name)} CLOSED: read-only, termasuk template dokumen. Tetap tersedia untuk audit & laporan.</span></div>`;
+    // Kartu kerja channel; ditutup di akhir template tiap route channel
+    const href = (k) => `#/setup/${p.id}/ch/${ch.id}/${k}`;
     const chNav = ch ? `<div class="cps-work"><div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap channel</div>
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">${p.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${c.id}/${sub === 'classes' ? 'brands' : sub}">${esc(c.channel_name)}</a>`).join('')}</div>
-        <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-brand sub-tabs mb-0">${CH_TABS.map(([k, n, l]) => `<li class="nav-item"><a class="nav-link ${sub === k ? 'active' : ''}"
-          href="#/setup/${p.id}/ch/${ch.id}/${k === 'classes' ? (ch.brands[0] ? 'brands/' + ch.brands[0].id : 'brands') : k}"><span class="n">${n}</span>${l}</a></li>`).join('')}</ul></div>` : '';
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">${p.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${c.id}/${sub}">${esc(c.channel_name)}</a>`).join('')}</div>
+        <ul class="nav nav-tabs phase-tabs mb-0">${SM.PHASES.map(([ph, l]) => `<li class="nav-item"><a class="nav-link ${ph === phase ? 'active' : ''}" href="${href(PHASE_TABS[ph][0][0])}">${l}
+          ${ph === 'REGISTRATION' ? '' : soonTag}${statusTag(SM.phaseStatus(ch, ph))}</a></li>`).join('')}</ul>
+        <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-brand sub-tabs mb-0">${PHASE_TABS[phase].map(([k, l, later]) => `<li class="nav-item"><a class="nav-link ${sub === k ? 'active' : ''}"
+          href="${href(k)}">${l}${later ? soonTag : ''}${k === 'pillars' ? confirmTag : ''}</a></li>`).join('')}</ul></div>` : '';
     return `<div class="cps-head"><div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div>
         <div class="small text-muted"><a href="#/setup">Program Setup</a> / ${p.year}</div>
-        <h1>${esc(p.name)} <span class="text-muted fw-normal fs-6">${esc(p.code)}</span> ${h.badge(st)}</h1></div>
+        <h1>${esc(p.name)} <span class="text-muted fw-normal fs-6">${esc(p.code)}</span> <span class="badge badge-light">${SM.summaryLabel(p.id)}</span></h1></div>
       </div>
       <div class="cps-facts">
         <div class="cps-fact"><span class="cps-fact-label">Periode</span><span class="cps-fact-value">${h.date(p.period_start)} – ${h.date(p.period_end)}</span></div>
         <div class="cps-fact"><span class="cps-fact-label">Channel</span><span class="cps-fact-value">${p.channels.length}</span></div>
         <div class="cps-fact"><span class="cps-fact-label">Registrasi</span><span class="cps-fact-value">${p.registrationCount}</span></div>
       </div></div>
-      <ol class="flow-steps">${steps.map(([k, n, l, href]) => `<li class="${step === k ? 'active' : ''}"><a href="${href}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
+      <ol class="flow-steps">${steps.map(([k, n, l, href2]) => `<li class="${step === k ? 'active' : ''}"><a href="${href2}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
       ${lock}${chNav}`;
   }
 
@@ -82,19 +113,19 @@
       <div class="page-head"><div><h1>Program Setup ${year}</h1><div class="sub">Konfigurasi program loyalty tanpa code release. Hanya Admin HO & Admin IT (Superadmin).</div></div>
         <a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Program baru</a></div>
       <div class="card mb-4"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0">
-        <thead><tr><th>Kode</th><th>Nama</th><th>Tipe</th><th>Periode</th><th class="num">Channel</th><th class="num">Registrasi</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Kode</th><th>Nama</th><th>Tipe</th><th>Periode</th><th class="num">Channel</th><th class="num">Registrasi</th><th>Status channel × fase</th><th></th></tr></thead>
         <tbody>${programs.map((p) => `<tr><td><code>${esc(p.code)}</code></td><td class="fw-semibold">${esc(p.name)}</td><td>${esc(types[p.program_type_id])}</td>
           <td>${h.date(p.period_start)} – ${h.date(p.period_end)}</td>
           <td class="num">${DB.where('programChannels', (c) => c.program_id === p.id).length}</td>
-          <td class="num">${DB.where('registrations', (x) => x.program_id === p.id).length}</td><td>${h.badge(p.status)}</td>
-          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/header" class="btn btn-sm btn-outline-brand">${p.status === 'DRAFT' ? 'Edit' : 'Lihat'}</a>
+          <td class="num">${DB.where('registrations', (x) => x.program_id === p.id).length}</td><td><span class="badge badge-light">${SM.summaryLabel(p.id)}</span></td>
+          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/header" class="btn btn-sm btn-outline-brand">${SM.programSummary(p.id).count.DRAFT ? 'Edit' : 'Lihat'}</a>
             <a href="#/setup?clone=${p.id}" class="btn btn-sm btn-link">Clone</a></td></tr>`).join('')
           || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div></div>
       <div class="card" id="clone"><div class="card-header"><span class="step-chip">1A</span>&nbsp;Clone program</div><div class="card-body">
         <p class="small text-muted">Membuat program <strong>DRAFT</strong> baru dengan semua channel, brand, kelas, tier, pilar, rumus, form fase, approval layer & template dokumen tersalin. Lanjutkan di step 2 untuk mengubah yang berbeda saja.</p>
         <form data-action="setup.clone" class="row g-2 align-items-end">
           <div class="col-md-4"><label class="form-label small">Program sumber <span class="text-danger">*</span></label><select name="source_id" class="form-control">
-            ${all.map((o) => `<option value="${o.id}" ${sel(Number(q.clone) === o.id)}>${o.year} · ${esc(o.name)} (${esc(o.code)}) · ${h.STATUS[o.status][0]}</option>`).join('')}</select></div>
+            ${all.map((o) => `<option value="${o.id}" ${sel(Number(q.clone) === o.id)}>${o.year} · ${esc(o.name)} (${esc(o.code)}) · ${SM.summaryLabel(o.id)}</option>`).join('')}</select></div>
           <div class="col-md-2"><label class="form-label small">Kode baru <span class="text-danger">*</span></label><input name="code" class="form-control text-uppercase" placeholder="LOYALTY-${year + 1}" required></div>
           <div class="col-md-3"><label class="form-label small">Nama baru <span class="text-danger">*</span></label><input name="name" class="form-control" placeholder="Loyalty Program ${year + 1}" required></div>
           <div class="col-md-1"><label class="form-label small">Tahun <span class="text-danger">*</span></label><input name="year" type="number" class="form-control" value="${year}" required></div>
@@ -138,6 +169,8 @@
     return `<div class="cps">${isNew ? `<div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div><div class="small text-muted"><a href="#/setup">Program Setup</a> / ${UI.currentYear()}</div><h1>Program baru</h1>
         <div class="sub">Step 1B · program dibuat dengan status DRAFT</div></div></div></div>` : nav(p, 'header')}
       ${UI.errorsHtml(errors)}
+      ${isNew ? '' : `<div class="card"><div class="card-header"><i class="bi bi-grid-3x3-gap"></i>&nbsp;Status channel × fase <span class="small text-muted fw-normal">&nbsp;· publish per channel & fase di step 5; fase yang PUBLISHED read-only, fase lain tetap bisa diedit</span></div>
+        <div class="card-body p-0">${phaseMatrix(p)}</div></div>`}
       <div class="row g-3"><div class="col-12">
         <form data-action="setup.header" data-id="${isNew ? '' : p.id}"><fieldset ${lockAttr}>
         <div class="card"><div class="card-header"><span class="step-chip">1B</span>&nbsp;Program header</div><div class="card-body row g-3">
@@ -149,7 +182,7 @@
           <div class="col-md-4"><label class="form-label">Periode selesai <span class="text-danger">*</span></label><input name="period_end" type="date" class="form-control" value="${esc(fv.period_end)}" required><div class="form-text">Harus setelah tanggal mulai</div></div>
           <div class="col-12"><label class="form-label">Deskripsi</label><textarea name="description" class="form-control" rows="3">${esc(fv.description)}</textarea></div>
           <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> ${isNew ? 'Buat program (DRAFT) & lanjut ke channel' : 'Simpan header'}</button>
-            ${!isNew && p.status === 'DRAFT' && !p.registrationCount ? `<a href="#" class="btn btn-link text-danger" data-click="setup.deleteProgram" data-id="${p.id}" data-confirm="Hapus program DRAFT ini beserta seluruh konfigurasinya?"><i class="bi bi-trash"></i> Hapus DRAFT</a>` : ''}</div>
+            ${!isNew && !programLocked(p.id) && !p.registrationCount ? `<a href="#" class="btn btn-link text-danger" data-click="setup.deleteProgram" data-id="${p.id}" data-confirm="Hapus program DRAFT ini beserta seluruh konfigurasinya?"><i class="bi bi-trash"></i> Hapus DRAFT</a>` : ''}</div>
         </div></div></fieldset></form>
       </div>
       </div></div>`;
@@ -215,36 +248,42 @@
   // ---------------------------------------------------------------- 2 · channel
   route('/setup/:id/channels', ({ id }) => {
     const p = getProgram(id);
-    const avail = DB.t('channels').filter((c) => c.is_active && !p.channels.some((x) => x.channel_code === c.code));
+    // master channel × tipe (Active / Passive) yang belum ada di program
+    const taken = (code, type) => p.channels.some((x) => x.channel_code === code && (x.channel_type || null) === type);
+    const avail = DB.t('channels').filter((c) => c.is_active && Object.keys(E.CHANNEL_TYPES).some((t) => !taken(c.code, t)));
     return {
       title: 'Channel', html: `<div class="cps">${nav(p, 'channels')}
       <div class="row g-3"><div class="col-lg-8"><div class="card"><div class="card-header"><span class="step-chip">2</span>&nbsp;Channel program</div><div class="card-body p-0">
-        <table class="table mb-0"><thead><tr><th>Channel</th><th class="num">Brand</th><th class="num">Pilar / LM</th><th>Approval Registration</th><th></th></tr></thead><tbody>
-        ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td><td class="num">${ch.brands.length}</td>
+        <table class="table mb-0"><thead><tr><th>Channel</th><th>Tipe</th><th class="num">Brand</th><th class="num">Pilar / LM</th><th>Approval Registration</th><th></th></tr></thead><tbody>
+        ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td>
+          <td>${E.CHANNEL_TYPES[ch.channel_type] ? `<span class="badge badge-light">${E.CHANNEL_TYPES[ch.channel_type]}</span>` : '<span class="text-muted small">-</span>'}</td><td class="num">${ch.brands.length}</td>
           <td class="num">${ch.pillars.length} / ${ch.leadMeasures.length}</td><td>${UI.layerPath(ch.phases.REGISTRATION.layers)}</td>
           <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/eligibility" class="btn btn-sm btn-brand">Konfigurasi</a>
             ${editable(p) ? `<a href="#" class="btn btn-sm btn-link text-danger" data-click="setup.deleteChannel" data-id="${p.id}" data-pc="${ch.id}" data-confirm="Hapus channel ${esc(ch.channel_name)} beserta konfigurasinya?">Hapus</a>` : ''}</td></tr>`).join('')
-          || '<tr><td colspan="5" class="text-muted p-4">Belum ada channel.</td></tr>'}</tbody></table></div></div></div>
+          || '<tr><td colspan="6" class="text-muted p-4">Belum ada channel.</td></tr>'}</tbody></table></div></div></div>
       <div class="col-lg-4"><div class="card"><div class="card-header">Tambah channel</div><div class="card-body">
-        <p class="small text-muted">Satu program bisa punya beberapa channel (tetap dihitung satu program). Setiap channel dapat konfigurasi sendiri di step 3. Satu channel hanya sekali per program.</p>
-        ${!editable(p) ? '<div class="small text-muted">Program sudah dipublish. Menambah channel setelah publish <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> masih dikonfirmasi (PRD UF9).</div>'
-          : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}" class="d-flex gap-2"><select name="channel_code" class="form-control">
-          ${avail.map((c) => `<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select><button class="btn btn-brand">Tambah</button></form>
+        <p class="small text-muted">Satu program bisa punya beberapa channel (tetap dihitung satu program). Setiap channel dapat konfigurasi sendiri di step 3. Pilih <strong>Active</strong> atau <strong>Passive</strong>: channel yang sama dengan tipe berbeda menjadi dua channel terpisah.</p>
+        ${!editable(p) ? '<div class="small text-muted">Sudah ada fase yang dipublish. Menambah channel setelah publish <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> masih dikonfirmasi (PRD UF9).</div>'
+          : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}"><select name="channel_code" class="form-control mb-2">
+          ${avail.map((c) => `<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select>
+          <div class="d-flex gap-3 mb-2">${Object.entries(E.CHANNEL_TYPES).map(([k, l], i) => `<label class="mb-0"><input type="radio" name="channel_type" value="${k}" ${i === 0 ? 'checked' : ''} required> ${l}</label>`).join('')}</div>
+          <button class="btn btn-brand">Tambah</button></form>
           <div class="form-text">Channel baru langsung berisi preset rumus "${C.PRESET_NAME}", form fase, approval layer contoh & template MOU/SKN. Semua bisa diubah.</div>`
-          : '<div class="small text-muted">Semua channel master sudah ditambahkan.</div>'}
+          : '<div class="small text-muted">Semua channel master (Active & Passive) sudah ditambahkan.</div>'}
       </div></div></div></div></div>`,
     };
   });
   actions['setup.addChannel'] = (f, form) => {
     const pid = Number(form.dataset.id);
     assertDraft(pid);
-    const code = f.get('channel_code');
-    if (DB.t('programChannels').some((c) => c.program_id === pid && c.channel_code === code)) throw new Error('Channel sudah ada di program ini.');
-    const pc = DB.insert('programChannels', { program_id: pid, channel_code: code, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
+    const code = f.get('channel_code'); const type = f.get('channel_type');
+    if (!E.CHANNEL_TYPES[type]) throw new Error('Pilih tipe channel: Active atau Passive.');
+    if (DB.t('programChannels').some((c) => c.program_id === pid && c.channel_code === code && c.channel_type === type)) throw new Error(`Channel ${E.CHANNEL_TYPES[type]} ini sudah ada di program.`);
+    const pc = DB.insert('programChannels', { program_id: pid, channel_code: code, channel_type: type, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
       elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
       elig_exclusive_program_ids: [], elig_exceptions: [] });
     E.createChannelDefaults(pc, UI.currentUser().id);
-    E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code });
+    E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code, channel_type: type });
     touch(pid);
     done('success', 'Channel ditambahkan. Lanjut atur eligibility & jadwal.', `/setup/${pid}/ch/${pc.id}/eligibility`);
   };
@@ -264,7 +303,7 @@
     const usedAsMember = new Set(ch.brands.flatMap((b) => b.member_codes || []));
     return {
       title: `Brand · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'brands')}
-      <form data-action="setup.saveBrands" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
+      <form data-action="setup.saveBrands" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
       <div class="card"><div class="card-header"><span class="step-chip">3b</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
         <p class="small text-muted mb-3">Baseline <strong>tidak</strong> diatur di sini: CBD/CDT mengisi baseline tiap toko di form Registration. EST & IR growth hanya informasi (<span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span> definisi dikonfirmasi).</p>
         <div class="table-responsive"><table class="table table-sm table-bordered">
@@ -277,17 +316,17 @@
               <td><div class="input-group input-group-sm"><input name="ir_${b.code}" type="number" step="any" class="form-control" value="${x && x.ir_growth_pct !== null ? x.ir_growth_pct : ''}"><span class="input-group-text">%</span></div></td>
               <td><div class="input-group input-group-sm"><span class="input-group-text">Rp</span><input name="minb_${b.code}" type="number" class="form-control" value="${(ch.elig_min_baseline || {})[b.code] === undefined || (ch.elig_min_baseline || {})[b.code] === null ? '' : ch.elig_min_baseline[b.code]}"
                 placeholder="${x && x.classes[0] ? h.rpShort(x.classes[0].baseline_min) : 'kelas terendah'}"></div></td>
-              <td class="num">${x ? x.classes.length : '-'}</td>
-              <td class="text-right">${x ? `<a href="#/setup/${p.id}/ch/${ch.id}/brands/${x.id}" class="btn btn-sm btn-outline-brand">Kelas & tier</a>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+              <td class="num">${x ? lmClasses(ch, x).length : '-'}</td>
+              <td class="text-right">${x ? `<a href="#/setup/${p.id}/ch/${ch.id}/scheme" class="btn btn-sm btn-outline-brand">Skema kelas</a>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
         <div class="form-text mb-2">Baseline minimal = syarat pendaftaran per brand (saran baseline toko harus ≥ angka ini). Kosong = batas bawah kelas terendah brand tsb (3c).</div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan brand</button>
-        <span class="form-text d-inline ml-2">Contoh: Light+ memakai skema & target Wardah.</span>
+        <span class="form-text d-inline ml-2">Contoh: Light+ punya skema sendiri dengan anggota BrightNow; brand juga bisa mengikuti skema brand lain di Skema kelas.</span>
       </div></div></fieldset></form></div></div>`,
     };
   });
   actions['setup.saveBrands'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
-    assertDraft(pid);
+    assertDraft(pid, pcId, 'REGISTRATION');
     const codes = f.all('brand_codes');
     if (!codes.length) throw new Error('Pilih minimal satu brand peserta.');
     const members = Object.fromEntries(codes.map((c) => [c, f.all('members_' + c).filter((m) => !codes.includes(m))]));
@@ -309,170 +348,31 @@
     pc.elig_min_baseline = Object.fromEntries(codes.map((c) => [c, toNum(f.get('minb_' + c))]).filter(([, n]) => n !== null));
     E.audit(pid, 'programChannelBrand', pcId, 'update', before, { brands: codes, min_baseline: pc.elig_min_baseline });
     touch(pid);
-    done('success', 'Brand peserta disimpan. Isi kelas & tier tiap brand.', `/setup/${pid}/ch/${pcId}/brands`);
+    done('success', 'Brand peserta disimpan. Atur rentang baseline tiap brand di Skema kelas.', `/setup/${pid}/ch/${pcId}/brands`);
   };
 
-  // ---------------------------------------------------------------- 3c · kelas & tier per brand
-  route('/setup/:id/ch/:pc/brands/:b', ({ id, pc, b }) => {
-    const p = getProgram(id);
-    const ch = getChannel(p, pc);
-    const brand = ch.brands.find((x) => x.id === Number(b));
-    if (!brand) fail('Brand tidak ditemukan');
-    const state = brand.classes.map((c) => ({ id: c.id, code: c.code, baseline_min: c.baseline_min, baseline_max: c.baseline_max, fix: c.fix_rebate_max_pct,
-      tiers: c.tiers.map((t) => ({ g: t.target_growth_pct, cond: t.conditional_rebate_pct, total: t.total_rebate_pct })) }));
-    return {
-      title: `Kelas ${brand.brand_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'classes')}
-      <div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap brand</div>
-        <div class="d-flex flex-wrap gap-2">${ch.brands.map((x) => `<a class="btn btn-sm ${x.id === brand.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/brands/${x.id}">${esc(x.brand_name)} <span class="badge badge-light">${x.classes.length}</span></a>`).join('')}</div></div>
-      <div class="row g-3"><div class="col-xl-8">
-        <form data-action="setup.saveClasses" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p)}><input type="hidden" name="classes" id="clsJson">
-        <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3c</span>&nbsp;Kelas & tier — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</span>
-          <button type="button" class="btn btn-sm btn-outline-brand" id="addClass"><i class="bi bi-plus"></i> Kelas</button></div>
-          <div class="card-body">
-            <p class="small text-muted">Batas kelas khusus brand ini (brand lain di channel yang sama punya batas sendiri). Urutan 1 = kelas terendah. Baseline min <strong>inklusif</strong>, maks <strong>eksklusif</strong>, maks kosong = tak terbatas.
-              Per tier isi <strong>salah satu</strong>: conditional % atau total %; yang lain dihitung (total = fix maks + conditional). Growth boleh di atas 100%.</p>
-            <div id="flags"></div><div id="classes"></div>
-            <button class="btn btn-brand mt-2"><i class="bi bi-save"></i> Simpan kelas ${esc(brand.brand_name)}</button>
-          </div></div></fieldset></form>
-      </div>
-      <div class="col-xl-4"><div class="card sticky-summary"><div class="card-header"><i class="bi bi-calculator"></i>&nbsp;Cek cepat</div><div class="card-body">
-        <label class="form-label small">Baseline / bulan</label><div class="input-group input-group-sm mb-2"><span class="input-group-text">Rp</span><input type="number" id="qBase" class="form-control" value="200000000"></div>
-        <label class="form-label small">Growth komitmen</label><div class="input-group input-group-sm mb-2"><input type="number" id="qGrowth" class="form-control" value="76"><span class="input-group-text">%</span></div>
-        <div id="qOut" class="small"></div>
-        <div class="form-text">Cek lengkap (rumus, approval path) ada di step 4 Simulasi.</div></div></div></div></div></div></div>`,
-      after(root) {
-        const el = root.querySelector('#classes');
-        const ro = !editable(p);
-        const num = (v) => (v === null || v === undefined || v === '' ? '' : v);
-        function draw() {
-          el.innerHTML = state.map((c, ci) => `<div class="class-card">
-            <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
-              <div style="width:70px"><label class="form-label small mb-0">Kelas</label><input class="form-control form-control-sm fw-bold" data-c="${ci}" data-f="code" value="${h.esc(c.code)}"></div>
-              <div><label class="form-label small mb-0">Urutan</label><div class="form-control form-control-sm bg-light text-center" style="width:56px">${ci + 1}</div></div>
-              <div style="flex:1;min-width:150px"><label class="form-label small mb-0">Baseline min / bln (Rp)</label><input type="number" class="form-control form-control-sm" data-c="${ci}" data-f="baseline_min" value="${num(c.baseline_min)}"></div>
-              <div style="flex:1;min-width:150px"><label class="form-label small mb-0">Baseline maks / bln (Rp)</label><input type="number" class="form-control form-control-sm" data-c="${ci}" data-f="baseline_max" value="${num(c.baseline_max)}" placeholder="tak terbatas"></div>
-              <div style="width:110px"><label class="form-label small mb-0">Fix rebate maks</label><div class="input-group input-group-sm"><input type="number" step="any" class="form-control" data-c="${ci}" data-f="fix" value="${num(c.fix)}"><span class="input-group-text">%</span></div></div>
-              <div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-secondary" data-act="up" data-c="${ci}" ${ci === 0 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button>
-                <button type="button" class="btn btn-outline-secondary" data-act="down" data-c="${ci}" ${ci === state.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button>
-                <button type="button" class="btn btn-outline-danger" data-act="delC" data-c="${ci}"><i class="bi bi-trash"></i></button></div>
-            </div>
-            <table class="table table-sm table-bordered mb-1"><thead><tr><th>Tier</th><th>Target growth %</th><th>Conditional rebate %</th><th>Total rebate %</th><th></th></tr></thead><tbody>
-              ${c.tiers.map((t, ti) => `<tr><td class="text-center">${ti + 1}</td>
-                <td><input type="number" step="any" class="form-control form-control-sm" data-c="${ci}" data-t="${ti}" data-f="g" value="${num(t.g)}"></td>
-                <td><input type="number" step="any" class="form-control form-control-sm" data-c="${ci}" data-t="${ti}" data-f="cond" value="${num(t.cond)}"></td>
-                <td><input type="number" step="any" class="form-control form-control-sm" data-c="${ci}" data-t="${ti}" data-f="total" value="${num(t.total)}"></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-act="delT" data-c="${ci}" data-t="${ti}"><i class="bi bi-x-lg"></i></button></td></tr>`).join('')}
-            </tbody></table><button type="button" class="btn btn-sm btn-link px-0" data-act="addT" data-c="${ci}">+ tier</button></div>`).join('')
-            || '<div class="text-muted small">Belum ada kelas.</div>';
-          if (ro) el.querySelectorAll('input,button').forEach((x) => { x.disabled = true; });
-          flags();
-        }
-        const n = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
-        function flags() {
-          const msgs = [];
-          const s = state.map((c) => ({ code: c.code, min: n(c.baseline_min), max: n(c.baseline_max) })).filter((c) => c.min !== null).sort((a, b) => a.min - b.min);
-          for (let i = 1; i < s.length; i++) {
-            if (s[i - 1].max === null || s[i - 1].max > s[i].min) msgs.push(`Range kelas ${s[i - 1].code} & ${s[i].code} tumpang tindih`);
-            else if (s[i - 1].max < s[i].min) msgs.push(`Celah baseline antara kelas ${s[i - 1].code} & ${s[i].code} (peringatan)`);
-          }
-          if (state.filter((c) => n(c.baseline_max) === null).length > 1) msgs.push('Lebih dari satu kelas tanpa batas atas');
-          state.forEach((c) => c.tiers.forEach((t, i) => {
-            if (i && n(t.g) !== null && n(c.tiers[i - 1].g) !== null && n(t.g) <= n(c.tiers[i - 1].g)) msgs.push(`Kelas ${c.code}: target growth tier ${i + 1} tidak naik`);
-            if (i && n(t.total) !== null && n(c.tiers[i - 1].total) !== null && n(t.total) < n(c.tiers[i - 1].total)) msgs.push(`Kelas ${c.code}: rebate tier ${i + 1} turun`);
-          }));
-          root.querySelector('#flags').innerHTML = msgs.length ? `<div class="alert alert-warning py-2 small">${msgs.map(h.esc).join('<br>')}</div>` : '';
-          quick();
-        }
-        function quick() {
-          const v = Number(root.querySelector('#qBase').value); const g = Number(root.querySelector('#qGrowth').value);
-          const cls = state.find((c) => n(c.baseline_min) !== null && v >= n(c.baseline_min) && (n(c.baseline_max) === null || v < n(c.baseline_max)));
-          const out = root.querySelector('#qOut');
-          if (!cls) { out.innerHTML = '<span class="text-danger">Tidak masuk kelas mana pun → tidak eligible untuk brand ini.</span>'; return; }
-          let tier = null; cls.tiers.forEach((t) => { if (n(t.g) !== null && g >= n(t.g)) tier = t; });
-          out.innerHTML = `Kelas ${h.cls(cls.code)} · ${tier ? `tier ${tier.g}% → total <strong>${tier.total}%</strong> (fix ${cls.fix}% + conditional ${tier.cond}%)` : 'di bawah tier 1 → conditional 0'}`;
-        }
-        el.addEventListener('input', (e) => {
-          const d = e.target.dataset; if (!d.f) return;
-          const c = state[d.c];
-          if (d.t === undefined) { c[d.f] = e.target.value; }
-          else {
-            const t = c.tiers[d.t]; t[d.f] = e.target.value;
-            const fix = n(c.fix) || 0;
-            const other = (k, val) => { t[k] = val; const inp = el.querySelector(`[data-c="${d.c}"][data-t="${d.t}"][data-f="${k}"]`); if (inp) inp.value = val; };
-            if (d.f === 'total' && e.target.value !== '') other('cond', +(Number(e.target.value) - fix).toFixed(4));
-            if (d.f === 'cond' && e.target.value !== '') other('total', +(Number(e.target.value) + fix).toFixed(4));
-          }
-          if (d.f === 'fix') c.tiers.forEach((t, ti) => { if (t.total !== '' && t.total !== null) { t.cond = +(Number(t.total) - (n(c.fix) || 0)).toFixed(4); const inp = el.querySelector(`[data-c="${d.c}"][data-t="${ti}"][data-f="cond"]`); if (inp) inp.value = t.cond; } });
-          flags();
-        });
-        el.addEventListener('click', (e) => {
-          const b2 = e.target.closest('[data-act]'); if (!b2) return;
-          const d = b2.dataset; const ci = Number(d.c);
-          if (d.act === 'addT') { const last = state[ci].tiers[state[ci].tiers.length - 1]; state[ci].tiers.push({ g: last ? Number(last.g) + 5 : '', cond: '', total: '' }); }
-          if (d.act === 'delT') state[ci].tiers.splice(Number(d.t), 1);
-          if (d.act === 'delC' && confirm(`Hapus kelas ${state[ci].code}?`)) state.splice(ci, 1);
-          if (d.act === 'up' || d.act === 'down') { const j = d.act === 'up' ? ci - 1 : ci + 1; [state[ci], state[j]] = [state[j], state[ci]]; }
-          draw();
-        });
-        root.querySelector('#addClass').addEventListener('click', () => {
-          const last = state[state.length - 1];
-          state.push({ id: null, code: last ? String.fromCharCode(last.code.charCodeAt(0) + 1) : 'A', baseline_min: last ? last.baseline_max : '', baseline_max: '', fix: last ? last.fix : 1,
-            tiers: last ? last.tiers.map((t) => ({ ...t })) : [{ g: 50, cond: '', total: '' }] });
-          draw();
-        });
-        ['#qBase', '#qGrowth'].forEach((s) => root.querySelector(s).addEventListener('input', quick));
-        root.querySelector('#clsJson').closest('form').addEventListener('submit', () => { root.querySelector('#clsJson').value = JSON.stringify(state); }, true);
-        if (ro) root.querySelector('#addClass').disabled = true;
-        draw();
-      },
-    };
-  });
+  // ---------------------------------------------------------------- kelas & tier lama per brand
+  // Diganti Skema kelas seragam (setup3.js). Nilai kelas lama (fix rebate maks, conditional / total per tier) tetap tersimpan
+  // karena dipakai perhitungan Registration / Payout yang sudah berjalan; editornya tidak ditampilkan lagi.
+  route('/setup/:id/ch/:pc/brands/:b', ({ id, pc }) => UI.redirect(`/setup/${id}/ch/${pc}/scheme`));
 
-  actions['setup.saveClasses'] = (f, form) => {
-    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const bId = Number(form.dataset.b);
-    assertDraft(pid);
-    const raw = JSON.parse(f.get('classes') || '[]');
-    const n = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
-    const errs = [];
-    const rows = raw.map((c, i) => {
-      const code = String(c.code || '').trim();
-      const fix = n(c.fix);
-      if (!code) errs.push(`Kelas urutan ${i + 1}: kode wajib diisi`);
-      if (n(c.baseline_min) === null) errs.push(`Kelas ${code}: baseline min wajib diisi`);
-      if (fix === null) errs.push(`Kelas ${code}: fix rebate maks wajib diisi`);
-      const tiers = (c.tiers || []).map((t, ti) => {
-        const g = n(t.g); let cond = n(t.cond); let total = n(t.total);
-        if (g === null) errs.push(`Kelas ${code} tier ${ti + 1}: target growth wajib`);
-        if (cond === null && total === null) errs.push(`Kelas ${code} tier ${ti + 1}: isi conditional % atau total %`);
-        if (cond === null && total !== null) cond = +(total - (fix || 0)).toFixed(4);
-        if (total === null && cond !== null) total = +(cond + (fix || 0)).toFixed(4);
-        if (cond !== null && total !== null && Math.abs(total - (cond + (fix || 0))) > 0.0001) errs.push(`Kelas ${code} tier ${ti + 1}: total ${total}% tidak sama dengan fix ${fix}% + conditional ${cond}%`);
-        return { tier_no: ti + 1, target_growth_pct: g, conditional_rebate_pct: cond, total_rebate_pct: total };
-      });
-      if (!tiers.length) errs.push(`Kelas ${code}: minimal 1 tier`);
-      return { id: c.id, code, sort_order: i + 1, baseline_min: n(c.baseline_min), baseline_max: n(c.baseline_max), fix_rebate_max_pct: fix, tiers };
-    });
-    if (new Set(rows.map((r) => r.code)).size !== rows.length) errs.push('Kode kelas tidak boleh sama dalam satu brand');
-    if (errs.length) throw new Error(errs.slice(0, 8).join(' · '));
-    const before = DB.where('programClasses', (c) => c.program_channel_brand_id === bId);
-    DB.remove('programClasses', (c) => c.program_channel_brand_id === bId);
-    for (const r of rows) { delete r.id; DB.insert('programClasses', Object.assign({ program_channel_brand_id: bId }, r)); }
-    E.audit(pid, 'programClass', bId, 'replace', before, rows);
-    touch(pid);
-    const brand = DB.byId('programChannelBrands', bId);
-    done('success', `Kelas & tier ${esc(brand.brand_code)} disimpan (${rows.length} kelas). Peringatan tumpang tindih/celah dicek ulang di step 5.`, `/setup/${pid}/ch/${pcId}/brands/${bId}`);
-  };
+  // Kelas yang dipakai editor saran lead measure: kelas skema brand (atau brand acuannya) bila channel sudah memakai skema per brand, selain itu kelas lama brand
+  function lmClasses(ch, brand) {
+    const st = SM.setupOf(ch);
+    if (!SM.hasSchemes(st)) return brand.classes;
+    return SM.brandRanges(st, brand.brand_code).map((r) => ({ code: r.code, baseline_min: r.min, baseline_max: r.max }));
+  }
 
   // ---------------------------------------------------------------- 3c · pillar framework
   // 3c dua langkah: (1) struktur pilar → JTBD → lead measure per channel, (2) target tiap lead measure per brand × kelas (× section)
   function pillarTabs(p, ch, active) {
-    const done = (b) => b.classes.filter((c) => (b.lm_targets || {})[c.code]).length;
+    const done = (b) => lmClasses(ch, b).filter((c) => (b.lm_targets || {})[c.code]).length;
     return `<div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Struktur sekali per channel, lalu target per kelas untuk setiap brand</div>
       <div class="d-flex flex-wrap gap-2 align-items-center">
         <a class="btn btn-sm ${active === 'tree' ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars"><i class="bi bi-diagram-3"></i> 1. Struktur pilar</a>
         <span class="small text-muted ml-2">2. Target per kelas:</span>
         ${ch.brands.map((b) => `<a class="btn btn-sm ${active === b.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars/${b.id}">${esc(b.brand_name)}
-          <span class="badge ${b.classes.length && done(b) === b.classes.length ? 'badge-success' : 'badge-light'}">${done(b)}/${b.classes.length}</span></a>`).join('') || '<span class="small text-muted">Pilih brand dulu di 3b.</span>'}
+          <span class="badge ${lmClasses(ch, b).length && done(b) === lmClasses(ch, b).length ? 'badge-success' : 'badge-light'}">${done(b)}/${lmClasses(ch, b).length}</span></a>`).join('') || '<span class="small text-muted">Pilih brand dulu di 3b.</span>'}
       </div></div>`;
   }
 
@@ -484,8 +384,8 @@
     return {
       title: `Pilar · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
       ${pillarTabs(p, ch, 'tree')}
-      <form data-action="setup.savePillars" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}><input type="hidden" name="tree" id="treeJson">
-      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pillar framework — ${esc(ch.channel_name)}</span>
+      <form data-action="setup.savePillars" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}><input type="hidden" name="tree" id="treeJson">
+      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pillar framework — ${esc(ch.channel_name)} ${confirmTag}</span>
         <button type="button" class="btn btn-sm btn-outline-brand" id="addPillar"><i class="bi bi-plus"></i> Pilar</button></div>
         <div class="card-body">
           <div class="row g-2 mb-3"><div class="col-md-5"><label class="form-label">Nama framework <span class="text-danger">*</span></label>
@@ -495,11 +395,17 @@
           <div id="tree"></div><div id="wsum" class="small mt-2"></div>
           <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pillar framework</button>
-        </div></div></fieldset></form></div></div>`,
+        </div></div></fieldset></form>
+      <form data-action="setup.saveLmExample" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
+      <div class="card mt-3"><div class="card-header"><i class="bi bi-lightbulb"></i>&nbsp;Pilar di form CBD ${confirmTag}</div><div class="card-body small">
+        <div class="text-muted mb-2">CBD mengalokasikan nominal Vision Compass <strong>per pilar</strong> di atas. Plafon per brand = target 2027 × persen Vision Compass kelas (diatur di <a href="#/setup/${p.id}/ch/${ch.id}/scheme">Skema kelas</a>).</div>
+        <label class="d-block mb-2"><input type="checkbox" name="lm_as_detail_example" value="1" ${SM.setupOf(ch).lm_as_detail_example ? 'checked' : ''}> Tampilkan saran lead measure pilar tersebut sebagai contoh teks (placeholder) kolom <strong>detail activation</strong></label>
+        <div class="text-muted mb-2">Hubungan teks saran lead measure dengan alokasi belum dipastikan.</div>
+        <button class="btn btn-brand btn-sm"><i class="bi bi-save"></i> Simpan</button></div></div></fieldset></form></div></div>`,
       after(root) {
         const el = root.querySelector('#tree');
         const t = tree;
-        const ro = !editable(p);
+        const ro = !editable(p, ch, 'REGISTRATION');
         const opt = (cur) => Object.entries(C.LM_VALUE_TYPES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
         // Satuan: bebas untuk Angka (jam, etalase, bulan, …); otomatis % untuk Persentase; tidak dipakai untuk Teks
         const unitInput = (l, a) => (l.value_type === 'PERCENT' ? '<input class="form-control bg-light" style="flex:1.3" value="%" disabled title="Persentase selalu %">'
@@ -556,7 +462,7 @@
 
   actions['setup.savePillars'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
-    assertDraft(pid);
+    assertDraft(pid, pcId, 'REGISTRATION');
     const tree = JSON.parse(f.get('tree') || '[]');
     const framework = String(f.get('framework') || '').trim();
     if (!framework) throw new Error('Nama framework wajib diisi');
@@ -613,6 +519,18 @@
     done('success', `Pillar framework "${esc(framework)}" disimpan (${kP.length} pilar, ${kJ.length} JTBD, ${kL.length} lead measure). Lanjut isi target per kelas tiap brand.`, `/setup/${pid}/ch/${pcId}/pillars`);
   };
 
+  actions['setup.saveLmExample'] = (f, form) => {
+    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
+    assertDraft(pid, pcId, 'REGISTRATION');
+    const pc = DB.byId('programChannels', pcId);
+    const st = SM.setupOf(pc); const before = st.lm_as_detail_example;
+    st.lm_as_detail_example = f.has('lm_as_detail_example');
+    pc.setup = st;
+    touch(pid);
+    E.audit(pid, 'programChannel', pcId, 'lm_as_detail_example', before, st.lm_as_detail_example);
+    done('success', 'Pengaturan saran lead measure disimpan.', `/setup/${pid}/ch/${pcId}/pillars`);
+  };
+
   // ---------------------------------------------------------------- 3c (2) · target lead measure per brand × kelas (× section)
   // Tabel seperti Excel Vision Compass: Pilar · JTBD · Lead measure dibekukan di kiri, tiap kelas = kolom (section = sub-kolom).
   // Sel kosong = lead measure tidak berlaku untuk kelas/section itu. Data tetap programChannelBrands.lm_targets.
@@ -621,6 +539,7 @@
     const ch = getChannel(p, pc);
     const brand = ch.brands.find((x) => x.id === Number(b));
     if (!brand) fail('Brand tidak ditemukan');
+    brand.classes = lmClasses(ch, brand); // kelas dari Skema kelas (hanya untuk editor ini)
     const lms = ch.leadMeasures;
     const saved = brand.lm_targets || {};
     // state per kode kelas; cells sejajar dengan sections (tanpa section / "gabung" → cells[0]; null = kosong / tidak berlaku)
@@ -637,8 +556,8 @@
     return {
       title: `Target pilar ${brand.brand_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
       ${pillarTabs(p, ch, brand.id)}
-      <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p)}><input type="hidden" name="targets" id="lmtJson">
-      <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;Target lead measure per kelas — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
+      <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}><input type="hidden" name="targets" id="lmtJson">
+      <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;Saran lead measure per kelas ${confirmTag} — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
         <div class="card-body">${empty ? `<div class="text-muted">${empty}</div>` : `
           <p class="small text-muted">Isi target tiap lead measure per kelas langsung di tabel. <strong>Sel kosong = tidak berlaku</strong> untuk kelas itu. Satuan mengikuti struktur pilar; operator (Minimal / Maksimal / = / Teks) dipilih sekali di kolom Lead measure dan berlaku untuk semua kelas.
             Bila kelas dibagi lagi (mis. Wardah: <em>Face Care</em> &amp; <em>Makeup</em>), klik <i class="bi bi-plus"></i> Section di judul kelas; tombol <i class="bi bi-arrows-collapse-vertical"></i> menggabung section jadi satu target (mis. "Have a Store Community Affiliate").</p>
@@ -649,7 +568,7 @@
         </div></div></fieldset></form></div></div>`,
       after(root) {
         if (empty) return;
-        const ro = !editable(p);
+        const ro = !editable(p, ch, 'REGISTRATION');
         const box = root.querySelector('#lmtJson').closest('form');
         const v = (x) => (x === null || x === undefined ? '' : x);
         const lmOf = (idv) => lms.find((l) => l.id === Number(idv));
@@ -841,10 +760,11 @@
 
   actions['setup.saveLmTargets'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const bId = Number(form.dataset.b);
-    assertDraft(pid);
+    assertDraft(pid, pcId, 'REGISTRATION');
     const brandRow = DB.byId('programChannelBrands', bId);
     const ch = E.loadProgram(pid).channels.find((c) => c.id === pcId);
     const brand = ch.brands.find((x) => x.id === bId);
+    brand.classes = lmClasses(ch, brand);
     const raw = JSON.parse(f.get('targets') || '{}');
     const errs = [];
     const out = {};
@@ -901,8 +821,8 @@
     return {
       title: `Rumus · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'formulas')}
       <div class="row g-3"><div class="col-xl-9">
-      <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p)}>
-      <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3e</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)}</span>
+      <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'PAYOUT')}>
+      <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3e</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)} ${soonTag}</span>
         <a href="#/setup/${p.id}/simulate?ch=${ch.id}" class="btn btn-sm btn-outline-brand"><i class="bi bi-play"></i> Coba di simulasi</a></div><div class="card-body">
         <p class="small text-muted">Daftar slot tetap (developer). Isi rumus hanya dengan variabel katalog & fungsi ${window.Formula.FUNCTION_NAMES.join(', ')}. Sintaks dicek saat mengetik & saat simpan; hasil dicek di simulasi (step 4).</p>
         <div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr><th style="width:190px">Kolom</th><th>Rumus</th><th style="width:110px">Preset</th><th style="width:220px">Deskripsi (untuk Finance)</th></tr></thead><tbody>
@@ -944,14 +864,14 @@
         const tb = root.querySelector('#ovTable tbody');
         root.querySelector('#addOv').addEventListener('click', () => { tb.insertAdjacentHTML('beforeend', root.querySelector('#ovTpl').innerHTML); bind(tb.lastElementChild); });
         tb.addEventListener('click', (e) => { const b = e.target.closest('.del-ov'); if (b) b.closest('tr').remove(); });
-        if (!editable(p)) root.querySelector('#addOv').disabled = true;
+        if (!editable(p, ch, 'PAYOUT')) root.querySelector('#addOv').disabled = true;
       },
     };
   });
 
   actions['setup.saveFormulas'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
-    assertDraft(pid);
+    assertDraft(pid, pcId, 'PAYOUT');
     const sample = C.sampleVars();
     const rows = []; const errs = [];
     for (const s of C.FORMULA_SLOTS) {
@@ -979,5 +899,5 @@
     done('success', 'Rumus disimpan. Cek hasilnya di step 4 Simulasi.', `/setup/${pid}/ch/${pcId}/formulas`);
   };
 
-  window.SetupShared = { getProgram, getChannel, nav, assertDraft, assertDocsEditable, touch, editable, fs };
+  window.SetupShared = { getProgram, getChannel, nav, assertDraft, assertDocsEditable, touch, editable, fs, phaseMatrix, statusTag, programLocked, confirmTag, soonTag, lmClasses };
 })();

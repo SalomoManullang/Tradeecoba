@@ -10,7 +10,7 @@
     };
   }
 
-  const CHANNELS = [['LOCOMM', 'Local E-Commerce (Locomm)', 1], ['CS', 'Cosmetic Store', 2], ['LMT', 'Local Modern Trade', 3]];
+  const CHANNELS = [['LOCOMM', 'Local E-Commerce (Locomm)', 1], ['CS', 'Cosmetics Store & GT Other', 2], ['LMT', 'Local Modern Trade', 3]];
   // [kode, nama, range sell in / bulan untuk dummy]
   const BRANDS = [['WRD', 'Wardah', 60e6, 900e6], ['LIGHT', 'Light+', 5e6, 30e6], ['EMN', 'Emina', 30e6, 500e6], ['KHF', 'Kahf', 50e6, 600e6],
     ['MO', 'MakeOver', 20e6, 450e6], ['OMG', 'OMG', 100e6, 800e6], ['LAB', 'Labore', 10e6, 200e6]];
@@ -265,6 +265,8 @@
     mkPayout(regs[1], 'CONDITIONAL', cPer, 'HEAD_FINANCE');
     mkPayout(regs[2], 'CONDITIONAL', cPer, 'FINANCE');
     mkPayout(regs[0], 'FIX', fPer, 'HEAD_FINANCE');
+    // status per channel × fase + data contoh deck 2027 (channel CS) — js/setup-model.js
+    window.SetupModel.seedDemo();
     return DB.state;
   }
 

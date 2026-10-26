@@ -3,7 +3,7 @@
 // Output (di reference/docs/reskin/):
 //   baseline.json / after.json          id, name, data-*, href, required/readonly/disabled, teks label & tombol per route
 //   scenarios-before.json / -after.json hasil skenario inti (hash tujuan, flash, error, angka simulasi, validasi)
-//   state-before.json / -after.json     isi localStorage tradee2027-fe-v2 setelah skenario
+//   state-before.json / -after.json     isi localStorage tradee2027-fe-v4 setelah skenario
 //   screens/<label>/<lebar>/<route>.png
 import { chromium } from 'playwright';
 import fs from 'node:fs';
@@ -17,7 +17,7 @@ const _root = _argv.indexOf('--root');
 // --root <folder>: jalankan terhadap salinan kode lain (mis. git worktree di HEAD untuk baseline modul)
 const ROOT = _root >= 0 ? path.resolve(_argv[_root + 1]) : path.resolve(HERE, '../../../..');
 const INDEX = pathToFileURL(path.join(ROOT, 'index.html')).href;
-const STORE_KEY = 'tradee2027-fe-v2';
+const STORE_KEY = 'tradee2027-fe-v4';
 // Waktu dibekukan supaya created_at / published_at / audit log sama di setiap run
 const FIXED_TIME = new Date('2026-10-22T09:00:00+07:00');
 

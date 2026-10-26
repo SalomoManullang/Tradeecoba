@@ -67,10 +67,16 @@
     return program;
   }
 
+  // Channel program bisa bertipe Active / Passive: master channel yang sama jadi dua channel program yang berbeda
+  const CHANNEL_TYPES = { ACTIVE: 'Active', PASSIVE: 'Passive' };
+  function channelName(pcRow) {
+    const master = DB.t('channels').find((c) => c.code === pcRow.channel_code) || {};
+    return (master.name || pcRow.channel_code) + (CHANNEL_TYPES[pcRow.channel_type] ? ` · ${CHANNEL_TYPES[pcRow.channel_type]}` : '');
+  }
   function loadChannel(pcRow) {
     const ch = clone(pcRow);
     const master = DB.t('channels').find((c) => c.code === ch.channel_code) || {};
-    ch.channel_name = master.name || ch.channel_code;
+    ch.channel_name = channelName(ch);
     ch.channel_sort = master.sort || 0;
     ch.brands = DB.where('programChannelBrands', (b) => b.program_channel_id === ch.id).sort(bySort).map((b) => {
       const brand = clone(b);
@@ -549,36 +555,41 @@
       description: src.description, status: 'DRAFT', published_at: null, published_by: null, cloned_from_program_id: src.id, lock_version: 1,
       created_by: actorId, created_at: nowIso(), updated_at: nowIso(),
     });
-    for (const pc of DB.where('programChannels', (x) => x.program_id === src.id)) {
-      const npc = DB.insert('programChannels', Object.assign(clone(pc), { program_id: p.id }));
-      for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) {
-        const nb = DB.insert('programChannelBrands', Object.assign(clone(b), { program_channel_id: npc.id }));
-        for (const c of DB.where('programClasses', (x) => x.program_channel_brand_id === b.id)) DB.insert('programClasses', Object.assign(clone(c), { program_channel_brand_id: nb.id }));
-      }
-      const lmMap = {};
-      for (const pl of DB.where('programPillars', (x) => x.program_channel_id === pc.id)) {
-        const npl = DB.insert('programPillars', Object.assign(clone(pl), { program_channel_id: npc.id }));
-        for (const j of DB.where('programJtbds', (x) => x.program_pillar_id === pl.id)) {
-          const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_pillar_id: npl.id }));
-          for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) lmMap[l.id] = DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id })).id;
-        }
-      }
-      // target lead measure merujuk id lead measure → arahkan ke id hasil clone
-      for (const nb of DB.where('programChannelBrands', (x) => x.program_channel_id === npc.id && x.lm_targets)) {
-        for (const t of Object.values(nb.lm_targets)) {
-          t.rows = Object.fromEntries(Object.entries(t.rows || {}).filter(([k]) => lmMap[k]).map(([k, v]) => [lmMap[k], v]));
-        }
-      }
-      for (const t of ['programFormulas', 'programPhaseFields', 'programApprovalLayers', 'programPayoutSchedules']) {
-        for (const r of DB.where(t, (x) => x.program_channel_id === pc.id)) DB.insert(t, Object.assign(clone(r), { program_channel_id: npc.id }));
-      }
-      for (const t of DB.where('programDocumentTemplates', (x) => x.program_channel_id === pc.id)) {
-        const latest = DB.where('programDocumentTemplateRevisions', (r) => r.program_document_template_id === t.id).sort((a, b) => b.revision - a.revision)[0];
-        const nt = DB.insert('programDocumentTemplates', { program_channel_id: npc.id, doc_type: t.doc_type, current_revision: 1 });
-        DB.insert('programDocumentTemplateRevisions', { program_document_template_id: nt.id, revision: 1, content: latest ? clone(latest.content) : { sections: defaultSections(t.doc_type) }, created_by: actorId, created_at: nowIso() });
+    for (const pc of DB.where('programChannels', (x) => x.program_id === src.id)) cloneChannel(pc, p.id, actorId);
+    return p;
+  }
+
+  // Salin satu channel program beserta brand, kelas, pilar, rumus, fase, approval, jadwal & template dokumen (status fase mulai DRAFT)
+  function cloneChannel(pc, programId, actorId, extra) {
+    // status publish per channel × fase: hasil clone selalu mulai dari DRAFT
+    const npc = DB.insert('programChannels', Object.assign(clone(pc), { program_id: programId, phase_status: { REGISTRATION: 'DRAFT', MONITORING: 'DRAFT', PAYOUT: 'DRAFT' } }, extra || {}));
+    for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) {
+      const nb = DB.insert('programChannelBrands', Object.assign(clone(b), { program_channel_id: npc.id }));
+      for (const c of DB.where('programClasses', (x) => x.program_channel_brand_id === b.id)) DB.insert('programClasses', Object.assign(clone(c), { program_channel_brand_id: nb.id }));
+    }
+    const lmMap = {};
+    for (const pl of DB.where('programPillars', (x) => x.program_channel_id === pc.id)) {
+      const npl = DB.insert('programPillars', Object.assign(clone(pl), { program_channel_id: npc.id }));
+      for (const j of DB.where('programJtbds', (x) => x.program_pillar_id === pl.id)) {
+        const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_pillar_id: npl.id }));
+        for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) lmMap[l.id] = DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id })).id;
       }
     }
-    return p;
+    // target lead measure merujuk id lead measure → arahkan ke id hasil clone
+    for (const nb of DB.where('programChannelBrands', (x) => x.program_channel_id === npc.id && x.lm_targets)) {
+      for (const t of Object.values(nb.lm_targets)) {
+        t.rows = Object.fromEntries(Object.entries(t.rows || {}).filter(([k]) => lmMap[k]).map(([k, v]) => [lmMap[k], v]));
+      }
+    }
+    for (const t of ['programFormulas', 'programPhaseFields', 'programApprovalLayers', 'programPayoutSchedules']) {
+      for (const r of DB.where(t, (x) => x.program_channel_id === pc.id)) DB.insert(t, Object.assign(clone(r), { program_channel_id: npc.id }));
+    }
+    for (const t of DB.where('programDocumentTemplates', (x) => x.program_channel_id === pc.id)) {
+      const latest = DB.where('programDocumentTemplateRevisions', (r) => r.program_document_template_id === t.id).sort((a, b) => b.revision - a.revision)[0];
+      const nt = DB.insert('programDocumentTemplates', { program_channel_id: npc.id, doc_type: t.doc_type, current_revision: 1 });
+      DB.insert('programDocumentTemplateRevisions', { program_document_template_id: nt.id, revision: 1, content: latest ? clone(latest.content) : { sections: defaultSections(t.doc_type) }, created_by: actorId, created_at: nowIso() });
+    }
+    return npc;
   }
 
   // ---------------------------------------------------------------- hapus berantai
@@ -691,7 +702,7 @@
 
   window.Engine = {
     monthsBetween, today, periodsOf, brandSales, baselineMonths,
-    loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, monitoringApproval, payoutCalc,
+    CHANNEL_TYPES, channelName, cloneChannel, loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, monitoringApproval, payoutCalc,
     registrationObjects, monitoringObjects, payoutObjects, generateDocuments,
     eligibility, minBaseline, firstDo, soSiRatio, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
     fmtLmTarget, lmTarget, lmTargetText,

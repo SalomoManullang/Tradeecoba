@@ -172,18 +172,20 @@
   function headerMenu(user, year, path) {
     const is = (...roles) => roles.includes(user.role);
     const programs = DB.where('programs', (p) => p.year === year);
-    const published = programs.filter((p) => p.status === 'PUBLISHED');
-    const running = programs.filter((p) => p.status !== 'DRAFT');
+    // status per channel × fase: Registration = fase Pendaftaran PUBLISHED, Payout = fase Pencairan tidak DRAFT
+    const SM = window.SetupModel;
+    const published = programs.filter((p) => SM.programHas(p.id, 'REGISTRATION', SM.isPublished));
+    const running = programs.filter((p) => SM.programHas(p.id, 'PAYOUT', SM.isRunning));
     const icon = (p) => PROGRAM_ICON[(p.id - 1) % PROGRAM_ICON.length];
     const n = inboxCount(user, year);
-    const chs = (p) => DB.where('programChannels', (c) => c.program_id === p.id &&
+    const chs = (p) => DB.where('programChannels', (c) => c.program_id === p.id && SM.isPublished(c, 'REGISTRATION') &&
       (!user.channel_codes || !user.channel_codes.length || user.channel_codes.includes(c.channel_code)));
-    const chName = (c) => (DB.t('channels').find((x) => x.code === c.channel_code) || {}).name;
+    const chName = (c) => window.Engine.channelName(c);
     const items = [{ label: `Dashboard ${ROLE_LABEL[user.role]}`, href: '/', active: path === '/' }];
 
     if (is(...SETUP_ROLES)) {
       items.push({ label: 'Program Setup', isNew: true, active: path.startsWith('/setup'), children: [
-        ...programs.map((p) => ({ label: `${p.name} (${p.code})`, icon: icon(p), href: `/setup/${p.id}/header`, badge: STATUS[p.status][0] })),
+        ...programs.map((p) => ({ label: `${p.name} (${p.code})`, icon: icon(p), href: `/setup/${p.id}/header`, badge: SM.summaryLabel(p.id) })),
         { label: 'Program baru', icon: 'flaticon2-plus', href: '/setup/new' },
         { label: 'Daftar & clone program', icon: 'flaticon2-copy', href: '/setup' },
       ] });
@@ -228,7 +230,15 @@
   }
 
   // Menu aside (ikon di kiri, submenu melayang) — pola sama dengan sidebar/sidebar-awal.php
-  function asideMenu(user) {
+  // Tiap grup bisa dibuka / ditutup lewat judul atau ikonnya. Default terbuka; pilihan diingat per browser.
+  const SIDE_GROUPS_KEY = 'tradee-sidebar-groups';
+  function sideGroupState() { try { return JSON.parse(localStorage.getItem(SIDE_GROUPS_KEY)) || {}; } catch (e) { return {}; } }
+  const hrefActive = (href, path, query) => {
+    const [base, qs] = href.split('?');
+    if (path !== base && !path.startsWith(base + '/')) return false;
+    return Object.entries(Object.fromEntries(new URLSearchParams(qs || ''))).every(([k, v]) => query[k] === v);
+  };
+  function asideMenu(user, path = '/', query = {}) {
     const is = (...roles) => roles.includes(user.role);
     const groups = [
       { icon: 'flaticon-customer', title: 'Status Peserta', items: [['Disetujui', '/registration/participants?status=approved'], ['Menunggu approval', '/registration/participants?status=in_review'],
@@ -239,12 +249,22 @@
         ...(is(...SETUP_ROLES) ? [['Channel & Brand', '/master/data']] : [])] },
     ];
     if (is(...SETUP_ROLES)) groups.splice(1, 0, { icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Program baru', '/setup/new']] });
-    return groups.map((g) => `<li class="kt-menu__item kt-menu__item--submenu" data-hover aria-haspopup="true">
+    const saved = sideGroupState();
+    // item aktif: href paling spesifik yang cocok dengan halaman sekarang
+    const all = groups.flatMap((g) => g.items.map(([, href]) => href)).filter((href) => hrefActive(href, path, query));
+    const active = all.sort((a, b) => b.length - a.length)[0];
+    return groups.map((g) => {
+      const key = g.title;
+      const has = g.items.some(([, href]) => href === active);
+      const open = Object.hasOwn(saved, key) ? saved[key] : true;
+      return `<li class="kt-menu__item kt-menu__item--submenu${open ? ' is-open' : ''}${has ? ' has-active' : ''}" data-hover data-group="${esc(key)}" aria-haspopup="true">
       <a href="javascript:;" class="kt-menu__link kt-menu__toggle" title="${esc(g.title)}"><i class="kt-menu__link-icon ${g.icon}"></i><span class="kt-menu__link-text"></span><i class="kt-menu__ver-arrow ${g.icon}"></i></a>
       <div class="kt-menu__submenu"><span class="kt-menu__arrow"></span><div class="kt-menu__wrapper"><ul class="kt-menu__subnav">
-        <li class="kt-menu__item kt-menu__item--parent kt-menu__item--submenu-fullheight" aria-haspopup="true"><span class="kt-menu__link"><span class="kt-menu__link-text">${esc(g.title)}</span></span></li>
-        ${g.items.map(([l, href]) => `<li class="kt-menu__item" aria-haspopup="true"><a href="#${href}" class="kt-menu__link"><i class="kt-menu__link-bullet kt-menu__link-bullet--line"><span></span></i><span class="kt-menu__link-text">${esc(l)}</span></a></li>`).join('')}
-      </ul></div></div></li>`).join('');
+        <li class="kt-menu__item kt-menu__item--parent kt-menu__item--submenu-fullheight" aria-haspopup="true"><span class="kt-menu__link cmp-group-toggle" role="button" tabindex="0" aria-expanded="${open}"
+          data-click="toggleSideGroup" data-key="${esc(key)}"><span class="kt-menu__link-text">${esc(g.title)}</span><i class="bi bi-chevron-down cmp-group-chev"></i></span></li>
+        ${g.items.map(([l, href]) => `<li class="kt-menu__item${href === active ? ' kt-menu__item--active' : ''}" aria-haspopup="true"><a href="#${href}" class="kt-menu__link"><i class="kt-menu__link-bullet kt-menu__link-bullet--line"><span></span></i><span class="kt-menu__link-text">${esc(l)}</span></a></li>`).join('')}
+      </ul></div></div></li>`;
+    }).join('');
   }
 
   function yearDropdown() {
@@ -287,7 +307,7 @@
           </div>
           <div class="cmp-side-menu" id="kt_aside_menu_wrapper">
             <div id="kt_aside_menu" data-ktmenu-vertical="1" data-ktmenu-dropdown="1" data-ktmenu-scroll="0">
-              <ul class="kt-menu__nav">${asideMenu(user)}</ul>
+              <ul class="kt-menu__nav">${asideMenu(user, path, parseHash().query)}</ul>
             </div>
           </div>
         </div>
@@ -360,8 +380,16 @@
     root.querySelectorAll('[data-hover]').forEach((li) => {
       li.addEventListener('mouseenter', () => li.classList.add('kt-menu__item--hover'));
       li.addEventListener('mouseleave', () => li.classList.remove('kt-menu__item--hover'));
-      li.querySelector(':scope > .kt-menu__link').addEventListener('click', (e) => { e.preventDefault(); li.classList.toggle('kt-menu__item--hover'); });
+      li.querySelector(':scope > .kt-menu__link').addEventListener('click', (e) => {
+        e.preventDefault();
+        const shell = li.closest('.cmp-shell');
+        if (li.dataset.group && !(shell && shell.classList.contains('is-collapsed') && window.innerWidth > 1024)) { const t = li.querySelector('.cmp-group-toggle'); clicks.toggleSideGroup(t.dataset, t); return; }
+        li.classList.toggle('kt-menu__item--hover');
+      });
     });
+    root.querySelectorAll('.cmp-group-toggle').forEach((t) => t.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clicks.toggleSideGroup(t.dataset, t); }
+    }));
   }
   document.addEventListener('click', (e) => {
     if (!e.target.closest('[data-hmenu]')) document.querySelectorAll('[data-hmenu].kt-menu__item--hover').forEach((x) => x.classList.remove('kt-menu__item--hover'));
@@ -371,6 +399,16 @@
   const actions = {};
   const clicks = {};
 
+  // Buka / tutup satu grup sidebar (tidak berlaku saat sidebar diperkecil: isi grup tampil melayang)
+  clicks.toggleSideGroup = (d, el) => {
+    const shell = document.querySelector('.cmp-shell');
+    if (shell && shell.classList.contains('is-collapsed') && window.innerWidth > 1024) return;
+    const li = el.closest('[data-group]');
+    const open = li.classList.toggle('is-open');
+    el.setAttribute('aria-expanded', String(open));
+    const st = sideGroupState(); st[d.key] = open;
+    try { localStorage.setItem(SIDE_GROUPS_KEY, JSON.stringify(st)); } catch (e) { /* abaikan */ }
+  };
   clicks.toggleSidebar = () => {
     const shell = document.querySelector('.cmp-shell');
     if (!shell) return;

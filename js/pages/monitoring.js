@@ -21,10 +21,10 @@
   }
 
   route('/monitoring', ({}, q, { user, year }) => {
-    const programs = DB.where('programs', (p) => p.year === year && p.status !== 'DRAFT').map((p) => E.loadProgram(p.id));
+    const programs = DB.where('programs', (p) => p.year === year && window.SetupModel.programHas(p.id, 'MONITORING', window.SetupModel.isRunning)).map((p) => E.loadProgram(p.id));
     return {
       title: 'Monitoring', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Monitoring ${year}</h1><div class="sub">Evidence per lead measure untuk peserta yang registrasinya sudah disetujui. Frekuensi mengikuti setup channel.</div></div></div>
-      ${programs.map((p) => p.channels.map((ch) => {
+      ${programs.map((p) => p.channels.filter((ch) => window.SetupModel.isRunning(ch, 'MONITORING')).map((ch) => {
         const regs = DB.where('registrations', (r) => r.program_channel_id === ch.id && r.status === 'approved' && inScope(user, store(r.customer_id)));
         if (!regs.length) return '';
         const pers = E.periodsOf(p.period_start, p.period_end, ch.monitoring_frequency);

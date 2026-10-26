@@ -12,14 +12,17 @@
 
   function programCtx(pid, year) {
     const program = E.loadProgram(Number(pid));
-    if (!program || program.year !== year || program.status === 'DRAFT') fail('Program tidak ditemukan');
+    if (!program || program.year !== year || !window.SetupModel.programHas(program.id, 'PAYOUT', window.SetupModel.isRunning)) fail('Program tidak ditemukan');
+    // hanya channel yang fase Pencairannya sudah tidak DRAFT
+    program.channels = program.channels.filter((c) => window.SetupModel.isRunning(c, 'PAYOUT'));
     return program;
   }
   const periodsFor = (program, ch, comp) => E.periodsOf(program.period_start, program.period_end, ch.payoutSchedule[comp] || 'QUARTERLY');
 
   // ---------------------------------------------------------------- ringkasan
   route('/payout', ({}, q, { year }) => {
-    const programs = DB.where('programs', (p) => p.year === year && p.status !== 'DRAFT').map((p) => E.loadProgram(p.id));
+    const programs = DB.where('programs', (p) => p.year === year && window.SetupModel.programHas(p.id, 'PAYOUT', window.SetupModel.isRunning)).map((p) => E.loadProgram(p.id))
+      .map((p) => Object.assign(p, { channels: p.channels.filter((c) => window.SetupModel.isRunning(c, 'PAYOUT')) }));
     return {
       title: 'Payout', html: `<div class="cps cps-app"><div class="cps-list"><div class="page-head"><div><h1>Payout ${year}</h1><div class="sub">Conditional & Fix dibayar terpisah, masing-masing dengan jadwal & record sendiri.</div></div></div>
       ${programs.map((p) => `<div class="card mb-3"><div class="card-header d-flex justify-content-between"><span>${esc(p.name)}&nbsp;<span class="text-muted fw-normal">· ${esc(p.code)}</span></span>

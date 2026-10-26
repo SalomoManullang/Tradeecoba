@@ -1,7 +1,7 @@
 // "Database" di browser: tabel = array JS, disimpan ke localStorage.
 // Tidak ada koneksi ke backend / server apa pun.
 (function () {
-  const KEY = 'tradee2027-fe-v2'; // v2: model data PRD v0.4 (data v1 tidak dipakai lagi)
+  const KEY = 'tradee2027-fe-v4'; // v4: channel Active / Passive, aturan per channel (js/setup-model.js); data versi lama tidak dipakai lagi
   // Nama tabel mengikuti arsitektur v0.5 §4.1. Anak kecil (tier, kondisi auto-approve, sub-brand)
   // disimpan sebagai array di dalam baris induknya supaya prototype tetap sederhana.
   const TABLES = ['users', 'years', 'channels', 'brands', 'dcs', 'stores',

@@ -104,7 +104,7 @@
           box.innerHTML = rows.map((c, ci) => {
             const span = Math.max(1, c.tiers.length);
             const head = `<td rowspan="${span}" class="cls-cell"><input class="form-control form-control-sm fw-semibold" data-c="${ci}" data-k="code" value="${h.esc(c.code)}" placeholder="Kode"></td>
-              <td rowspan="${span}"><div class="d-flex gap-1 align-items-center base-rng">${inp(ci, null, 'min', c.min)}<span class="text-muted">–</span>${inp(ci, null, 'max', c.max)}</div></td>`;
+              <td rowspan="${span}"><div class="d-flex gap-1 align-items-center base-rng">${inp(ci, null, 'min', c.min)}${inp(ci, null, 'max', c.max)}</div></td>`;
             const tail = `<td rowspan="${span}">${inp(ci, null, 'vc_pct', c.vc_pct, '%')}</td>
               <td rowspan="${span}" class="text-right text-nowrap"><button type="button" class="btn btn-sm btn-light" data-act="addTier" data-c="${ci}" title="Tambah tier"><i class="bi bi-plus"></i> Tier</button>
                 <button type="button" class="btn btn-sm btn-light text-danger" data-act="delCls" data-c="${ci}" title="Hapus kelas"><i class="bi bi-trash"></i></button></td>`;
@@ -199,7 +199,7 @@
     const list = (xs, f) => { if (!xs.length) return '<span class="text-success">tidak ada</span>';
       const by = {}; for (const x of xs) (by[x.b] = by[x.b] || []).push(`${esc(x.c)}${x.t} (${pct(f(x))})`);
       return `<span class="text-warning">${Object.entries(by).map(([bn, v]) => `<strong>${esc(bn)}</strong>: ${v.join(', ')}`).join(' · ')}</span>`; };
-    const rng = (n1, v1, n2, v2) => `<div class="d-flex gap-1 align-items-center rng">${pctIn(n1, v1, 'placeholder="min"')}<span class="text-muted">–</span>${pctIn(n2, v2, 'placeholder="maks"')}</div>`;
+    const rng = (n1, v1, n2, v2) => `<div class="d-flex gap-1 align-items-center rng">${pctIn(n1, v1, 'placeholder="min"')}${pctIn(n2, v2, 'placeholder="maks"')}</div>`;
     return {
       title: `Batas & exception · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'limits')}
       <form data-action="setup.saveLimits" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>

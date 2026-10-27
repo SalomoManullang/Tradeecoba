@@ -44,6 +44,7 @@
     if (r.filter((x) => x.max === null).length > 1) out.push('lebih dari satu kelas tanpa batas atas');
     const sorted = r.slice().sort((a, b) => a.min - b.min);
     for (let i = 1; i < sorted.length; i++) if (sorted[i - 1].max === null || sorted[i - 1].max > sorted[i].min) out.push(`rentang baseline kelas ${sorted[i - 1].code} & ${sorted[i].code} tumpang tindih`);
+    for (const c of SM.schemeOf(st, code).classes) out.push(...SM.growthIssues(c));
     return out;
   };
   route('/setup/:id/ch/:pc/scheme', ({ id, pc }) => {
@@ -83,9 +84,9 @@
             : 'Mengikuti brand lain = kelas, tier, rebate, Vision Compass, dan rentang baseline brand acuan dipakai seluruhnya.'}</div></div>
         <div id="followNote"></div>
         ${iss.length ? `<div class="alert alert-danger py-2 small">${esc(iss.join('; '))}. Diblokir saat publish Pendaftaran.</div>` : ''}
-        <div class="small text-muted mb-2">Kelas toko ditentukan dari baseline: baseline ≥ min dan &lt; maks masuk kelas itu (Rp juta / bulan; batas atas boleh kosong). <strong>Total conditional = semester rebate + yearly rebate</strong> (dihitung, tidak diisi).</div>
+        <div class="small text-muted mb-2">Kelas toko ditentukan dari baseline: baseline ≥ min dan &lt; maks masuk kelas itu (Rp juta / bulan; batas atas boleh kosong). <strong>Growth</strong> = target growth tier (step kelipatan 5%, naik per tier); target 2027 = baseline × 12 × (1 + growth). <strong>Total conditional = semester rebate + yearly rebate</strong> (dihitung, tidak diisi).</div>
         <div class="table-responsive"><table class="table table-sm scheme-table mb-2"><thead><tr><th style="width:100px">Kelas</th><th style="width:230px">Baseline / bulan <span class="text-muted fw-normal">min – maks</span></th>
-          <th style="width:80px">Tier</th><th>Semester rebate</th><th>Yearly rebate</th><th class="num">Total conditional</th><th>Total Vision Compass</th><th></th></tr></thead><tbody id="clsRows"></tbody></table></div>
+          <th style="width:80px">Tier</th><th style="width:120px">Growth</th><th>Semester rebate</th><th>Yearly rebate</th><th class="num">Total conditional</th><th>Total Vision Compass</th><th></th></tr></thead><tbody id="clsRows"></tbody></table></div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan skema ${esc(brand.brand_name)}</button>
       </div></div></fieldset></form></div></div>`,
       after(root) {
@@ -108,12 +109,12 @@
             const tail = `<td rowspan="${span}">${inp(ci, null, 'vc_pct', c.vc_pct, '%')}</td>
               <td rowspan="${span}" class="text-right text-nowrap"><button type="button" class="btn btn-sm btn-light" data-act="addTier" data-c="${ci}" title="Tambah tier"><i class="bi bi-plus"></i> Tier</button>
                 <button type="button" class="btn btn-sm btn-light text-danger" data-act="delCls" data-c="${ci}" title="Hapus kelas"><i class="bi bi-trash"></i></button></td>`;
-            if (!c.tiers.length) return `<tr class="cls-first">${head}<td colspan="4" class="text-danger small">Belum ada tier.</td>${tail}</tr>`;
+            if (!c.tiers.length) return `<tr class="cls-first">${head}<td colspan="5" class="text-danger small">Belum ada tier.</td>${tail}</tr>`;
             return c.tiers.map((t, ti) => `<tr class="${ti === 0 ? 'cls-first' : ''}">${ti === 0 ? head : ''}
               <td class="text-nowrap">Tier ${ti + 1} <button type="button" class="btn btn-sm btn-link text-danger p-0" data-act="delTier" data-c="${ci}" data-t="${ti}" title="Hapus tier"><i class="bi bi-x"></i></button></td>
-              <td>${inp(ci, ti, 'semester_pct', t.semester_pct, '%')}</td><td>${inp(ci, ti, 'yearly_pct', t.yearly_pct, '%')}</td>
+              <td>${inp(ci, ti, 'growth_pct', t.growth_pct, '%')}</td><td>${inp(ci, ti, 'semester_pct', t.semester_pct, '%')}</td><td>${inp(ci, ti, 'yearly_pct', t.yearly_pct, '%')}</td>
               <td class="num fw-semibold" data-total="${ci}-${ti}">${pct(SM.tierTotal(t))}</td>${ti === 0 ? tail : ''}</tr>`).join('');
-          }).join('') || '<tr><td colspan="8" class="text-muted small">Belum ada kelas.</td></tr>';
+          }).join('') || '<tr><td colspan="9" class="text-muted small">Belum ada kelas.</td></tr>';
           if (ro || ref) box.querySelectorAll('input,button').forEach((x) => { x.disabled = true; });
           root.querySelector('#addCls').disabled = ro || !!ref;
         }
@@ -126,14 +127,17 @@
         box.addEventListener('click', (e) => {
           const btn = e.target.closest('[data-act]'); if (!btn || sel2.value) return;
           const c = state[btn.dataset.c];
-          if (btn.dataset.act === 'addTier') { const last = c.tiers[c.tiers.length - 1] || {}; c.tiers.push({ semester_pct: nv(last.semester_pct) === '' ? null : last.semester_pct, yearly_pct: null }); }
+          if (btn.dataset.act === 'addTier') {
+            const last = c.tiers[c.tiers.length - 1] || {};
+            c.tiers.push({ growth_pct: n(last.growth_pct) === null ? null : n(last.growth_pct) + 5, semester_pct: nv(last.semester_pct) === '' ? null : last.semester_pct, yearly_pct: null }); // step kelipatan 5%
+          }
           if (btn.dataset.act === 'delTier') c.tiers.splice(Number(btn.dataset.t), 1);
           if (btn.dataset.act === 'delCls') state.splice(Number(btn.dataset.c), 1);
           draw();
         });
         root.querySelector('#addCls').addEventListener('click', () => {
           const last = state[state.length - 1];
-          state.push({ code: '', orig: null, min: last && last.max !== null ? last.max : null, max: null, vc_pct: null, tiers: last ? last.tiers.map(() => ({ semester_pct: null, yearly_pct: null })) : [{ semester_pct: null, yearly_pct: null }] });
+          state.push({ code: '', orig: null, min: last && last.max !== null ? last.max : null, max: null, vc_pct: null, tiers: last ? last.tiers.map((t) => ({ growth_pct: t.growth_pct, semester_pct: null, yearly_pct: null })) : [{ growth_pct: null, semester_pct: null, yearly_pct: null }] });
           draw();
         });
         sel2.addEventListener('change', draw);
@@ -166,7 +170,7 @@
         if (!/^[A-Z0-9+_-]{1,10}$/.test(code)) throw new Error(`Kode kelas "${code || '(kosong)'}" tidak valid (huruf/angka, maks 10).`);
         const mn = nn(c.min, 'Baseline'); const mx = nn(c.max, 'Baseline');
         return { code, orig: c.orig, min: mn === null ? null : Math.round(mn * JUTA), max: mx === null ? null : Math.round(mx * JUTA), vc_pct: nn(c.vc_pct, 'Persen'),
-          tiers: (c.tiers || []).map((t) => ({ semester_pct: nn(t.semester_pct, 'Persen'), yearly_pct: nn(t.yearly_pct, 'Persen') })) };
+          tiers: (c.tiers || []).map((t) => ({ growth_pct: nn(t.growth_pct, 'Growth'), semester_pct: nn(t.semester_pct, 'Persen'), yearly_pct: nn(t.yearly_pct, 'Persen') })) };
       });
       if (new Set(classes.map((c) => c.code)).size !== classes.length) throw new Error('Kode kelas tidak boleh dobel.');
       // kode kelas yang diganti: pindahkan target lead measure brand ini & brand yang mengikutinya ke kode baru

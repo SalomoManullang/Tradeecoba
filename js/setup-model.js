@@ -18,7 +18,7 @@
 
   function emptySetup() {
     return {
-      // schemes[brand].classes = [{ code, min, max (baseline / bulan, Rp), vc_pct, tiers: [{ semester_pct, yearly_pct }] }]; scheme_follow[brand] = kode brand acuan
+      // schemes[brand].classes = [{ code, min, max (baseline / bulan, Rp), vc_pct, tiers: [{ growth_pct, semester_pct, yearly_pct }] }]; scheme_follow[brand] = kode brand acuan
       schemes: {}, scheme_follow: {},
       // aturan channel: rentang persen semester / yearly benefit yang boleh dipakai kelas, batas total (conditional + Vision Compass)
       rules: { semester_min: null, semester_max: null, yearly_min: null, yearly_max: null, total_max_pct: null },
@@ -35,6 +35,16 @@
 
   // ---------------------------------------------------------------- skema & kelas per brand (kelas ditentukan dari baseline)
   const tierTotal = (t) => round((num(t.semester_pct) || 0) + (num(t.yearly_pct) || 0)); // total conditional = semester + yearly
+  // growth tiap tier diisi Admin HO di skema kelas: wajib, dan harus naik dari tier ke tier
+  function growthIssues(c) {
+    const out = [];
+    c.tiers.forEach((t, i) => {
+      const g = num(t.growth_pct);
+      if (g === null) out.push(`kelas ${c.code} tier ${i + 1}: growth belum diisi`);
+      else if (i && num(c.tiers[i - 1].growth_pct) !== null && g <= num(c.tiers[i - 1].growth_pct)) out.push(`kelas ${c.code} tier ${i + 1}: growth harus lebih tinggi dari tier ${i}`);
+    });
+    return out;
+  }
   // Brand yang mengikuti brand lain memakai seluruh skema brand acuan (kelas, tier, rebate, Vision Compass, rentang baseline)
   const schemeBrand = (setup, brand) => ((setup.scheme_follow || {})[brand] && (setup.scheme_follow || {})[brand] !== brand ? setup.scheme_follow[brand] : brand);
   const schemeOf = (setup, brand) => (setup.schemes || {})[schemeBrand(setup, brand)] || { classes: [] };
@@ -47,7 +57,7 @@
   }
 
   // ---------------------------------------------------------------- pratinjau form CBD (simulasi, tidak menyimpan)
-  // in: { brand, baseline, growth: [g tier1..n] (diisi CBD), tier (1..n), alloc: [{ pillar, nominal }], lower_to }
+  // in: { brand, baseline, growth: [g tier1..n] (opsional; default growth tier dari skema), tier (1..n), alloc: [{ pillar, nominal }], lower_to }
   function preview(program, ch, input) {
     const setup = setupOf(ch);
     const out = { exceptions: [], tiers: [], rules: setup.rules };
@@ -63,7 +73,8 @@
       return out;
     }
     out.tiers = cls.tiers.map((t, i) => {
-      const g = num((input.growth || [])[i]);
+      const gIn = num((input.growth || [])[i]);
+      const g = gIn !== null ? gIn : num(t.growth_pct); // growth tier ditetapkan di skema kelas
       const target = baseline === null || g === null ? null : baseline * 12 * (1 + g / 100); // target 2027 = baseline / bulan × 12 × (1 + growth)
       const sem = num(t.semester_pct); const yr = num(t.yearly_pct); const tot = tierTotal(t);
       return { tier: i + 1, growth: g, target, semester_pct: sem, yearly_pct: yr, total_pct: tot,
@@ -136,6 +147,7 @@
       const classes = schemeOf(setup, code).classes;
       if (!classes.length) { errors.push(`${name}: belum punya kelas.`); continue; }
       for (const c of classes) if (!c.tiers.length) errors.push(`${name} kelas ${c.code}: belum punya tier.`);
+      for (const c of classes) growthIssues(c).forEach((x) => errors.push(`${name} ${x}.`));
       // rentang baseline: tumpang tindih, terbalik, lebih dari satu kelas tanpa batas atas
       const r = brandRanges(setup, code);
       const filled = r.filter((x) => x.min !== null);
@@ -230,10 +242,12 @@
     // skema per brand: persen rebate deck sama untuk semua brand (semester berlaku S1 & S2, yearly 1,00 / 1,25 / 1,50%),
     // rentang baseline / bulan (Rp juta) per brand; kelas D tanpa batas atas
     const REBATE = [['A', 0.5, 1.5], ['B', 0.75, 1.5], ['C', 1, 2], ['D', 1.25, 2.5]];
+    // growth tier 1 per brand (deck hal. 2–8); tier 2 & 3 = +5% & +10%
+    const GROWTH = type === 'ACTIVE' ? { WRD: 20, LIGHT: 30, KHF: 40, EMN: 10, OMG: 40, MO: 15, LAB: 95 } : { WRD: 35, LIGHT: 25, KHF: 45, EMN: 20, OMG: 25, MO: 35, LAB: 95 };
     const BASE = { WRD: [50, 150, 400, 800], LIGHT: [50, 80, 120, 200], KHF: [50, 80, 125, 330], EMN: [50, 80, 120, 210], OMG: [50, 85, 170, 320], MO: [50, 75, 135, 270], LAB: [50, 70, 90, 100] };
     for (const [b, xs] of Object.entries(BASE)) {
       s.schemes[b] = { classes: REBATE.map(([code, sem, vc], i) => ({ code, min: xs[i] * M, max: i < 3 ? xs[i + 1] * M : null, vc_pct: vc,
-        tiers: [1, 1.25, 1.5].map((yr) => ({ semester_pct: sem, yearly_pct: yr })) })) };
+        tiers: [1, 1.25, 1.5].map((yr, ti) => ({ growth_pct: GROWTH[b] + ti * 5, semester_pct: sem, yearly_pct: yr })) })) };
     }
     s.terms = [
       { id: 't1', name: 'S1', type: 'SEMESTER', start: '2027-01-01', end: '2027-06-30', portion_pct: 30, schedule: '' },
@@ -268,7 +282,7 @@
 
   window.SetupModel = {
     PHASES, PHASE_LABEL, TERM_TYPES, TERM_BASIS,
-    phaseStatus, isPublished, isRunning, emptySetup, setupOf, tierTotal, brandRanges, classOf, schemeBrand, schemeOf, hasSchemes,
+    phaseStatus, isPublished, isRunning, emptySetup, setupOf, tierTotal, growthIssues, brandRanges, classOf, schemeBrand, schemeOf, hasSchemes,
     preview, termSums, termErrors, validatePhase, programSummary, programHas, summaryLabel, demoSetup, seedDemo, fmtPct,
   };
 })();

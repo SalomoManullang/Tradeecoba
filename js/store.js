@@ -8,7 +8,7 @@
     'programTypes', 'programs', 'programChannels', 'programChannelBrands', 'programClasses',
     'programPillars', 'programJtbds', 'programLeadMeasures', 'programFormulas', 'programPhaseFields',
     'programApprovalLayers', 'programPayoutSchedules', 'programDocumentTemplates', 'programDocumentTemplateRevisions',
-    'programAuditLogs', 'registrations', 'monitorings', 'payouts', 'approvalLogs', 'generatedDocuments'];
+    'programAuditLogs', 'formulaLibrary', 'registrations', 'monitorings', 'payouts', 'approvalLogs', 'generatedDocuments'];
 
   function load() {
     try {

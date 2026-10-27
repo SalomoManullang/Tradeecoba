@@ -821,7 +821,8 @@
     return {
       title: `Rumus · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'formulas')}
       <div class="row g-3"><div class="col-xl-9">
-      <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'PAYOUT')}>
+      ${UI.currentUser().role === 'SUPERADMIN' ? '' : '<div class="alert alert-info py-2 small"><i class="bi bi-lock"></i>&nbsp;Rumus hanya dapat diubah Admin IT. Admin HO dapat melihat rumus yang berlaku.</div>'}
+      <form data-action="setup.saveFormulas" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'PAYOUT') || (UI.currentUser().role === 'SUPERADMIN' ? '' : 'disabled')}>
       <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3e</span>&nbsp;Rumus per slot — ${esc(ch.channel_name)} ${soonTag}</span>
         <a href="#/setup/${p.id}/simulate?ch=${ch.id}" class="btn btn-sm btn-outline-brand"><i class="bi bi-play"></i> Coba di simulasi</a></div><div class="card-body">
         <p class="small text-muted">Daftar slot tetap (developer). Isi rumus hanya dengan variabel katalog & fungsi ${window.Formula.FUNCTION_NAMES.join(', ')}. Sintaks dicek saat mengetik & saat simpan; hasil dicek di simulasi (step 4).</p>
@@ -864,13 +865,14 @@
         const tb = root.querySelector('#ovTable tbody');
         root.querySelector('#addOv').addEventListener('click', () => { tb.insertAdjacentHTML('beforeend', root.querySelector('#ovTpl').innerHTML); bind(tb.lastElementChild); });
         tb.addEventListener('click', (e) => { const b = e.target.closest('.del-ov'); if (b) b.closest('tr').remove(); });
-        if (!editable(p, ch, 'PAYOUT')) root.querySelector('#addOv').disabled = true;
+        if (!editable(p, ch, 'PAYOUT') || UI.currentUser().role !== 'SUPERADMIN') root.querySelector('#addOv').disabled = true;
       },
     };
   });
 
   actions['setup.saveFormulas'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
+    if (UI.currentUser().role !== 'SUPERADMIN') throw new Error('Rumus hanya dapat diubah Admin IT.');
     assertDraft(pid, pcId, 'PAYOUT');
     const sample = C.sampleVars();
     const rows = []; const errs = [];

@@ -1,4 +1,4 @@
-// Master data: sell out bulanan (upload CSV), toko, channel & brand.
+// Master data: sell out bulanan (upload CSV), toko, channel & brand, library rumus (Admin IT).
 (function () {
   const { h, route, actions, clicks, done, flash, render, inScope } = UI;
   const { esc } = h;
@@ -114,5 +114,103 @@
     const x = DB.t(d.kind).find((y) => y.code === d.code);
     x.is_active = !x.is_active;
     DB.save(); render();
+  };
+
+  // ---------------------------------------------------------------- library rumus
+  // Rumus field form (mode "Dihitung") dibuat & diubah Admin IT; Admin HO hanya melihat dan memilihnya di Program Setup.
+  const C = window.Catalog;
+  const E = window.Engine;
+  const isIT = () => UI.currentUser().role === 'SUPERADMIN';
+  const PHASE_NAME = { REGISTRATION: 'Pendaftaran', MONITORING: 'Monitoring', PAYOUT: 'Pencairan' };
+  const fmtFx = (v, type) => (type === 'PERCENT' ? h.pct(v * 100, 2) : type === 'RUPIAH' ? h.rp(Math.round(v)) : h.num(v, 2));
+  function fxResult(expr, phase, type) {
+    if (!expr) return '<span class="text-muted">isi rumus</span>';
+    const samples = C.fieldFormulaSamples(phase);
+    const r = window.Formula.check(expr, samples);
+    if (!r.isValid) return `<span class="text-danger">${esc(r.errors.join(', '))}</span>`;
+    try { return `<span class="text-success">valid</span> · contoh = <strong>${esc(fmtFx(window.Formula.evaluate(expr, samples), type))}</strong>`; } catch (e) { return `<span class="text-danger">${esc(e.message)}</span>`; }
+  }
+  const usageOf = (id) => DB.where('programPhaseFields', (f) => f.formula_id === id).length;
+
+  route('/master/formulas', ({}, q) => {
+    UI.requireSetup();
+    const it = isIT();
+    const list = E.formulaLibrary();
+    const edit = it && q.edit ? (q.edit === 'new' ? { id: null, name: '', phase: 'REGISTRATION', data_type: 'RUPIAH', expression: '', description: '' } : list.find((x) => x.id === Number(q.edit))) : null;
+    const phases = Object.keys(C.FIELD_FORMULA_VARS);
+    const ref = (phase) => {
+      const vars = C.FIELD_FORMULA_VARS[phase] || [];
+      return `<div class="row g-3"><div class="col-lg-7"><div class="fx-h">Variabel ${esc(PHASE_NAME[phase])} <span class="text-muted fw-normal">${it && edit ? '· klik untuk menyisipkan' : ''}</span></div>
+        <table class="table table-sm fx-table mb-0"><tbody>${vars.map((x) => `<tr><td>${it && edit ? `<button type="button" class="fx-chip" data-ins="${x.code}">${x.code}</button>` : `<code>${x.code}</code>`}</td>
+          <td>${esc(x.label)}<div class="small text-muted">${esc(x.unit)} · contoh ${esc(x.unit === 'Rp' ? h.rp(x.sample) : String(x.sample).replace('.', ','))}</div></td></tr>`).join('')}</tbody></table>
+        <div class="small text-muted mt-1">Persen ditulis pecahan: 1,5% = <code>0.015</code>. Pakai titik untuk desimal.</div></div>
+        <div class="col-lg-5"><div class="fx-h">Fungsi &amp; operator</div>
+        <table class="table table-sm fx-table mb-0"><tbody>${C.FORMULA_FUNCTIONS.map(([fn, d, ex]) => `<tr><td class="text-nowrap"><code>${esc(fn)}</code></td><td>${esc(d)}<div class="small text-muted"><code>${esc(ex)}</code></div></td></tr>`).join('')}</tbody></table></div></div>`;
+    };
+    return {
+      title: 'Library rumus', html: `
+      <div class="page-head"><div><h1>Library rumus</h1><div class="sub">Rumus untuk field form bermode <em>Dihitung</em>. ${it ? 'Anda (Admin IT) dapat membuat & mengubah rumus.' : 'Hanya Admin IT yang dapat membuat & mengubah rumus; Admin HO memilihnya di Program Setup → Form & approval.'}</div></div>
+        ${it && !edit ? '<a href="#/master/formulas?edit=new" class="btn btn-brand"><i class="bi bi-plus"></i> Rumus baru</a>' : ''}</div>
+      ${edit ? `<form data-action="formula.save" data-id="${edit.id || ''}" class="card mb-3"><div class="card-header">${edit.id ? 'Ubah rumus' : 'Rumus baru'}</div><div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-4"><label class="form-label">Nama rumus <span class="text-danger">*</span></label><input name="name" class="form-control" value="${esc(edit.name)}" required placeholder="mis. Target setahun"></div>
+          <div class="col-md-2"><label class="form-label">Fase</label><select name="phase" class="form-control">${phases.map((x) => `<option value="${x}" ${h.sel(edit.phase === x)}>${PHASE_NAME[x]}</option>`).join('')}</select></div>
+          <div class="col-md-2"><label class="form-label">Tipe hasil</label><select name="data_type" id="fxType" class="form-control">${C.CALC_TYPES.map((x) => `<option value="${x}" ${h.sel(edit.data_type === x)}>${C.FIELD_TYPES[x]}</option>`).join('')}</select></div>
+          <div class="col-md-4"><label class="form-label">Keterangan</label><input name="description" class="form-control" value="${esc(edit.description || '')}" placeholder="untuk Admin HO, mis. dipakai di MoU"></div>
+          <div class="col-12"><label class="form-label">Rumus <span class="text-danger">*</span></label><input name="expression" id="fxExpr" class="form-control text-monospace" value="${esc(edit.expression)}" placeholder="mis. target * months" autocomplete="off">
+            <div class="small mt-1" id="fxRes">${fxResult(edit.expression, edit.phase, edit.data_type)}</div>
+            ${edit.id && usageOf(edit.id) ? `<div class="small text-warning mt-1">Dipakai di ${usageOf(edit.id)} field form. Form yang sudah disimpan tetap memakai versi lama sampai disimpan ulang oleh Admin HO.</div>` : ''}</div>
+        </div>
+        <div class="fx-guide mt-3">${ref(edit.phase)}</div>
+        <div class="d-flex gap-2 mt-3"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan rumus</button><a href="#/master/formulas" class="btn btn-outline-secondary">Batal</a></div>
+      </div></form>` : ''}
+      <div class="card"><div class="table-responsive"><table class="table table-bordered table-hover mb-0">
+        <thead><tr><th>Nama</th><th>Fase</th><th>Tipe</th><th>Rumus</th><th>Contoh hasil</th><th class="num">Dipakai</th><th>Status</th>${it ? '<th></th>' : ''}</tr></thead>
+        <tbody>${list.map((x) => `<tr class="${x.is_active ? '' : 'text-muted'}"><td class="fw-semibold">${esc(x.name)}${x.description ? `<div class="small text-muted fw-normal">${esc(x.description)}</div>` : ''}</td>
+          <td>${PHASE_NAME[x.phase] || x.phase}</td><td>${C.FIELD_TYPES[x.data_type]}</td><td><code class="fx-code">${esc(x.expression)}</code></td>
+          <td class="small">${fxResult(x.expression, x.phase, x.data_type)}</td><td class="num">${usageOf(x.id)} field</td>
+          <td>${x.is_active ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-secondary">Nonaktif</span>'}</td>
+          ${it ? `<td class="text-nowrap text-right"><a href="#/master/formulas?edit=${x.id}" class="btn btn-sm btn-outline-brand">Ubah</a>
+            <a href="#" class="btn btn-sm btn-link" data-click="formula.toggle" data-id="${x.id}">${x.is_active ? 'Nonaktifkan' : 'Aktifkan'}</a></td>` : ''}</tr>`).join('')
+          || `<tr><td colspan="${it ? 8 : 7}" class="text-center text-muted py-4">Belum ada rumus.</td></tr>`}</tbody></table></div></div>
+      ${edit ? '' : `<div class="card mt-3"><div class="card-header">Panduan penulisan rumus</div><div class="card-body">${ref('REGISTRATION')}</div></div>`}`,
+      after(root) {
+        const expr = root.querySelector('#fxExpr'); if (!expr) return;
+        const form = expr.closest('form');
+        const upd = () => { root.querySelector('#fxRes').innerHTML = fxResult(expr.value, form.phase.value, form.data_type.value); };
+        expr.addEventListener('input', upd);
+        form.addEventListener('change', upd);
+        form.addEventListener('mousedown', (e) => { if (e.target.closest('[data-ins]')) e.preventDefault(); });
+        form.addEventListener('click', (e) => {
+          const b = e.target.closest('[data-ins]'); if (!b) return;
+          const s = expr.selectionStart ?? expr.value.length; const t = expr.selectionEnd ?? expr.value.length;
+          expr.value = expr.value.slice(0, s) + b.dataset.ins + expr.value.slice(t);
+          expr.focus(); expr.setSelectionRange(s + b.dataset.ins.length, s + b.dataset.ins.length);
+          upd();
+        });
+      },
+    };
+  });
+  actions['formula.save'] = (f, form) => {
+    if (!isIT()) throw new Error('Hanya Admin IT yang dapat membuat atau mengubah rumus.');
+    const id = Number(form.dataset.id) || null;
+    const v = { name: String(f.get('name') || '').trim(), phase: f.get('phase'), data_type: f.get('data_type'), expression: String(f.get('expression') || '').trim(), description: String(f.get('description') || '').trim() || null };
+    if (!v.name) throw new Error('Nama rumus wajib diisi');
+    if (!C.FIELD_FORMULA_VARS[v.phase]) throw new Error('Fase tidak mendukung field rumus');
+    if (!C.CALC_TYPES.includes(v.data_type)) throw new Error('Tipe hasil tidak dikenal');
+    const r = window.Formula.check(v.expression, C.fieldFormulaSamples(v.phase));
+    if (!r.isValid) throw new Error(`Rumus tidak valid: ${r.errors.join(', ')}`);
+    const list = E.formulaLibrary();
+    if (list.some((x) => x.id !== id && x.name.toLowerCase() === v.name.toLowerCase())) throw new Error('Nama rumus sudah dipakai');
+    Object.assign(v, { updated_by: UI.currentUser().id, updated_at: new Date().toISOString() });
+    if (id) Object.assign(DB.byId('formulaLibrary', id), v); else DB.insert('formulaLibrary', Object.assign({ is_active: true }, v));
+    done('success', `Rumus "${esc(v.name)}" disimpan.`, '/master/formulas');
+  };
+  clicks['formula.toggle'] = (d) => {
+    if (!isIT()) throw new Error('Hanya Admin IT yang dapat mengubah rumus.');
+    const x = DB.byId('formulaLibrary', d.id); if (!x) return;
+    x.is_active = !x.is_active;
+    x.updated_by = UI.currentUser().id; x.updated_at = new Date().toISOString();
+    done('success', `Rumus "${esc(x.name)}" ${x.is_active ? 'diaktifkan' : 'dinonaktifkan'}.`, '/master/formulas');
   };
 })();

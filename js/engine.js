@@ -433,6 +433,22 @@
   }
   const currentLayer = (rec) => (rec.current_layer_id ? DB.byId('programApprovalLayers', rec.current_layer_id) : null);
 
+  // ---------------------------------------------------------------- library rumus field form (dikelola Admin IT)
+  // formulaLibrary: { id, name, phase, data_type, expression, description, is_active, updated_by, updated_at }
+  // Field form menyimpan formula_id + salinan expression (versi saat form disimpan); runtime memakai salinan itu.
+  function formulaLibrary() {
+    if (!DB.state.formulaLibrarySeeded) {
+      DB.state.formulaLibrarySeeded = true;
+      if (!DB.t('formulaLibrary').length) {
+        for (const [phase, list] of Object.entries(C.FORMULA_EXAMPLES)) {
+          for (const [name, expression, data_type] of list) DB.insert('formulaLibrary', { name, phase, data_type, expression, description: null, is_active: true, updated_by: null, updated_at: nowIso() });
+        }
+      }
+      DB.save();
+    }
+    return DB.t('formulaLibrary');
+  }
+
   // ---------------------------------------------------------------- target lead measure per brand × kelas (× section)
   // programChannelBrands.lm_targets = { [kode kelas]: { sections: ['Face Care', 'Makeup'], rows: { [lead_measure_id]: { off, same, cells: [{ op, value, text }] } } } }
   // Kunci kelas = kode (id kelas berganti tiap simpan 3b). cells sejajar dengan sections; tanpa section / "sama" → cells[0].
@@ -705,7 +721,7 @@
     CHANNEL_TYPES, channelName, cloneChannel, loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, monitoringApproval, payoutCalc,
     registrationObjects, monitoringObjects, payoutObjects, generateDocuments,
     eligibility, minBaseline, firstDo, soSiRatio, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
-    fmtLmTarget, lmTarget, lmTargetText,
+    fmtLmTarget, lmTarget, lmTargetText, formulaLibrary,
     renderDocument, unknownPlaceholders, defaultSections, audit, createChannelDefaults, cloneProgram,
     deleteChannel, deleteProgram, deletePillarTree, validateProgram,
   };

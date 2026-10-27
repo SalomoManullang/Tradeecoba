@@ -25,7 +25,7 @@
     const cfg = ch.phases[phase];
     const catalog = C.CATALOG_FIELDS.filter((f) => f.phases.includes(phase));
     const fields = cfg.fields.map((f) => ({ id: f.id, source: f.source, field_key: f.field_key, label: f.label, data_type: f.data_type, options: (f.options || []).join(', '),
-      mode: f.mode, expression: f.expression || '', repeat_per: f.repeat_per, is_visible: f.is_visible, is_editable: f.is_editable, is_required: f.is_required,
+      mode: f.mode, expression: f.expression || '', formula_id: f.formula_id || null, repeat_per: f.repeat_per, is_visible: f.is_visible, is_editable: f.is_editable, is_required: f.is_required,
       min_value: f.min_value === null ? '' : f.min_value, max_value: f.max_value === null ? '' : f.max_value }));
     const layers = cfg.layers.map((l) => ({ role_code: l.role_code, is_final: l.is_final, conditions: (l.conditions || []).map((c) => ({ ...c })) }));
     const objects = Object.entries(C.AUTO_APPROVE_OBJECTS).filter(([, o]) => o.phases.includes(phase));
@@ -39,7 +39,7 @@
         <span><button type="button" class="btn btn-sm btn-outline-brand" id="addCatalog"><i class="bi bi-plus"></i> Field katalog</button>
           <button type="button" class="btn btn-sm btn-outline-brand" id="addCustom"><i class="bi bi-plus"></i> Field custom</button></span></div>
         <div class="card-body">
-          <p class="small text-muted">Field katalog sudah dipahami sistem (mis. baseline, growth, evidence_upload). Field custom bisa ditambah tanpa development; mode <em>Dihitung</em> memakai aturan rumus FR5. Urutan baris = posisi di form.</p>
+          <p class="small text-muted">Field katalog sudah dipahami sistem (mis. baseline, growth, evidence_upload). Field custom bisa ditambah tanpa development; mode <em>Dihitung</em> memakai rumus dari <a href="#/master/formulas">Library rumus</a> yang dibuat Admin IT. Urutan baris = posisi di form.</p>
           <div class="table-responsive"><table class="table table-sm table-bordered phase-fields"><thead><tr><th>#</th><th>Field</th><th>Label</th><th>Tipe</th><th>Mode</th><th>Diulang</th>
             <th title="Visible">Tampil</th><th title="Editable">Edit</th><th title="Required">Wajib</th><th>Min</th><th>Maks</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
           <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan form ${ph.label}</button>
@@ -63,100 +63,73 @@
         const ro = !editable(p, ch, phase);
         const fr = root.querySelector('#fRows');
         const typeOpts = (cur) => Object.entries(C.FIELD_TYPES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
-        // "Dihitung (rumus)" hanya untuk tipe angka & hanya di fase yang benar-benar menghitungnya (Pendaftaran)
-        const canCalc = (f) => C.CALC_TYPES.includes(f.data_type) && !!C.FIELD_FORMULA_VARS[phase];
-        const modeOpts = (cur, f) => Object.entries(C.MODES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)} ${k === 'CALCULATED' && !canCalc(f) ? 'disabled' : ''}>${v}${k === 'CALCULATED' && !canCalc(f) ? (C.FIELD_FORMULA_VARS[phase] ? ' (khusus Angka/Persen/Rupiah)' : ' (belum didukung di fase ini)') : ''}</option>`).join('');
+        // Field "Dihitung" memakai rumus dari Library rumus (dibuat Admin IT); Admin HO hanya memilih & melihat rumusnya.
+        // Hanya fase yang benar-benar menghitung field rumus (Pendaftaran) yang mendukung mode ini.
+        const canCalc = () => !!C.FIELD_FORMULA_VARS[phase];
+        const modeOpts = (cur) => Object.entries(C.MODES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)} ${k === 'CALCULATED' && !canCalc() ? 'disabled' : ''}>${v}${k === 'CALCULATED' && !canCalc() ? ' (belum didukung di fase ini)' : ''}</option>`).join('');
         const samples = C.fieldFormulaSamples(phase);
-        let guideAt = null; // indeks field yang panduan rumusnya terbuka
+        const lib = E.formulaLibrary().filter((x) => x.phase === phase);
+        const libOf = (id) => lib.find((x) => x.id === Number(id)) || null;
         const fmtVal = (v, type) => (type === 'PERCENT' ? h.pct(v * 100, 2) : type === 'RUPIAH' ? h.rp(Math.round(v)) : h.num(v, 2));
-        function fxStatus(f) {
-          if (!f.expression) return '<span class="text-muted">isi rumus</span>';
-          const r = window.Formula.check(f.expression, samples);
-          if (!r.isValid) return `<span class="text-danger">${h.esc(r.errors.join(', '))}</span>`;
-          try { return `<span class="text-success">valid</span> · contoh = <strong>${h.esc(fmtVal(window.Formula.evaluate(f.expression, samples), f.data_type))}</strong>`; } catch (e) { return `<span class="text-danger">${h.esc(e.message)}</span>`; }
-        }
-        function guideHtml(i) {
-          const f = fields[i];
-          const vars = C.FIELD_FORMULA_VARS[phase] || [];
-          return `<tr class="fx-guide-row"><td colspan="12"><div class="fx-guide">
-            <div class="d-flex justify-content-between align-items-center mb-2"><strong><i class="bi bi-lightbulb"></i> Panduan rumus · ${h.esc(f.label || f.field_key || 'field baru')}</strong>
-              <button type="button" class="btn btn-sm btn-link p-0" data-act="guide"><i class="bi bi-x-lg"></i> Tutup</button></div>
-            <div class="row g-3">
-              <div class="col-lg-5"><div class="fx-h">Variabel <span class="text-muted fw-normal">· klik untuk menyisipkan</span></div>
-                <table class="table table-sm fx-table mb-0"><tbody>${vars.map((x) => `<tr><td><button type="button" class="fx-chip" data-ins="${x.code}">${x.code}</button></td>
-                  <td>${h.esc(x.label)}<div class="small text-muted">${h.esc(x.unit)} · contoh ${h.esc(x.unit === 'Rp' ? h.rp(x.sample) : String(x.sample).replace('.', ','))}</div></td></tr>`).join('')}</tbody></table>
-                <div class="small text-muted mt-1">Persen ditulis pecahan: 1,5% = <code>0.015</code>. Pakai titik untuk desimal.</div></div>
-              <div class="col-lg-4"><div class="fx-h">Fungsi &amp; operator</div>
-                <table class="table table-sm fx-table mb-0"><tbody>${C.FORMULA_FUNCTIONS.map(([fn, d, ex]) => `<tr><td class="text-nowrap"><code>${h.esc(fn)}</code></td><td>${h.esc(d)}<div class="small text-muted"><code>${h.esc(ex)}</code></div></td></tr>`).join('')}</tbody></table></div>
-              <div class="col-lg-3"><div class="fx-h">Contoh rumus <span class="text-muted fw-normal">· klik untuk memakai</span></div>
-                ${(C.FORMULA_EXAMPLES[phase] || []).map(([t, ex, type]) => `<button type="button" class="fx-example" data-ex="${h.esc(ex)}" data-type="${type}"><span>${h.esc(t)}</span><code>${h.esc(ex)}</code>
-                  <span class="small text-muted">${C.FIELD_TYPES[type]} · = ${h.esc(fmtVal(window.Formula.evaluate(ex, samples), type))}</span></button>`).join('')}</div>
-            </div>
-            <div class="fx-preview mt-2">Hasil dengan data contoh: <span data-fxprev="${i}">${fxStatus(f)}</span></div>
-          </div></td></tr>`;
+        function formulaCell(f) {
+          const x = libOf(f.formula_id);
+          const opts = lib.filter((y) => y.is_active || y.id === Number(f.formula_id)).map((y) => `<option value="${y.id}" ${sel(x && x.id === y.id)}>${h.esc(y.name)} (${C.FIELD_TYPES[y.data_type]})${y.is_active ? '' : ' · nonaktif'}</option>`).join('');
+          let info = '';
+          if (x) {
+            let ex = '';
+            try { ex = fmtVal(window.Formula.evaluate(x.expression, samples), x.data_type); } catch (e) { ex = '-'; }
+            info = `<div class="fx-pick"><code>${h.esc(x.expression)}</code>${x.description ? `<div class="text-muted">${h.esc(x.description)}</div>` : ''}<div>contoh = <strong>${h.esc(ex)}</strong></div>
+              ${f.expression && f.expression !== x.expression ? '<div class="text-warning">Rumus di library sudah diubah Admin IT; simpan form untuk memakai versi terbaru.</div>' : ''}
+              ${x.is_active ? '' : '<div class="text-danger">Rumus ini sudah dinonaktifkan; pilih rumus lain.</div>'}</div>`;
+          } else if (f.expression) {
+            info = `<div class="fx-pick"><code>${h.esc(f.expression)}</code><div class="text-danger">Rumus ditulis manual (cara lama). Pilih rumus dari library.</div></div>`;
+          }
+          return `<select class="form-control form-control-sm mt-1" data-f="formula_id"><option value="">Pilih rumus dari library…</option>${opts}</select>${info}
+            <a href="#/master/formulas" class="small" target="_blank"><i class="bi bi-book"></i> Library rumus</a>`;
         }
         const repOpts = (cur) => Object.entries(C.REPEAT).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
         function drawFields() {
           fr.innerHTML = fields.map((f, i) => {
             const cat = f.source === 'CATALOG';
+            const calc = !cat && f.mode === 'CALCULATED';
             return `<tr data-i="${i}"><td class="text-nowrap">${i + 1}
                 <button type="button" class="btn btn-sm btn-link p-0" data-act="up" ${i === 0 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-link p-0" data-act="down" ${i === fields.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button></td>
               <td>${cat ? `<select class="form-control form-control-sm" data-f="field_key">${catalog.map((c) => `<option value="${c.key}" ${sel(f.field_key === c.key)}>${c.key}</option>`).join('')}</select><span class="badge badge-light">katalog</span>`
                 : `<input class="form-control form-control-sm" data-f="field_key" value="${h.esc(f.field_key)}" placeholder="nama_field"><span class="badge badge-info">custom</span>`}</td>
               <td><input class="form-control form-control-sm" data-f="label" value="${h.esc(f.label)}"></td>
-              <td>${cat ? `<span class="small">${C.FIELD_TYPES[f.data_type]}</span>` : `<select class="form-control form-control-sm" data-f="data_type">${typeOpts(f.data_type)}</select>`}
-                ${!cat && f.data_type === 'OPTION' ? `<input class="form-control form-control-sm mt-1" data-f="options" value="${h.esc(f.options)}" placeholder="Quarterly, Semester">` : ''}</td>
-              <td>${cat ? `<span class="small">${C.MODES[f.mode]}</span>` : `<select class="form-control form-control-sm" data-f="mode">${modeOpts(f.mode, f)}</select>`}
-                ${!cat && f.mode === 'CALCULATED' ? `<input class="form-control form-control-sm mt-1 text-monospace" data-f="expression" value="${h.esc(f.expression)}" placeholder="mis. target * months">
-                  <div class="small fx-out" data-fxprev="${i}">${fxStatus(f)}</div>
-                  <button type="button" class="btn btn-sm btn-link p-0" data-act="guide"><i class="bi bi-lightbulb"></i> ${guideAt === i ? 'Tutup panduan' : 'Panduan rumus'}</button>` : ''}</td>
+              <td>${cat ? `<span class="small">${C.FIELD_TYPES[f.data_type]}</span>`
+                : calc ? `<span class="small">${C.FIELD_TYPES[f.data_type]}</span><div class="small text-muted">ikut rumus</div>`
+                : `<select class="form-control form-control-sm" data-f="data_type">${typeOpts(f.data_type)}</select>`}
+                ${!cat && f.data_type === 'OPTION' && !calc ? `<input class="form-control form-control-sm mt-1" data-f="options" value="${h.esc(f.options)}" placeholder="Quarterly, Semester">` : ''}</td>
+              <td>${cat ? `<span class="small">${C.MODES[f.mode]}</span>` : `<select class="form-control form-control-sm" data-f="mode">${modeOpts(f.mode)}</select>`}
+                ${calc ? formulaCell(f) : ''}</td>
               <td>${cat ? `<span class="small">${C.REPEAT[f.repeat_per]}</span>` : `<select class="form-control form-control-sm" data-f="repeat_per">${repOpts(f.repeat_per)}</select>`}</td>
               ${['is_visible', 'is_editable', 'is_required'].map((k) => `<td class="text-center"><input type="checkbox" data-f="${k}" ${chk(f[k])} ${f.mode === 'CALCULATED' && k !== 'is_visible' ? 'disabled' : ''}></td>`).join('')}
               <td><input type="number" step="any" class="form-control form-control-sm" style="width:80px" data-f="min_value" value="${f.min_value}"></td>
               <td><input type="number" step="any" class="form-control form-control-sm" style="width:80px" data-f="max_value" value="${f.max_value}"></td>
               <td><button type="button" class="btn btn-sm btn-link text-danger p-0" data-act="del"><i class="bi bi-x-lg"></i></button></td></tr>`;
           }).join('') || '<tr><td colspan="12" class="text-muted">Belum ada field.</td></tr>';
-          if (guideAt !== null && fields[guideAt] && fields[guideAt].mode === 'CALCULATED') fr.querySelector(`tr[data-i="${guideAt}"]`).insertAdjacentHTML('afterend', guideHtml(guideAt));
-          else guideAt = null;
           if (ro) fr.querySelectorAll('input,select,button').forEach((x) => { x.disabled = true; });
         }
         fr.addEventListener('change', (e) => {
           const tr = e.target.closest('tr[data-i]'); const k = e.target.dataset.f; if (!tr || !k) return;
-          if (['expression', 'label', 'field_key'].includes(k) && e.target.tagName === 'INPUT') return; // sudah tersimpan lewat event input; gambar ulang di sini membuat klik panduan hilang
+          if (['label', 'field_key'].includes(k) && e.target.tagName === 'INPUT') return; // sudah tersimpan lewat event input
           const f = fields[tr.dataset.i];
           f[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
           if (k === 'field_key' && f.source === 'CATALOG') { const c = catalog.find((x) => x.key === f.field_key); Object.assign(f, { label: c.label, data_type: c.dataType, mode: c.mode, repeat_per: c.repeatPer, options: (c.options || []).join(', '), is_editable: c.mode === 'ENTERED' }); }
-          if (k === 'mode' && f.mode === 'CALCULATED') { f.is_editable = false; f.is_required = false; guideAt = Number(tr.dataset.i); }
-          if (k === 'data_type' && f.mode === 'CALCULATED' && !canCalc(f)) { f.mode = 'ENTERED'; f.is_editable = true; }
+          if (k === 'mode' && f.mode === 'CALCULATED') { f.is_editable = false; f.is_required = false; }
+          if (k === 'mode' && f.mode === 'ENTERED') { f.formula_id = null; f.expression = ''; f.is_editable = true; }
+          // pilih rumus → tipe field & rumus mengikuti library
+          if (k === 'formula_id') { const x = libOf(f.formula_id); f.formula_id = x ? x.id : null; if (x) { f.data_type = x.data_type; f.expression = x.expression; } }
           drawFields();
         });
         fr.addEventListener('input', (e) => {
           const tr = e.target.closest('tr[data-i]'); const k = e.target.dataset.f;
-          if (!tr || !k || e.target.type === 'checkbox') return;
+          if (!tr || !k || e.target.type === 'checkbox' || e.target.tagName === 'SELECT') return;
           fields[tr.dataset.i][k] = e.target.value;
-          if (k === 'expression') fr.querySelectorAll(`[data-fxprev="${tr.dataset.i}"]`).forEach((x) => { x.innerHTML = fxStatus(fields[tr.dataset.i]); });
         });
-        // sisipkan teks ke kolom rumus yang panduannya terbuka, di posisi kursor
-        function insertExpr(text, replace) {
-          const inp = fr.querySelector(`tr[data-i="${guideAt}"] [data-f="expression"]`); if (!inp) return;
-          const s = replace ? 0 : inp.selectionStart ?? inp.value.length; const e2 = replace ? inp.value.length : inp.selectionEnd ?? inp.value.length;
-          inp.value = inp.value.slice(0, s) + text + inp.value.slice(e2);
-          fields[guideAt].expression = inp.value;
-          inp.focus(); inp.setSelectionRange(s + text.length, s + text.length);
-          fr.querySelectorAll(`[data-fxprev="${guideAt}"]`).forEach((x) => { x.innerHTML = fxStatus(fields[guideAt]); });
-        }
-        // tombol panduan tidak mengambil fokus dari kolom rumus (posisi kursor tetap)
-        fr.addEventListener('mousedown', (e) => { if (e.target.closest('[data-ins], [data-ex]')) e.preventDefault(); });
         fr.addEventListener('click', (e) => {
-          const ins = e.target.closest('[data-ins]'); if (ins) { insertExpr(ins.dataset.ins, false); return; }
-          const ex = e.target.closest('[data-ex]');
-          if (ex) {
-            if (fields[guideAt].expression && !confirm('Ganti rumus yang sudah ada dengan contoh ini?')) return;
-            if (fields[guideAt].data_type !== ex.dataset.type) { fields[guideAt].data_type = ex.dataset.type; insertExpr(ex.dataset.ex, true); drawFields(); return; }
-            insertExpr(ex.dataset.ex, true); return;
-          }
           const b = e.target.closest('[data-act]'); if (!b) return;
-          if (b.dataset.act === 'guide') { const row = b.closest('tr[data-i]'); guideAt = row && guideAt !== Number(row.dataset.i) ? Number(row.dataset.i) : null; drawFields(); return; }
           const i = Number(b.closest('tr').dataset.i);
           if (b.dataset.act === 'del') fields.splice(i, 1);
           if (b.dataset.act === 'up' || b.dataset.act === 'down') { const j = b.dataset.act === 'up' ? i - 1 : i + 1; [fields[i], fields[j]] = [fields[j], fields[i]]; }
@@ -236,16 +209,17 @@
       if (!String(r.label || '').trim()) errs.push(`Field "${key}": label wajib`);
       const options = r.data_type === 'OPTION' ? String(r.options || '').split(',').map((s) => s.trim()).filter(Boolean) : null;
       if (r.data_type === 'OPTION' && !options.length) errs.push(`Field "${key}": isi pilihan`);
+      // field dihitung wajib memakai rumus aktif dari Library rumus; rumus & tipe disalin dari library saat disimpan
+      let lib = null;
       if (r.source === 'CUSTOM' && r.mode === 'CALCULATED') {
+        lib = E.formulaLibrary().find((x) => x.id === Number(r.formula_id)) || null;
         if (!C.FIELD_FORMULA_VARS[phase]) errs.push(`Field "${key}": field dihitung belum didukung di fase ${phase}`);
-        else if (!C.CALC_TYPES.includes(r.data_type)) errs.push(`Field "${key}": field dihitung harus bertipe Angka, Persen, atau Rupiah`);
-        else {
-          // hanya variabel yang benar-benar tersedia saat form fase ini dihitung
-          const chk2 = window.Formula.check(r.expression, C.fieldFormulaSamples(phase));
-          if (!chk2.isValid) errs.push(`Field "${key}": rumus tidak valid (${chk2.errors.join(', ')})`);
-        }
+        else if (!lib) errs.push(`Field "${key}": pilih rumus dari Library rumus`);
+        else if (!lib.is_active) errs.push(`Field "${key}": rumus "${lib.name}" sudah dinonaktifkan Admin IT; pilih rumus lain`);
+        else if (lib.phase !== phase) errs.push(`Field "${key}": rumus "${lib.name}" untuk fase lain`);
       }
-      return { phase, field_key: key, label: String(r.label || '').trim(), source: r.source, data_type: r.data_type, options, mode: r.mode, expression: r.mode === 'CALCULATED' && r.source === 'CUSTOM' ? r.expression : null,
+      return { phase, field_key: key, label: String(r.label || '').trim(), source: r.source, data_type: lib ? lib.data_type : r.data_type, options, mode: r.mode,
+        expression: lib ? lib.expression : null, formula_id: lib ? lib.id : null,
         repeat_per: r.repeat_per, is_visible: !!r.is_visible, is_editable: r.mode === 'CALCULATED' ? false : !!r.is_editable, is_required: r.mode === 'CALCULATED' ? false : !!r.is_required,
         min_value: toNum(r.min_value), max_value: toNum(r.max_value), sort_order: i + 1 };
     });

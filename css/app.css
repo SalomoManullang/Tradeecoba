@@ -253,3 +253,7 @@ details > summary { cursor: pointer; }
 .fx-example code { display: block; font-size: .76rem; }
 .fx-preview { font-size: .82rem; border-top: 1px dashed #d7e6f2; padding-top: 6px; }
 .fx-guide code, .fx-chip, [data-f="expression"] { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+
+/* library rumus: rumus terpilih di editor form & kolom rumus di tabel library */
+.fx-pick { font-size: .78rem; margin-top: 4px; padding: 4px 6px; border: 1px solid #d7e6f2; border-radius: 4px; background: #f8fbfe; }
+.fx-pick code, .fx-code { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; white-space: pre-wrap; }

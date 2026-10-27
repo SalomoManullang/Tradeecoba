@@ -239,3 +239,17 @@ details > summary { cursor: pointer; }
 
 /* 3a · judul bagian di halaman eligibility & jadwal */
 .elig-sec { font-weight: 600; color: #0b4f7c; border-bottom: 1px solid #d7e6f2; padding-bottom: 4px; margin-top: 4px; }
+
+/* 3f · panduan rumus field form */
+.fx-guide-row > td { background: #f5fbff; }
+.fx-guide { border: 1px solid #b9dcf3; border-radius: 6px; background: #fff; padding: 12px; }
+.fx-h { font-weight: 600; font-size: .82rem; margin-bottom: 4px; color: #0b4f7c; }
+.fx-table td { font-size: .8rem; vertical-align: top; }
+.fx-chip { border: 1px solid #7fb7dc; background: #eef7ff; color: #0b4f7c; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: .78rem; cursor: pointer; }
+.fx-chip:hover { background: #d7f0ff; }
+.fx-example { display: block; width: 100%; text-align: left; border: 1px solid #dfe3ec; background: #fff; border-radius: 5px; padding: 6px 8px; margin-bottom: 6px; font-size: .8rem; cursor: pointer; }
+.fx-example:hover { border-color: #22b9ff; background: #f5fbff; }
+.fx-example span:first-child { display: block; font-weight: 600; }
+.fx-example code { display: block; font-size: .76rem; }
+.fx-preview { font-size: .82rem; border-top: 1px dashed #d7e6f2; padding-top: 6px; }
+.fx-guide code, .fx-chip, [data-f="expression"] { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }

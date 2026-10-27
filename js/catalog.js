@@ -44,6 +44,40 @@
   const FIELD_TYPES = { NUMBER: 'Angka', PERCENT: 'Persen', RUPIAH: 'Rupiah', TEXT: 'Teks', OPTION: 'Pilihan', DATE: 'Tanggal', FILE: 'File' };
   const REPEAT = { NONE: 'Tidak diulang', BRAND: 'Per brand', LEAD_MEASURE: 'Per lead measure' };
   const MODES = { ENTERED: 'Diisi user', CALCULATED: 'Dihitung (rumus)' };
+  // Field bermode "Dihitung" hanya untuk tipe angka; saat ini hanya form Pendaftaran yang menghitungnya (registration.js customCalc)
+  const CALC_TYPES = ['NUMBER', 'PERCENT', 'RUPIAH'];
+
+  // Variabel yang boleh dipakai rumus field form, per fase. Harus sama dengan yang diisi runtime (registration.js customCalc).
+  const FIELD_FORMULA_VARS = {
+    REGISTRATION: [
+      { code: 'baseline', label: 'Baseline / bulan (diisi CBD/CDT)', unit: 'Rp', sample: 200e6 },
+      { code: 'growth', label: 'Growth komitmen', unit: 'pecahan · 0,45 = 45%', sample: 0.45 },
+      { code: 'months', label: 'Jumlah bulan periode program', unit: 'bulan', sample: 12 },
+      { code: 'target', label: 'Target / bulan = baseline × (1 + growth)', unit: 'Rp', sample: 290e6 },
+      { code: 'fix_max_pct', label: 'Fix rebate maks kelas', unit: 'pecahan · 0,01 = 1%', sample: 0.01 },
+      { code: 'reached_tier_conditional_pct', label: 'Conditional % tier dari growth komitmen', unit: 'pecahan', sample: 0.015 },
+      { code: 'reached_tier_total_pct', label: 'Total rebate % tier (fix + conditional)', unit: 'pecahan', sample: 0.025 },
+    ],
+  };
+  const fieldFormulaSamples = (phase) => Object.fromEntries((FIELD_FORMULA_VARS[phase] || []).map((x) => [x.code, x.sample]));
+  const FORMULA_FUNCTIONS = [
+    ['+  -  *  /', 'Tambah, kurang, kali, bagi', 'target * months'],
+    ['>  >=  <  <=  ==  !=', 'Perbandingan (hasil benar / salah)', 'growth >= 0.4'],
+    ['MIN(a, b, …)', 'Nilai terkecil', 'MIN(target, 500000000)'],
+    ['MAX(a, b, …)', 'Nilai terbesar', 'MAX(growth, 0.3)'],
+    ['ROUND(x, d)', 'Bulatkan x ke d angka desimal', 'ROUND(target * months, 0)'],
+    ['IF(syarat, a, b)', 'Hasil a bila syarat benar, selain itu b', 'IF(growth >= 0.4, 0.005, 0)'],
+  ];
+  // [judul, rumus, tipe field yang cocok]
+  const FORMULA_EXAMPLES = {
+    REGISTRATION: [
+      ['Target setahun', 'target * months', 'RUPIAH'],
+      ['Kenaikan penjualan / bulan', 'target - baseline', 'RUPIAH'],
+      ['Nilai conditional rebate setahun', 'reached_tier_conditional_pct * target * months', 'RUPIAH'],
+      ['Nilai total rebate setahun', 'reached_tier_total_pct * target * months', 'RUPIAH'],
+      ['Bonus 0,5% bila growth ≥ 40%', 'IF(growth >= 0.4, 0.005, 0)', 'PERCENT'],
+    ],
+  };
 
   // Field katalog per fase (PRD FR7). system = makna dipahami engine.
   const CATALOG_FIELDS = [
@@ -99,6 +133,7 @@
   window.Catalog = {
     PHASES, FORMULA_SLOTS, PRESET_NAME, FORMULA_VARIABLES, sampleVars, FIELD_TYPES, REPEAT, MODES, CATALOG_FIELDS,
     APPROVAL_ROLES, AUTO_APPROVE_OBJECTS, OPERATORS, PLACEHOLDERS, FREQUENCIES, LM_VALUE_TYPES, DOC_TYPES,
+    CALC_TYPES, FIELD_FORMULA_VARS, fieldFormulaSamples, FORMULA_FUNCTIONS, FORMULA_EXAMPLES,
     LM_TARGET_OPS, lmTargetOps, lmType, lmUnit,
   };
 })();

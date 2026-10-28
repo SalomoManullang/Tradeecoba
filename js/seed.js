@@ -149,16 +149,15 @@
             tiers: tiers.map(([g, total, cond], k) => ({ tier_no: k + 1, target_growth_pct: g, total_rebate_pct: total, conditional_rebate_pct: cond !== undefined ? cond : +(total - fix).toFixed(4) })) });
         });
       });
-      const lmIds = [];
-      PILLARS.forEach(([pName, jtbds], pi) => {
-        const pl = DB.insert('programPillars', { program_channel_id: pc.id, name: pName, sort_order: pi + 1, weight_pct: null });
-        jtbds.forEach(([jName, lms], ji) => {
-          const j = DB.insert('programJtbds', { program_pillar_id: pl.id, name: jName, sort_order: ji + 1 });
-          lms.forEach(([lName, type, unit], li) => lmIds.push(DB.insert('programLeadMeasures', { program_jtbd_id: j.id, name: lName, description: null, value_type: type, unit, weight_pct: null, sort_order: li + 1 }).id));
-        });
-      });
+      // Pilar per channel; JTBD & lead measure per brand (contoh: struktur sama untuk setiap brand)
+      const pillars = PILLARS.map(([pName], pi) => DB.insert('programPillars', { program_channel_id: pc.id, name: pName, sort_order: pi + 1, weight_pct: null }));
       // Target lead measure per kelas; Wardah dibagi section Face Care / Makeup, brand lain tanpa section
       for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) {
+        const lmIds = [];
+        PILLARS.forEach(([, jtbds], pi) => jtbds.forEach(([jName, lms], ji) => {
+          const j = DB.insert('programJtbds', { program_pillar_id: pillars[pi].id, program_channel_brand_id: b.id, name: jName, sort_order: ji + 1 });
+          lms.forEach(([lName, type, unit], li) => lmIds.push(DB.insert('programLeadMeasures', { program_jtbd_id: j.id, name: lName, description: null, value_type: type, unit, weight_pct: null, sort_order: li + 1 }).id));
+        }));
         const sections = b.brand_code === 'WRD' ? ['Face Care', 'Makeup'] : [];
         const classes = DB.where('programClasses', (c) => c.program_channel_brand_id === b.id);
         b.lm_targets = Object.fromEntries(classes.map((c, k) => [c.code, { sections, rows: Object.fromEntries(LM_TARGETS.map((fn, i) => {
@@ -236,8 +235,8 @@
 
     // ---------------------------------------------------------- monitoring Q1 & Q2 2027 (evidence per lead measure)
     const mPeriods = E.periodsOf(program.period_start, program.period_end, ch.monitoring_frequency);
-    const lms = ch.leadMeasures;
     regs.slice(0, 6).forEach((r, i) => {
+      const lms = E.regLeadMeasures(ch, r); // lead measure brand yang diikuti toko
       mPeriods.slice(0, 2).forEach((per, pi) => {
         const evidence = {};
         lms.forEach((l, li) => { if (!(i === 2 && li % 3 === 0) && !(pi === 1 && i === 4 && li > 5)) evidence[l.id] = `evidence_${l.id}_${per.key}.jpg`; });

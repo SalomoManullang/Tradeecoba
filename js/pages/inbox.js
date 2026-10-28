@@ -33,7 +33,7 @@
       ${section('registration', 'Registration', ['Program', 'Brand · growth · total rebate'], (rec) => [esc(DB.byId('programs', rec.program_id).code),
         rec.brands.map((b) => `<span class="mr-2 text-nowrap">${esc(bName(b.brand_code))} ${b.growth_pct}% · ${b.total_pct}%</span>`).join('')])}
       ${section('monitoring', 'Monitoring', ['Periode', 'Evidence'], (rec, r) => { const ch = E.loadProgram(r.program_id).channels.find((c) => c.id === r.program_channel_id);
-        return [esc(rec.period_label), `${Object.keys(rec.evidence || {}).length} / ${ch.leadMeasures.length} lead measure`]; })}
+        return [esc(rec.period_label), `${Object.keys(rec.evidence || {}).length} / ${E.regLeadMeasures(ch, r).length} lead measure`]; })}
       ${section('payout', 'Payout', ['Komponen · periode', 'Nominal'], (rec) => [`${rec.component === 'CONDITIONAL' ? 'Conditional' : 'Fix'} · ${esc(rec.period_label)}`, `<strong>${h.rp(rec.amount)}</strong>`])}</div></div>`,
     };
   });

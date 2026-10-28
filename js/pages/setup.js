@@ -336,6 +336,10 @@
     const before = existing.map((b) => b.brand_code);
     for (const b of existing.filter((x) => !codes.includes(x.brand_code))) {
       DB.remove('programClasses', (c) => c.program_channel_brand_id === b.id);
+      // JTBD & lead measure milik brand yang dilepas ikut terhapus
+      const bj = DB.where('programJtbds', (j) => j.program_channel_brand_id === b.id).map((j) => j.id);
+      DB.remove('programLeadMeasures', (l) => bj.includes(l.program_jtbd_id));
+      DB.remove('programJtbds', (j) => bj.includes(j.id));
       DB.remove('programChannelBrands', (x) => x.id === b.id);
       DB.remove('programFormulas', (x) => x.program_channel_id === pcId && x.brand_code === b.brand_code);
     }
@@ -363,38 +367,42 @@
     return SM.brandRanges(st, brand.brand_code).map((r) => ({ code: r.code, baseline_min: r.min, baseline_max: r.max }));
   }
 
-  // ---------------------------------------------------------------- 3c · pillar framework
-  // 3c dua langkah: (1) struktur pilar → JTBD → lead measure per channel, (2) target tiap lead measure per brand × kelas (× section)
+  // ---------------------------------------------------------------- 3d · pilar (per channel) → JTBD, lead measure & target (per brand)
+  // Langkah 1: pilar sama untuk semua brand di channel. Langkah 2: tiap brand menambah JTBD & lead measure di bawah pilar channel
+  // dan mengisi target per kelas di tabel yang sama. Brand yang mengikuti skema brand lain memakai JTBD, lead measure & target brand acuannya.
   function pillarTabs(p, ch, active) {
+    const nameOf = Object.fromEntries(ch.brands.map((b) => [b.brand_code, b.brand_name]));
     const done = (b) => lmClasses(ch, b).filter((c) => (b.lm_targets || {})[c.code]).length;
-    return `<div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Struktur sekali per channel, lalu target per kelas untuk setiap brand</div>
+    return `<div class="loop-lane inner mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Pilar sekali per channel, lalu JTBD, lead measure & target untuk setiap brand</div>
       <div class="d-flex flex-wrap gap-2 align-items-center">
-        <a class="btn btn-sm ${active === 'tree' ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars"><i class="bi bi-diagram-3"></i> 1. Struktur pilar</a>
-        <span class="small text-muted ml-2">2. Target per kelas:</span>
-        ${ch.brands.map((b) => `<a class="btn btn-sm ${active === b.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars/${b.id}">${esc(b.brand_name)}
-          <span class="badge ${lmClasses(ch, b).length && done(b) === lmClasses(ch, b).length ? 'badge-success' : 'badge-light'}">${done(b)}/${lmClasses(ch, b).length}</span></a>`).join('') || '<span class="small text-muted">Pilih brand dulu di 3b.</span>'}
+        <a class="btn btn-sm ${active === 'tree' ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars"><i class="bi bi-flag"></i> 1. Pilar channel <span class="badge badge-light">${ch.pillars.length}</span></a>
+        <span class="small text-muted ml-2">2. JTBD, lead measure & target:</span>
+        ${ch.brands.map((b) => { const fol = b.jtbd_source !== b.brand_code;
+          return `<a class="btn btn-sm ${active === b.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${ch.id}/pillars/${b.id}">${esc(b.brand_name)}
+          ${fol ? `<span class="badge badge-light">ikut ${esc(nameOf[b.jtbd_source] || b.jtbd_source)}</span>`
+            : `<span class="badge ${lmClasses(ch, b).length && done(b) === lmClasses(ch, b).length ? 'badge-success' : 'badge-light'}">${b.leadMeasures.length} LM · ${done(b)}/${lmClasses(ch, b).length}</span>`}</a>`; }).join('')
+          || '<span class="small text-muted">Pilih brand dulu di 3b.</span>'}
       </div></div>`;
   }
 
   route('/setup/:id/ch/:pc/pillars', ({ id, pc }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
-    const tree = ch.pillars.map((pl) => ({ id: pl.id, name: pl.name, jtbds: pl.jtbds.map((j) => ({ id: j.id, name: j.name,
-      lms: j.lead_measures.map((l) => ({ id: l.id, name: l.name, description: l.description, unit: l.unit, value_type: l.value_type })) })) }));
+    const used = (plId) => ch.leadMeasures.filter((l) => l.pillar_id === plId).length;
+    const list = ch.pillars.map((pl) => ({ id: pl.id, name: pl.name, used: used(pl.id) }));
     return {
       title: `Pilar · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
       ${pillarTabs(p, ch, 'tree')}
       <form data-action="setup.savePillars" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}><input type="hidden" name="tree" id="treeJson">
-      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pillar framework — ${esc(ch.channel_name)} ${confirmTag}</span>
+      <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3d</span>&nbsp;Pilar channel — ${esc(ch.channel_name)} ${confirmTag}</span>
         <button type="button" class="btn btn-sm btn-outline-brand" id="addPillar"><i class="bi bi-plus"></i> Pilar</button></div>
         <div class="card-body">
           <div class="row g-2 mb-3"><div class="col-md-5"><label class="form-label">Nama framework <span class="text-danger">*</span></label>
             <input name="framework" class="form-control" value="${esc(ch.pillar_framework_name)}" required placeholder="Vision Compass"><div class="form-text">Juga dipakai sebagai label Fix Rebate.</div></div>
-            <div class="col-md-7 small text-muted pt-md-4">Pilar → JTBD → Lead measure berlaku untuk semua brand di channel ini. Angka target (mis. 2 jam / 4 jam) diisi per brand × kelas di langkah 2; evidence diunggah di fase Monitoring.
-              Tanpa bobot (sama seperti 2026): Fix Rebate dibayar per termin bila Monitoring periodenya disetujui (rumus <code>pillar_score</code> di 3d). Referensi 2026: 3 pilar → 5 JTBD → 11 lead measure.</div></div>
-          <div id="tree"></div><div id="wsum" class="small mt-2"></div>
-          <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
-          <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pillar framework</button>
+            <div class="col-md-7 small text-muted pt-md-4">Pilar berlaku untuk <strong>semua brand</strong> di channel ini. JTBD, lead measure, dan target per kelas diisi <strong>per brand</strong> di langkah 2 (tombol brand di atas).
+              Tanpa bobot (sama seperti 2026): Fix Rebate dibayar per termin bila Monitoring periodenya disetujui.</div></div>
+          <div id="tree"></div>
+          <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pilar</button>
         </div></div></fieldset></form>
       <form data-action="setup.saveLmExample" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
       <div class="card mt-3"><div class="card-header"><i class="bi bi-lightbulb"></i>&nbsp;Pilar di form CBD ${confirmTag}</div><div class="card-body small">
@@ -404,57 +412,27 @@
         <button class="btn btn-brand btn-sm"><i class="bi bi-save"></i> Simpan</button></div></div></fieldset></form></div></div>`,
       after(root) {
         const el = root.querySelector('#tree');
-        const t = tree;
         const ro = !editable(p, ch, 'REGISTRATION');
-        const opt = (cur) => Object.entries(C.LM_VALUE_TYPES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
-        // Satuan: bebas untuk Angka (jam, etalase, bulan, …); otomatis % untuk Persentase; tidak dipakai untuk Teks
-        const unitInput = (l, a) => (l.value_type === 'PERCENT' ? '<input class="form-control bg-light" style="flex:1.3" value="%" disabled title="Persentase selalu %">'
-          : l.value_type === 'TEXT' ? '<input class="form-control bg-light" style="flex:1.3" value="" placeholder="(target berupa teks)" disabled>'
-          : `<input class="form-control" style="flex:1.3" ${a} data-f="unit" value="${h.esc(l.unit)}" list="lmUnits" placeholder="satuan, mis. jam / etalase">`);
         function draw() {
-          el.innerHTML = t.map((pl, pi) => `<div class="tree-pillar pl-2 mb-3">
-            <div class="input-group input-group-sm mb-1"><span class="input-group-text"><i class="bi bi-flag"></i>&nbsp;${pi + 1}</span>
-              <input class="form-control fw-semibold" style="flex:4" data-p="${pi}" data-f="name" value="${h.esc(pl.name)}" placeholder="Nama pilar">
-              <button type="button" class="btn btn-outline-brand" data-act="addJ" data-p="${pi}">+ JTBD</button>
-              <button type="button" class="btn btn-outline-danger" data-act="delP" data-p="${pi}"><i class="bi bi-trash"></i></button></div>
-            ${pl.jtbds.map((j, ji) => `<div class="tree-jtbd pl-2 mb-2">
-              <div class="input-group input-group-sm mb-1"><span class="input-group-text">JTBD</span>
-                <input class="form-control" data-p="${pi}" data-j="${ji}" data-f="name" value="${h.esc(j.name)}" placeholder="Job to be done">
-                <button type="button" class="btn btn-outline-brand" data-act="addL" data-p="${pi}" data-j="${ji}">+ Lead measure</button>
-                <button type="button" class="btn btn-outline-danger" data-act="delJ" data-p="${pi}" data-j="${ji}"><i class="bi bi-trash"></i></button></div>
-              ${j.lms.length ? '<div class="tree-lm lm-head"><span style="flex:4">Lead measure</span><span style="flex:1.3">Satuan <span class="fw-normal">(bukan angka target)</span></span><span style="flex:1.2">Tipe</span><span class="lm-head-x"></span></div>' : ''}
-              ${j.lms.map((l, li) => `<div class="tree-lm input-group input-group-sm mb-1">
-                <input class="form-control" style="flex:4" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="name" value="${h.esc(l.name)}" placeholder="Lead measure *">
-                ${unitInput(l, `data-p="${pi}" data-j="${ji}" data-l="${li}"`)}
-                <select class="form-control" style="flex:1.2" data-p="${pi}" data-j="${ji}" data-l="${li}" data-f="value_type">${opt(l.value_type)}</select>
-                <button type="button" class="btn btn-outline-danger" data-act="delL" data-p="${pi}" data-j="${ji}" data-l="${li}"><i class="bi bi-x"></i></button></div>`).join('')}
-            </div>`).join('')}</div>`).join('') || '<div class="text-muted small">Belum ada pilar.</div>';
-          if (ro) el.querySelectorAll('input,select,button').forEach((x) => { x.disabled = true; });
-          wsum();
+          el.innerHTML = list.map((pl, i) => `<div class="input-group input-group-sm mb-2 tree-pillar pl-2"><span class="input-group-text"><i class="bi bi-flag"></i>&nbsp;${i + 1}</span>
+              <input class="form-control fw-semibold" data-i="${i}" value="${h.esc(pl.name)}" placeholder="Nama pilar, mis. Being Relevant With Trend">
+              <span class="input-group-text small">${pl.used} lead measure (semua brand)</span>
+              <button type="button" class="btn btn-outline-secondary" data-act="up" data-i="${i}" ${i ? '' : 'disabled'}><i class="bi bi-arrow-up"></i></button>
+              <button type="button" class="btn btn-outline-danger" data-act="del" data-i="${i}"><i class="bi bi-trash"></i></button></div>`).join('')
+            || '<div class="text-muted small">Belum ada pilar.</div>';
+          if (ro) el.querySelectorAll('input,button').forEach((x) => { x.disabled = true; });
         }
-        function wsum() {
-          const nJ = t.reduce((a, pl) => a + pl.jtbds.length, 0); const nL = t.reduce((a, pl) => a + pl.jtbds.reduce((b, j) => b + j.lms.length, 0), 0);
-          root.querySelector('#wsum').innerHTML = `${t.length} pilar → ${nJ} JTBD → ${nL} lead measure`;
-        }
-        el.addEventListener('input', (e) => {
-          const d = e.target.dataset; if (!d.f) return;
-          let o = t[d.p]; if (d.j !== undefined) o = o.jtbds[d.j]; if (d.l !== undefined) o = o.lms[d.l];
-          o[d.f] = e.target.value; wsum();
-          if (d.f === 'value_type') draw(); // kolom satuan menyesuaikan tipe
-        });
+        el.addEventListener('input', (e) => { if (e.target.dataset.i !== undefined) list[e.target.dataset.i].name = e.target.value; });
         el.addEventListener('click', (e) => {
           const b = e.target.closest('[data-act]'); if (!b) return;
-          const d = b.dataset;
-          if (d.act === 'addJ') t[d.p].jtbds.push({ name: '', lms: [] });
-          if (d.act === 'addL') t[d.p].jtbds[d.j].lms.push({ name: '', description: null, unit: '', value_type: 'NUMBER' });
-          if (d.act === 'delP' && confirm('Hapus pilar beserta JTBD & lead measure-nya?')) t.splice(d.p, 1);
-          if (d.act === 'delJ' && confirm('Hapus JTBD beserta lead measure-nya?')) t[d.p].jtbds.splice(d.j, 1);
-          if (d.act === 'delL') t[d.p].jtbds[d.j].lms.splice(d.l, 1);
+          const i = Number(b.dataset.i);
+          if (b.dataset.act === 'up') [list[i - 1], list[i]] = [list[i], list[i - 1]];
+          if (b.dataset.act === 'del' && confirm(list[i].used ? `Hapus pilar "${list[i].name}" beserta ${list[i].used} lead measure di semua brand?` : `Hapus pilar "${list[i].name}"?`)) list.splice(i, 1);
           draw();
         });
-        root.querySelector('#addPillar').addEventListener('click', () => { t.push({ name: '', jtbds: [{ name: '', lms: [] }] }); draw(); });
+        root.querySelector('#addPillar').addEventListener('click', () => { list.push({ id: null, name: '', used: 0 }); draw(); });
         if (ro) root.querySelector('#addPillar').disabled = true;
-        root.querySelector('#treeJson').closest('form').addEventListener('submit', () => { root.querySelector('#treeJson').value = JSON.stringify(t); }, true);
+        root.querySelector('#treeJson').closest('form').addEventListener('submit', () => { root.querySelector('#treeJson').value = JSON.stringify(list); }, true);
         draw();
       },
     };
@@ -463,60 +441,34 @@
   actions['setup.savePillars'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
     assertDraft(pid, pcId, 'REGISTRATION');
-    const tree = JSON.parse(f.get('tree') || '[]');
+    const list = JSON.parse(f.get('tree') || '[]');
     const framework = String(f.get('framework') || '').trim();
     if (!framework) throw new Error('Nama framework wajib diisi');
     const errs = [];
-    tree.forEach((pl, pi) => {
-      if (!String(pl.name || '').trim()) errs.push(`Pilar ${pi + 1}: nama wajib`);
-      pl.jtbds.forEach((j) => {
-        if (!String(j.name || '').trim()) errs.push(`Pilar "${pl.name}": ada JTBD tanpa nama`);
-        if (!j.lms.length) errs.push(`JTBD "${j.name}": minimal 1 lead measure`);
-        j.lms.forEach((l) => {
-          if (!String(l.name || '').trim()) errs.push(`JTBD "${j.name}": ada lead measure tanpa nama`);
-          const unit = String(l.unit || '').trim();
-          if (C.lmType(l.value_type) !== 'NUMBER') return;
-          if (!unit) errs.push(`Lead measure "${l.name}": satuan wajib untuk tipe Angka`);
-          else if (/^[\d.,\s]+$/.test(unit)) errs.push(`Lead measure "${l.name}": satuan "${unit}" berupa angka. Isi satuannya (mis. jam, etalase); angka target diisi di Target per kelas`);
-        });
-      });
-      if (!pl.jtbds.length) errs.push(`Pilar "${pl.name}": minimal 1 JTBD`);
-    });
-    if (errs.length) throw new Error(errs.slice(0, 8).join(' · '));
+    list.forEach((pl, i) => { if (!String(pl.name || '').trim()) errs.push(`Pilar ${i + 1}: nama wajib`); });
+    const names = list.map((pl) => String(pl.name || '').trim().toLowerCase());
+    if (new Set(names).size !== names.length) errs.push('Nama pilar tidak boleh sama');
+    if (errs.length) throw new Error(errs.join(' · '));
     const pc = DB.byId('programChannels', pcId);
-    const before = { framework: pc.pillar_framework_name };
+    const before = { framework: pc.pillar_framework_name, pillars: DB.where('programPillars', (x) => x.program_channel_id === pcId).map((x) => x.name) };
     pc.pillar_framework_name = framework;
-    // Lead measure lama dipertahankan id-nya (evidence monitoring merujuk id ini)
     const oldP = DB.where('programPillars', (x) => x.program_channel_id === pcId).map((x) => x.id);
-    const oldJ = DB.where('programJtbds', (x) => oldP.includes(x.program_pillar_id)).map((x) => x.id);
-    const oldL = DB.where('programLeadMeasures', (x) => oldJ.includes(x.program_jtbd_id)).map((x) => x.id);
-    const kP = []; const kJ = []; const kL = [];
-    tree.forEach((pl, pi) => {
-      const pv = { program_channel_id: pcId, name: pl.name.trim(), sort_order: pi + 1, weight_pct: null };
-      let pr = oldP.includes(pl.id) && DB.byId('programPillars', pl.id);
-      if (pr) Object.assign(pr, pv); else pr = DB.insert('programPillars', pv);
-      kP.push(pr.id);
-      pl.jtbds.forEach((j, ji) => {
-        const jv = { program_pillar_id: pr.id, name: j.name.trim(), sort_order: ji + 1 };
-        let jr = oldJ.includes(j.id) && DB.byId('programJtbds', j.id);
-        if (jr) Object.assign(jr, jv); else jr = DB.insert('programJtbds', jv);
-        kJ.push(jr.id);
-        j.lms.forEach((l, li) => {
-          const type = C.lmType(l.value_type);
-          const lv = { program_jtbd_id: jr.id, name: l.name.trim(), description: l.description || null, unit: type === 'NUMBER' ? String(l.unit || '').trim() || null : null,
-            value_type: type, weight_pct: null, sort_order: li + 1 };
-          let lr = oldL.includes(l.id) && DB.byId('programLeadMeasures', l.id);
-          if (lr) Object.assign(lr, lv); else lr = DB.insert('programLeadMeasures', lv);
-          kL.push(lr.id);
-        });
-      });
+    const kept = [];
+    list.forEach((pl, i) => {
+      const v = { program_channel_id: pcId, name: pl.name.trim(), sort_order: i + 1, weight_pct: null };
+      let row = oldP.includes(pl.id) && DB.byId('programPillars', pl.id);
+      if (row) Object.assign(row, v); else row = DB.insert('programPillars', v);
+      kept.push(row.id);
     });
-    DB.remove('programLeadMeasures', (x) => oldL.includes(x.id) && !kL.includes(x.id));
-    DB.remove('programJtbds', (x) => oldJ.includes(x.id) && !kJ.includes(x.id));
-    DB.remove('programPillars', (x) => oldP.includes(x.id) && !kP.includes(x.id));
-    E.audit(pid, 'programPillar', pcId, 'replace', before, { framework, pillars: tree.length, lead_measures: kL.length });
+    // pilar dihapus → JTBD & lead measure semua brand di pilar itu ikut terhapus
+    const gone = oldP.filter((x) => !kept.includes(x));
+    const goneJ = DB.where('programJtbds', (j) => gone.includes(j.program_pillar_id)).map((j) => j.id);
+    DB.remove('programLeadMeasures', (l) => goneJ.includes(l.program_jtbd_id));
+    DB.remove('programJtbds', (j) => goneJ.includes(j.id));
+    DB.remove('programPillars', (x) => gone.includes(x.id));
+    E.audit(pid, 'programPillar', pcId, 'replace', before, { framework, pillars: list.map((x) => x.name) });
     touch(pid);
-    done('success', `Pillar framework "${esc(framework)}" disimpan (${kP.length} pilar, ${kJ.length} JTBD, ${kL.length} lead measure). Lanjut isi target per kelas tiap brand.`, `/setup/${pid}/ch/${pcId}/pillars`);
+    done('success', `Pilar disimpan (${kept.length} pilar). Lanjut isi JTBD, lead measure & target per brand.`, `/setup/${pid}/ch/${pcId}/pillars`);
   };
 
   actions['setup.saveLmExample'] = (f, form) => {
@@ -531,73 +483,87 @@
     done('success', 'Pengaturan saran lead measure disimpan.', `/setup/${pid}/ch/${pcId}/pillars`);
   };
 
-  // ---------------------------------------------------------------- 3c (2) · target lead measure per brand × kelas (× section)
-  // Tabel seperti Excel Vision Compass: Pilar · JTBD · Lead measure dibekukan di kiri, tiap kelas = kolom (section = sub-kolom).
-  // Sel kosong = lead measure tidak berlaku untuk kelas/section itu. Data tetap programChannelBrands.lm_targets.
+  // ---------------------------------------------------------------- 3d (2) · JTBD, lead measure & target per brand × kelas (× section)
+  // Tabel seperti Excel Vision Compass: Pilar (dari channel) · JTBD · Lead measure dibekukan di kiri dan bisa diubah langsung;
+  // tiap kelas = kolom (section = sub-kolom). Sel kosong = lead measure tidak berlaku untuk kelas/section itu.
   route('/setup/:id/ch/:pc/pillars/:b', ({ id, pc, b }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
     const brand = ch.brands.find((x) => x.id === Number(b));
     if (!brand) fail('Brand tidak ditemukan');
+    const head = `<div class="cps">${nav(p, 'config', ch, 'pillars')}${pillarTabs(p, ch, brand.id)}`;
+    if (brand.jtbd_source !== brand.brand_code) {
+      const ref = ch.brands.find((x) => x.brand_code === brand.jtbd_source);
+      return { title: `Pilar ${brand.brand_name}`, html: `${head}<div class="card"><div class="card-body">
+        <div class="alert alert-info mb-0"><i class="bi bi-link-45deg"></i>&nbsp;<strong>${esc(brand.brand_name)}</strong> mengikuti skema <strong>${esc(ref ? ref.brand_name : brand.jtbd_source)}</strong>, jadi JTBD, lead measure, dan target per kelasnya memakai milik ${esc(ref ? ref.brand_name : brand.jtbd_source)}.
+          Ubah di <a href="#/setup/${p.id}/ch/${ch.id}/pillars/${ref ? ref.id : ''}">tab ${esc(ref ? ref.brand_name : brand.jtbd_source)}</a>, atau lepas ikatannya di <a href="#/setup/${p.id}/ch/${ch.id}/scheme/${brand.brand_code}">Skema kelas</a>.</div></div></div></div>` };
+    }
     brand.classes = lmClasses(ch, brand); // kelas dari Skema kelas (hanya untuk editor ini)
-    const lms = ch.leadMeasures;
+    // struktur milik brand ini di bawah pilar channel; key = id tersimpan atau kunci sementara (baru)
+    const tree = brand.pillars.map((pl) => ({ id: pl.id, name: pl.name, jtbds: pl.jtbds.map((j) => ({ key: `j${j.id}`, id: j.id, name: j.name,
+      lms: j.lead_measures.map((l) => ({ key: String(l.id), id: l.id, name: l.name, unit: l.unit || '', value_type: l.value_type })) })) }));
     const saved = brand.lm_targets || {};
-    // state per kode kelas; cells sejajar dengan sections (tanpa section / "gabung" → cells[0]; null = kosong / tidak berlaku)
+    // state per kode kelas; rows[key lead measure]; cells sejajar dengan sections (tanpa section / "gabung" → cells[0]; null = kosong / tidak berlaku)
     const state = Object.fromEntries(brand.classes.map((c) => {
       const t = saved[c.code];
       return [c.code, { configured: !!t, sections: ((t && t.sections) || []).slice(),
-        rows: Object.fromEntries(lms.map((l) => {
-          const r = t && (t.rows || {})[l.id];
-          return [l.id, r ? { off: !!r.off, same: !!r.same, cells: JSON.parse(JSON.stringify(r.cells || [])) } : { off: true, same: false, cells: [] }];
-        })) }];
+        rows: Object.fromEntries(Object.entries((t && t.rows) || {}).map(([k, r]) => [k, { off: !!r.off, same: !!r.same, cells: JSON.parse(JSON.stringify(r.cells || [])) }])) }];
     }));
-    const empty = !brand.classes.length ? `Brand ini belum punya kelas. <a href="#/setup/${p.id}/ch/${ch.id}/brands/${brand.id}">Isi kelas di 3c</a>.`
-      : !lms.length ? `Channel belum punya lead measure. <a href="#/setup/${p.id}/ch/${ch.id}/pillars">Isi struktur pilar dulu</a>.` : '';
+    const empty = !brand.classes.length ? `Brand ini belum punya kelas. <a href="#/setup/${p.id}/ch/${ch.id}/scheme/${brand.brand_code}">Isi Skema kelas dulu</a>.`
+      : !ch.pillars.length ? `Channel belum punya pilar. <a href="#/setup/${p.id}/ch/${ch.id}/pillars">Isi pilar channel dulu</a>.` : '';
     return {
-      title: `Target pilar ${brand.brand_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'pillars')}
-      ${pillarTabs(p, ch, brand.id)}
+      title: `Pilar ${brand.brand_name}`, html: `${head}
       <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}><input type="hidden" name="targets" id="lmtJson">
-      <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;Saran lead measure per kelas ${confirmTag} — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
+      <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;JTBD, lead measure & target per kelas ${confirmTag} — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
         <div class="card-body">${empty ? `<div class="text-muted">${empty}</div>` : `
-          <p class="small text-muted">Isi target tiap lead measure per kelas langsung di tabel. <strong>Sel kosong = tidak berlaku</strong> untuk kelas itu. Satuan mengikuti struktur pilar; operator (Minimal / Maksimal / = / Teks) dipilih sekali di kolom Lead measure dan berlaku untuk semua kelas.
-            Bila kelas dibagi lagi (mis. Wardah: <em>Face Care</em> &amp; <em>Makeup</em>), klik <i class="bi bi-plus"></i> Section di judul kelas; tombol <i class="bi bi-arrows-collapse-vertical"></i> menggabung section jadi satu target (mis. "Have a Store Community Affiliate").</p>
+          <p class="small text-muted">Pilar berasal dari channel. Klik <strong>+ JTBD</strong> di kolom Pilar, lalu <strong>+ Lead measure</strong> di kolom JTBD; nama, satuan, tipe, dan operator lead measure diubah langsung di kolom kiri.
+            Isi target per kelas di kanan: <strong>sel kosong = tidak berlaku</strong>. Bila kelas dibagi lagi (mis. <em>Face Care</em> &amp; <em>Makeup</em>), klik <i class="bi bi-plus"></i> Section di judul kelas; tombol <i class="bi bi-arrows-collapse-vertical"></i> menggabung section jadi satu target.</p>
           <div class="d-flex justify-content-between align-items-center mb-1 small text-muted"><span><i class="bi bi-arrows-expand-vertical"></i> Tarik garis di tepi kanan judul kolom untuk melebarkan / mengecilkan kolom: judul <em>Class</em> = seluruh kelas, judul section / Target = kolom itu saja.</span>
             <button type="button" class="btn btn-sm btn-link p-0" id="lmtResetW">Reset lebar kolom</button></div>
+          <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
           <div class="lmt-sheet-wrap"><table class="lmt-sheet" id="lmtSheet"></table></div>
-          <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan target ${esc(brand.brand_name)}</button>`}
+          <div class="small text-muted mt-2" id="lmtSum"></div>
+          <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan ${esc(brand.brand_name)}</button>`}
         </div></div></fieldset></form></div></div>`,
       after(root) {
         if (empty) return;
         const ro = !editable(p, ch, 'REGISTRATION');
         const box = root.querySelector('#lmtJson').closest('form');
         const v = (x) => (x === null || x === undefined ? '' : x);
-        const lmOf = (idv) => lms.find((l) => l.id === Number(idv));
         const multi = (s) => s.sections.length > 1;
         const ncol = (s) => Math.max(1, s.sections.length);
         const range = (n) => Array.from({ length: n }, (_, i) => i);
-        // operator satu per lead measure untuk brand ini (berlaku di semua kelas & section); diambil dari sel tersimpan pertama
-        const rowOps = Object.fromEntries(lms.map((l) => {
+        let seq = 0;
+        const newKey = (pre) => `${pre}n${++seq}`;
+        const allLms = () => tree.flatMap((pl) => pl.jtbds.flatMap((j) => j.lms));
+        const lmOf = (key) => allLms().find((l) => l.key === String(key));
+        const jtbdOf = (key) => tree.flatMap((pl) => pl.jtbds).find((j) => j.key === key);
+        const rowOf = (code, key) => state[code].rows[key] || (state[code].rows[key] = { off: true, same: false, cells: [] });
+        // operator satu per lead measure (berlaku di semua kelas & section); diambil dari sel tersimpan pertama
+        const rowOps = {};
+        const opOf = (l) => {
           const ops = C.lmTargetOps(l.value_type);
-          const found = brand.classes.map((c) => state[c.code].rows[l.id]).flatMap((r) => (r.off ? [] : r.cells)).find((x) => x && ops.includes(x.op));
-          return [l.id, found ? found.op : ops[0]];
-        }));
-        const newCell = (l) => ({ op: rowOps[l.id], value: '', text: '' });
-        // sel yang ditampilkan di kolom i (null = kosong)
+          if (!ops.includes(rowOps[l.key])) {
+            const found = brand.classes.map((c) => rowOf(c.code, l.key)).flatMap((r) => (r.off ? [] : r.cells)).find((x) => x && ops.includes(x.op));
+            rowOps[l.key] = found ? found.op : ops[0];
+          }
+          return rowOps[l.key];
+        };
+        const newCell = (l) => ({ op: opOf(l), value: '', text: '' });
         const cellAt = (s, r, i) => (r.off ? null : !multi(s) || r.same ? r.cells[0] || null : r.cells[i] || null);
-        // pastikan ada objek sel untuk diketik (sel kosong → baris jadi berlaku)
         function ensureCell(code, l, i) {
-          const s = state[code]; const r = s.rows[l.id];
+          const s = state[code]; const r = rowOf(code, l.key);
           if (r.off) { r.off = false; r.same = false; r.cells = range(multi(s) ? ncol(s) : 1).map(() => null); }
           const k = !multi(s) || r.same ? 0 : i;
           if (!r.cells[k]) r.cells[k] = newCell(l);
-          r.cells[k].op = rowOps[l.id];
+          r.cells[k].op = opOf(l);
           s.configured = true;
           return r.cells[k];
         }
 
         // ---- lebar kolom: bisa ditarik, diingat per brand di browser ini (bukan data program)
         const WKEY = `tradee-lmt-widths-${brand.id}`;
-        const DEF_W = { f1: 150, f2: 210, f3: 240 };
+        const DEF_W = { f1: 170, f2: 240, f3: 330 };
         let W = {};
         try { W = JSON.parse(localStorage.getItem(WKEY)) || {}; } catch (e) { W = {}; }
         const colW = (k) => W[k] || DEF_W[k] || 240;
@@ -614,10 +580,10 @@
         const rs = (k) => (ro ? '' : `<span class="lmt-rs" data-rs="${h.esc(k)}" title="Tarik untuk ubah lebar kolom"></span>`);
 
         function cellHtml(code, l, i, merged) {
-          const s = state[code]; const r = s.rows[l.id];
+          const s = state[code]; const r = rowOf(code, l.key);
           const c = cellAt(s, r, i);
-          const op = rowOps[l.id];
-          const a = `data-c="${h.esc(code)}" data-l="${l.id}" data-i="${i}"`;
+          const op = opOf(l);
+          const a = `data-c="${h.esc(code)}" data-l="${h.esc(l.key)}" data-i="${i}"`;
           const unit = C.lmUnit(l);
           const mergeBtn = multi(s) && (merged || i === 0)
             ? `<button type="button" class="lmt-merge" data-act="${merged ? 'split' : 'merge'}" ${a} title="${merged ? 'Pisahkan per section' : 'Gabung semua section jadi satu target'}"><i class="bi bi-${merged ? 'arrows-expand-vertical' : 'arrows-collapse-vertical'}"></i></button>` : '';
@@ -626,12 +592,23 @@
               : `<input type="number" step="any" class="lmt-in num" ${a} data-f="value" value="${v(c ? c.value : '')}" placeholder="–"><span class="lmt-unit" title="${h.esc(unit)}">${h.esc(unit)}</span>`}
             ${mergeBtn}</div>`;
         }
+        // kolom Lead measure: nama · satuan · tipe · operator · hapus
+        function lmHtml(l) {
+          const ops = C.lmTargetOps(l.value_type);
+          const a = `data-l="${h.esc(l.key)}"`;
+          const unit = l.value_type === 'PERCENT' ? '<span class="lmt-st-unit">%</span>' : l.value_type === 'TEXT' ? '<span class="lmt-st-unit text-muted">teks</span>'
+            : `<input class="lmt-st-in unit" ${a} data-sf="lunit" value="${h.esc(l.unit)}" list="lmUnits" placeholder="satuan">`;
+          return `<div class="lmt-st"><div class="d-flex gap-1"><input class="lmt-st-in name" ${a} data-sf="lname" value="${h.esc(l.name)}" placeholder="Nama lead measure *">
+              <button type="button" class="lmt-st-del" data-act="delL" ${a} title="Hapus lead measure"><i class="bi bi-x-lg"></i></button></div>
+            <div class="d-flex gap-1 mt-1 align-items-center">${unit}
+              <select class="lmt-st-in type" ${a} data-sf="ltype" title="Tipe">${Object.entries(C.LM_VALUE_TYPES).map(([k, t]) => `<option value="${k}" ${sel(l.value_type === k)}>${t}</option>`).join('')}</select>
+              ${ops.length > 1 ? `<select class="lmt-op" data-rowop="${h.esc(l.key)}" title="Operator untuk semua kelas">${ops.map((o) => `<option value="${o}" ${sel(opOf(l) === o)}>${C.LM_TARGET_OPS[o]}</option>`).join('')}</select>` : ''}</div></div>`;
+        }
 
         function draw() {
           const cls = brand.classes;
-          // rowspan pilar & JTBD (lead measure sudah terurut pilar → JTBD)
-          const span = (key) => lms.reduce((m, l) => { m[key(l)] = (m[key(l)] || 0) + 1; return m; }, {});
-          const pSpan = span((l) => l.pillar_id); const jSpan = span((l) => `${l.pillar_id}|${l.jtbd_name}`);
+          const leaf = cls.reduce((sum, c) => sum + ncol(state[c.code]), 0);
+          const blank = `<td colspan="${leaf}" class="lmt-blank"></td>`;
           const head1 = cls.map((c) => { const s = state[c.code];
             return `<th colspan="${ncol(s)}" class="lmt-class">${rs(`cls:${c.code}`)}Class ${h.esc(c.code)}<div class="lmt-class-sub">${h.rpShort(c.baseline_min)} – ${c.baseline_max === null || c.baseline_max === undefined ? '∞' : h.rpShort(c.baseline_max)}</div>
               ${ro ? '' : `<div class="lmt-class-act"><button type="button" class="btn btn-link btn-sm p-0" data-act="addSec" data-c="${h.esc(c.code)}"><i class="bi bi-plus"></i> Section</button>
@@ -640,24 +617,34 @@
             return s.sections.length ? s.sections.map((x, i) => `<th class="lmt-sec${i ? '' : ' lmt-gstart'}"><div class="d-flex align-items-center gap-1"><input class="lmt-sec-in" data-sec="${i}" data-c="${h.esc(c.code)}" value="${h.esc(x)}" placeholder="nama section">
               ${ro ? '' : `<button type="button" class="lmt-merge text-danger" data-act="delSec" data-c="${h.esc(c.code)}" data-i="${i}" title="Hapus section"><i class="bi bi-x"></i></button>`}</div>${rs(`${c.code}:${i}`)}</th>`).join('')
               : `<th class="lmt-sec lmt-gstart">Target${rs(`${c.code}:0`)}</th>`; }).join('');
-          let lastP = null; let lastJ = null;
-          const body = lms.map((l) => {
-            const jk = `${l.pillar_id}|${l.jtbd_name}`;
-            const pc1 = l.pillar_id !== lastP ? `<td class="fz fz1" rowspan="${pSpan[l.pillar_id]}">${h.esc(l.pillar_name)}</td>` : '';
-            const pc2 = jk !== lastJ ? `<td class="fz fz2" rowspan="${jSpan[jk]}">${h.esc(l.jtbd_name)}</td>` : '';
-            lastP = l.pillar_id; lastJ = jk;
-            const cells = cls.map((c) => { const s = state[c.code]; const r = s.rows[l.id];
-              if (multi(s) && !r.off && r.same) return `<td colspan="${ncol(s)}" class="lmt-merged lmt-gstart">${cellHtml(c.code, l, 0, true)}</td>`;
-              return range(ncol(s)).map((i) => `<td${i ? '' : ' class="lmt-gstart"'}>${cellHtml(c.code, l, i, false)}</td>`).join(''); }).join('');
-            const ops = C.lmTargetOps(l.value_type);
-            const opSel = ops.length > 1 ? `<select class="lmt-op" data-rowop="${l.id}" title="Operator untuk semua kelas">${ops.map((o) => `<option value="${o}" ${sel(rowOps[l.id] === o)}>${C.LM_TARGET_OPS[o]}</option>`).join('')}</select>` : '';
-            return `<tr>${pc1}${pc2}<td class="fz fz3"><div class="lmt-lm"><span>${h.esc(l.name)}</span>${opSel}</div></td>${cells}</tr>`;
+          const body = tree.map((pl, pi) => {
+            const span = Math.max(1, pl.jtbds.reduce((sum, j) => sum + Math.max(1, j.lms.length), 0));
+            const plCell = `<td class="fz fz1" rowspan="${span}"><div class="fw-bold">${h.esc(pl.name)}</div>
+              ${ro ? '' : `<button type="button" class="btn btn-sm btn-link p-0 mt-1" data-act="addJ" data-p="${pi}"><i class="bi bi-plus"></i> JTBD</button>`}</td>`;
+            if (!pl.jtbds.length) return `<tr class="lmt-pfirst">${plCell}<td class="fz fz2 text-muted small">Belum ada JTBD</td><td class="fz fz3"></td>${blank}</tr>`;
+            return pl.jtbds.map((j, ji) => {
+              const jCell = `<td class="fz fz2" rowspan="${Math.max(1, j.lms.length)}"><div class="lmt-st"><div class="d-flex gap-1">
+                <textarea class="lmt-st-in name" rows="2" data-j="${h.esc(j.key)}" data-sf="jname" placeholder="Nama JTBD *">${h.esc(j.name)}</textarea>
+                <button type="button" class="lmt-st-del" data-act="delJ" data-j="${h.esc(j.key)}" title="Hapus JTBD"><i class="bi bi-trash"></i></button></div>
+                ${ro ? '' : `<button type="button" class="btn btn-sm btn-link p-0 mt-1" data-act="addL" data-j="${h.esc(j.key)}"><i class="bi bi-plus"></i> Lead measure</button>`}</div></td>`;
+              const first = ji === 0 ? plCell : '';
+              const cls1 = ji === 0 ? ' class="lmt-pfirst"' : '';
+              if (!j.lms.length) return `<tr${cls1}>${first}${jCell}<td class="fz fz3 text-muted small">Belum ada lead measure</td>${blank}</tr>`;
+              return j.lms.map((l, li) => {
+                const cells = cls.map((c) => { const s = state[c.code]; const r = rowOf(c.code, l.key);
+                  if (multi(s) && !r.off && r.same) return `<td colspan="${ncol(s)}" class="lmt-merged lmt-gstart">${cellHtml(c.code, l, 0, true)}</td>`;
+                  return range(ncol(s)).map((i) => `<td${i ? '' : ' class="lmt-gstart"'}>${cellHtml(c.code, l, i, false)}</td>`).join(''); }).join('');
+                return `<tr${li === 0 ? cls1 : ''}>${li === 0 ? first + jCell : ''}<td class="fz fz3">${lmHtml(l)}</td>${cells}</tr>`;
+              }).join('');
+            }).join('');
           }).join('');
           root.querySelector('#lmtSheet').innerHTML = `<colgroup>${colKeys().map((k) => `<col data-col="${h.esc(k)}">`).join('')}</colgroup>
             <thead><tr class="lmt-hr1"><th rowspan="2" class="fz fz1">Pilar${rs('f1')}</th><th rowspan="2" class="fz fz2">JTBD${rs('f2')}</th><th rowspan="2" class="fz fz3">Lead measure${rs('f3')}</th>${head1}</tr>
             <tr class="lmt-hr2">${head2}</tr></thead><tbody>${body}</tbody>`;
+          const nJ = tree.reduce((sum, pl) => sum + pl.jtbds.length, 0);
+          root.querySelector('#lmtSum').textContent = `${tree.length} pilar → ${nJ} JTBD → ${allLms().length} lead measure (${brand.brand_name})`;
           applyWidths();
-          root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit);
+          root.querySelectorAll('#lmtSheet textarea').forEach(fit);
           if (ro) root.querySelectorAll('#lmtSheet input,#lmtSheet select,#lmtSheet button,#lmtSheet textarea').forEach((x) => { x.disabled = true; });
         }
 
@@ -667,7 +654,6 @@
           const hd = e.target.closest('.lmt-rs'); if (!hd) return;
           e.preventDefault();
           const key = hd.dataset.rs;
-          // judul kelas → semua kolom section kelas itu ikut melebar/menyempit sebanding
           const parts = key.startsWith('cls:') ? range(ncol(state[key.slice(4)])).map((i) => `${key.slice(4)}:${i}`) : [key];
           drag = { x: e.clientX, parts: parts.map((k) => ({ k, w: colW(k) })) };
           document.body.classList.add('lmt-resizing');
@@ -680,32 +666,38 @@
             drag.parts.forEach((x) => { W[x.k] = Math.round(Math.max(110, Math.min(900, x.w + dx * (x.w / sum)))); });
             applyWidths();
           },
-          up() { if (!drag) return; drag = null; document.body.classList.remove('lmt-resizing'); saveW(); root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit); },
+          up() { if (!drag) return; drag = null; document.body.classList.remove('lmt-resizing'); saveW(); root.querySelectorAll('#lmtSheet textarea').forEach(fit); },
         };
         if (!window.lmtResizeBound) {
           window.lmtResizeBound = true;
           document.addEventListener('mousemove', (e) => window.lmtResize && window.lmtResize.move(e));
           document.addEventListener('mouseup', () => window.lmtResize && window.lmtResize.up());
         }
-        const fitAll = () => root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit);
-        let lastW = 0; // hanya saat lebar berubah (perubahan tinggi akibat fit tidak memicu ulang)
+        const fitAll = () => root.querySelectorAll('#lmtSheet textarea').forEach(fit);
+        let lastW = 0;
         if (window.ResizeObserver) new ResizeObserver(([en]) => { const w = Math.round(en.contentRect.width); if (w !== lastW) { lastW = w; fitAll(); } }).observe(root.querySelector('#lmtSheet'));
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
-        root.querySelector('#lmtResetW').addEventListener('click', () => { W = {}; saveW(); applyWidths(); root.querySelectorAll('#lmtSheet textarea.txt').forEach(fit); });
+        root.querySelector('#lmtResetW').addEventListener('click', () => { W = {}; saveW(); applyWidths(); fitAll(); });
 
         box.addEventListener('input', (e) => {
           const d = e.target.dataset;
           if (d.sec !== undefined) { state[d.c].sections[Number(d.sec)] = e.target.value; state[d.c].configured = true; return; }
+          if (d.sf === 'jname') { jtbdOf(d.j).name = e.target.value; fit(e.target); return; }
+          if (d.sf === 'lname') { lmOf(d.l).name = e.target.value; return; }
+          if (d.sf === 'lunit') { lmOf(d.l).unit = e.target.value; return; }
           if (!d.l || !['value', 'text'].includes(d.f)) return;
           ensureCell(d.c, lmOf(d.l), Number(d.i))[d.f] = e.target.value;
           e.target.closest('.lmt-cell').classList.toggle('is-empty', e.target.value === '');
           if (e.target.tagName === 'TEXTAREA') fit(e.target);
         });
         box.addEventListener('change', (e) => {
-          const id = e.target.dataset.rowop; if (!id) return;
+          const d = e.target.dataset;
+          if (d.sf === 'lunit') { draw(); return; } // satuan tampil di sel target
+          if (d.sf === 'ltype') { const l = lmOf(d.l); l.value_type = e.target.value; if (l.value_type !== 'NUMBER') l.unit = ''; opOf(l); draw(); return; }
+          const id = d.rowop; if (!id) return;
           rowOps[id] = e.target.value;
           for (const c of brand.classes) {
-            const r = state[c.code].rows[id];
+            const r = rowOf(c.code, id);
             if (r.off) continue;
             r.cells.forEach((x) => { if (x) x.op = rowOps[id]; });
             state[c.code].configured = true;
@@ -713,15 +705,30 @@
           draw();
         });
         box.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-act]'); if (!btn || !btn.dataset.c) return;
-          const code = btn.dataset.c; const s = state[code]; const act = btn.dataset.act;
+          const btn = e.target.closest('[data-act]'); if (!btn) return;
+          const act = btn.dataset.act;
+          // ---- struktur JTBD & lead measure
+          if (act === 'addJ') { tree[Number(btn.dataset.p)].jtbds.push({ key: newKey('j'), id: null, name: '', lms: [{ key: newKey('l'), id: null, name: '', unit: '', value_type: 'NUMBER' }] }); draw(); return; }
+          if (act === 'addL') { jtbdOf(btn.dataset.j).lms.push({ key: newKey('l'), id: null, name: '', unit: '', value_type: 'NUMBER' }); draw(); return; }
+          if (act === 'delJ') {
+            const pl = tree.find((x) => x.jtbds.some((j) => j.key === btn.dataset.j)); const j = jtbdOf(btn.dataset.j);
+            if (!confirm(`Hapus JTBD "${j.name || '(tanpa nama)'}" beserta ${j.lms.length} lead measure & targetnya?`)) return;
+            pl.jtbds = pl.jtbds.filter((x) => x !== j); draw(); return;
+          }
+          if (act === 'delL') {
+            const j = tree.flatMap((pl) => pl.jtbds).find((x) => x.lms.some((l) => l.key === btn.dataset.l)); const l = lmOf(btn.dataset.l);
+            if (!confirm(`Hapus lead measure "${l.name || '(tanpa nama)'}" beserta targetnya?`)) return;
+            j.lms = j.lms.filter((x) => x !== l); draw(); return;
+          }
+          // ---- target & section
+          if (!btn.dataset.c) return;
+          const code = btn.dataset.c; const s = state[code];
           if (act === 'merge' || act === 'split') {
-            const l = lmOf(btn.dataset.l); const r = s.rows[l.id];
+            const l = lmOf(btn.dataset.l); const r = rowOf(code, l.key);
             if (act === 'merge') { const first = r.off ? null : r.cells.find((x) => x); r.off = false; r.same = true; r.cells = [first || newCell(l)]; }
             else { const c0 = r.cells[0]; r.same = false; r.cells = range(ncol(s)).map(() => (c0 ? Object.assign({}, c0) : null)); }
           } else if (act === 'addSec') {
             s.sections.push('');
-            // section baru mulai dari target kolom pertama supaya tidak perlu isi ulang
             if (s.sections.length > 1) Object.values(s.rows).forEach((r) => { if (!r.off && !r.same) r.cells[s.sections.length - 1] = r.cells[0] ? Object.assign({}, r.cells[0]) : null; });
           } else if (act === 'delSec') {
             const i = Number(btn.dataset.i); s.sections.splice(i, 1);
@@ -749,9 +756,8 @@
           draw();
         });
         box.addEventListener('submit', () => {
-          // samakan operator semua sel dengan operator lead measure-nya
-          for (const c of brand.classes) for (const l of lms) state[c.code].rows[l.id].cells.forEach((x) => { if (x) x.op = rowOps[l.id]; });
-          root.querySelector('#lmtJson').value = JSON.stringify(state);
+          for (const l of allLms()) opOf(l);
+          root.querySelector('#lmtJson').value = JSON.stringify({ tree, targets: state, ops: rowOps });
         }, true);
         draw();
       },
@@ -764,45 +770,95 @@
     const brandRow = DB.byId('programChannelBrands', bId);
     const ch = E.loadProgram(pid).channels.find((c) => c.id === pcId);
     const brand = ch.brands.find((x) => x.id === bId);
+    if (brand.jtbd_source !== brand.brand_code) throw new Error(`${brand.brand_name} mengikuti skema brand lain; ubah JTBD di brand acuannya.`);
     brand.classes = lmClasses(ch, brand);
-    const raw = JSON.parse(f.get('targets') || '{}');
+    const payload = JSON.parse(f.get('targets') || '{}');
+    const tree = payload.tree || []; const raw = payload.targets || {}; const ops = payload.ops || {};
+    const pillarIds = ch.pillars.map((pl) => pl.id);
     const errs = [];
-    const out = {};
+    tree.forEach((pl) => {
+      if (!pillarIds.includes(pl.id)) errs.push('Pilar sudah tidak ada di channel; muat ulang halaman');
+      pl.jtbds.forEach((j) => {
+        if (!String(j.name || '').trim()) errs.push(`Pilar "${pl.name}": ada JTBD tanpa nama`);
+        if (!j.lms.length) errs.push(`JTBD "${j.name}": minimal 1 lead measure`);
+        j.lms.forEach((l) => {
+          if (!String(l.name || '').trim()) errs.push(`JTBD "${j.name}": ada lead measure tanpa nama`);
+          const unit = String(l.unit || '').trim();
+          if (C.lmType(l.value_type) !== 'NUMBER') return;
+          if (!unit) errs.push(`Lead measure "${l.name}": satuan wajib untuk tipe Angka`);
+          else if (/^[\d.,\s]+$/.test(unit)) errs.push(`Lead measure "${l.name}": satuan "${unit}" berupa angka; isi satuannya (mis. jam, etalase)`);
+        });
+      });
+    });
+    // target: section & angka divalidasi sebelum apa pun disimpan (simpan semua atau tidak sama sekali)
+    const lmName = Object.fromEntries(tree.flatMap((pl) => pl.jtbds.flatMap((j) => j.lms)).map((l) => [String(l.key), l.name]));
     for (const c of brand.classes) {
-      const s = raw[c.code];
-      if (!s || !s.configured) { if ((brandRow.lm_targets || {})[c.code]) out[c.code] = brandRow.lm_targets[c.code]; continue; }
+      const s = raw[c.code]; if (!s || !s.configured) continue;
       const sections = (s.sections || []).map((x) => String(x || '').trim());
       if (sections.some((x) => !x)) errs.push(`Kelas ${c.code}: nama section wajib diisi`);
       if (new Set(sections).size !== sections.length) errs.push(`Kelas ${c.code}: nama section tidak boleh sama`);
+      for (const [key, r] of Object.entries(s.rows || {})) {
+        if (!lmName[key] || r.off) continue;
+        for (const cell of r.cells || []) if (cell && cell.value !== '' && cell.value !== null && cell.value !== undefined && ops[key] !== 'TEXT' && !Number.isFinite(Number(cell.value))) errs.push(`Kelas ${c.code} · ${lmName[key]}: target harus angka`);
+      }
+    }
+    if (errs.length) throw new Error([...new Set(errs)].slice(0, 8).join(' · '));
+    // ---- struktur JTBD & lead measure milik brand ini (id lama dipertahankan: evidence monitoring merujuk id lead measure)
+    const oldJ = DB.where('programJtbds', (j) => j.program_channel_brand_id === bId).map((j) => j.id);
+    const oldL = DB.where('programLeadMeasures', (l) => oldJ.includes(l.program_jtbd_id)).map((l) => l.id);
+    const keptJ = []; const lmSaved = []; // [{ key, id, value_type, name }]
+    tree.forEach((pl) => pl.jtbds.forEach((j, ji) => {
+      const jv = { program_pillar_id: pl.id, program_channel_brand_id: bId, name: j.name.trim(), sort_order: ji + 1 };
+      let jr = oldJ.includes(j.id) && DB.byId('programJtbds', j.id);
+      if (jr) Object.assign(jr, jv); else jr = DB.insert('programJtbds', jv);
+      keptJ.push(jr.id);
+      j.lms.forEach((l, li) => {
+        const type = C.lmType(l.value_type);
+        const lv = { program_jtbd_id: jr.id, name: l.name.trim(), description: null, unit: type === 'NUMBER' ? String(l.unit || '').trim() || null : null, value_type: type, weight_pct: null, sort_order: li + 1 };
+        let lr = oldL.includes(l.id) && DB.byId('programLeadMeasures', l.id);
+        if (lr) Object.assign(lr, lv); else lr = DB.insert('programLeadMeasures', lv);
+        lmSaved.push({ key: String(l.key), id: lr.id, value_type: type, name: lv.name });
+      });
+    }));
+    const keptL = lmSaved.map((x) => x.id);
+    DB.remove('programLeadMeasures', (l) => oldL.includes(l.id) && !keptL.includes(l.id));
+    DB.remove('programJtbds', (j) => oldJ.includes(j.id) && !keptJ.includes(j.id));
+    // ---- target per kelas (kunci baris = id lead measure)
+    const out = {};
+    for (const c of brand.classes) {
+      const s = raw[c.code];
+      if (!s || !s.configured) {
+        const prev = (brandRow.lm_targets || {})[c.code];
+        if (prev) out[c.code] = Object.assign({}, prev, { rows: Object.fromEntries(Object.entries(prev.rows || {}).filter(([k]) => keptL.includes(Number(k)))) });
+        continue;
+      }
+      const sections = (s.sections || []).map((x) => String(x || '').trim());
       const nCols = sections.length > 1 ? sections.length : 1;
       const rows = {};
-      for (const l of ch.leadMeasures) {
-        const r = (s.rows || {})[l.id] || {};
+      for (const l of lmSaved) {
+        const r = (s.rows || {})[l.key] || { off: true };
         if (r.off) { rows[l.id] = { off: true, same: false, cells: [] }; continue; }
         const same = sections.length > 1 && !!r.same;
         const n = same ? 1 : nCols;
+        const opAll = C.lmTargetOps(l.value_type).includes(ops[l.key]) ? ops[l.key] : C.lmTargetOps(l.value_type)[0];
         // sel kosong / null = lead measure tidak berlaku di kelas / section itu
         const cells = Array.from({ length: n }, (_, i) => (r.cells || [])[i]).map((cell) => {
           if (!cell) return null;
-          const x = cell || {};
-          const op = C.lmTargetOps(l.value_type).includes(x.op) ? x.op : C.lmTargetOps(l.value_type)[0];
-          const value = op === 'TEXT' || x.value === '' || x.value === null || x.value === undefined ? null : Number(x.value);
-          if (value !== null && !Number.isFinite(value)) errs.push(`Kelas ${c.code} · ${l.name}: target harus angka`);
-          const text = op === 'TEXT' ? String(x.text || '').trim() : null;
-          if (op === 'TEXT' ? !text : value === null) return null; // sel kosong = tidak berlaku
+          const op = opAll;
+          const value = op === 'TEXT' || cell.value === '' || cell.value === null || cell.value === undefined ? null : Number(cell.value);
+          const text = op === 'TEXT' ? String(cell.text || '').trim() : null;
+          if (op === 'TEXT' ? !text : value === null) return null;
           return { op, value, text };
         });
         rows[l.id] = cells.every((x) => x === null) ? { off: true, same: false, cells: [] } : { off: false, same, cells };
       }
       out[c.code] = { sections, rows };
     }
-    if (errs.length) throw new Error(errs.slice(0, 8).join(' · '));
-    const before = brandRow.lm_targets || null;
+    const before = { lm_targets: brandRow.lm_targets || null };
     brandRow.lm_targets = out;
-    E.audit(pid, 'programLeadMeasureTarget', bId, 'replace', before, out);
+    E.audit(pid, 'programLeadMeasureTarget', bId, 'replace', before, { jtbd: keptJ.length, lead_measures: keptL.length, lm_targets: out });
     touch(pid);
-    const n = Object.keys(out).length;
-    done('success', `Target lead measure ${esc(brand.brand_name)} disimpan (${n}/${brand.classes.length} kelas). Sel kosong = tidak berlaku.`, `/setup/${pid}/ch/${pcId}/pillars/${bId}`);
+    done('success', `${esc(brand.brand_name)} disimpan: ${keptJ.length} JTBD, ${keptL.length} lead measure, target ${Object.keys(out).length}/${brand.classes.length} kelas. Sel kosong = tidak berlaku.`, `/setup/${pid}/ch/${pcId}/pillars/${bId}`);
   };
 
   // ---------------------------------------------------------------- 3d · rumus

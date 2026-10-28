@@ -26,7 +26,8 @@
     const catalog = C.CATALOG_FIELDS.filter((f) => f.phases.includes(phase));
     const fields = cfg.fields.map((f) => ({ id: f.id, source: f.source, field_key: f.field_key, label: f.label, data_type: f.data_type, options: (f.options || []).join(', '),
       mode: f.mode, expression: f.expression || '', formula_id: f.formula_id || null, repeat_per: f.repeat_per, is_visible: f.is_visible, is_editable: f.is_editable, is_required: f.is_required,
-      min_value: f.min_value === null ? '' : f.min_value, max_value: f.max_value === null ? '' : f.max_value }));
+      min_value: f.min_value === null || f.min_value === undefined ? '' : f.min_value, max_value: f.max_value === null || f.max_value === undefined ? '' : f.max_value, locked: !!f.locked }));
+    const reqKeys = E.requiredFieldKeys(phase);
     const layers = cfg.layers.map((l) => ({ role_code: l.role_code, is_final: l.is_final, conditions: (l.conditions || []).map((c) => ({ ...c })) }));
     const objects = Object.entries(C.AUTO_APPROVE_OBJECTS).filter(([, o]) => o.phases.includes(phase));
     return {
@@ -39,6 +40,7 @@
         <span><button type="button" class="btn btn-sm btn-outline-brand" id="addCatalog"><i class="bi bi-plus"></i> Field katalog</button>
           <button type="button" class="btn btn-sm btn-outline-brand" id="addCustom"><i class="bi bi-plus"></i> Field custom</button></span></div>
         <div class="card-body">
+          ${reqKeys.length ? `<div class="alert alert-light py-2 small mb-2"><i class="bi bi-lock-fill text-warning"></i>&nbsp;${reqKeys.length} field <strong>wajib</strong> ditetapkan Admin IT (<a href="#/master/required-fields">Field wajib</a>): selalu ada di form ini; hanya label & urutannya yang bisa diubah.</div>` : ''}
           <p class="small text-muted">Field katalog sudah dipahami sistem (mis. baseline, growth, evidence_upload). Field custom bisa ditambah tanpa development; mode <em>Dihitung</em> memakai rumus dari <a href="#/master/formulas">Library rumus</a> yang dibuat Admin IT. Urutan baris = posisi di form.</p>
           <div class="table-responsive"><table class="table table-sm table-bordered phase-fields"><thead><tr><th>#</th><th>Field</th><th>Label</th><th>Tipe</th><th>Mode</th><th>Diulang</th>
             <th title="Visible">Tampil</th><th title="Editable">Edit</th><th title="Required">Wajib</th><th>Min</th><th>Maks</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
@@ -88,13 +90,22 @@
             <a href="#/master/formulas" class="small" target="_blank"><i class="bi bi-book"></i> Library rumus</a>`;
         }
         const repOpts = (cur) => Object.entries(C.REPEAT).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
+        // field wajib (Admin IT): hanya label & urutan yang bisa diubah
+        const lockedRow = (f, i) => `<tr data-i="${i}" class="fld-locked"><td class="text-nowrap">${i + 1}
+                <button type="button" class="btn btn-sm btn-link p-0" data-act="up" ${i === 0 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-link p-0" data-act="down" ${i === fields.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button></td>
+              <td><span class="fw-semibold">${h.esc(f.field_key)}</span><span class="badge badge-warning ml-1" title="Field wajib dari Admin IT: tidak bisa dihapus; hanya label & urutan yang bisa diubah"><i class="bi bi-lock-fill"></i> wajib</span></td>
+              <td><input class="form-control form-control-sm" data-f="label" value="${h.esc(f.label)}" title="Label boleh diubah; field tetap wajib"></td><td><span class="small">${C.FIELD_TYPES[f.data_type]}</span></td><td><span class="small">${C.MODES[f.mode]}</span></td><td><span class="small">${C.REPEAT[f.repeat_per]}</span></td>
+              ${['is_visible', 'is_editable', 'is_required'].map((k) => `<td class="text-center"><input type="checkbox" ${chk(f[k])} disabled></td>`).join('')}
+              <td class="small text-muted">${h.esc(f.min_value)}</td><td class="small text-muted">${h.esc(f.max_value)}</td>
+              <td class="text-center text-muted" title="Field wajib tidak bisa dihapus"><i class="bi bi-lock"></i></td></tr>`;
         function drawFields() {
           fr.innerHTML = fields.map((f, i) => {
+            if (f.locked) return lockedRow(f, i);
             const cat = f.source === 'CATALOG';
             const calc = !cat && f.mode === 'CALCULATED';
             return `<tr data-i="${i}"><td class="text-nowrap">${i + 1}
                 <button type="button" class="btn btn-sm btn-link p-0" data-act="up" ${i === 0 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-link p-0" data-act="down" ${i === fields.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button></td>
-              <td>${cat ? `<select class="form-control form-control-sm" data-f="field_key">${catalog.map((c) => `<option value="${c.key}" ${sel(f.field_key === c.key)}>${c.key}</option>`).join('')}</select><span class="badge badge-light">katalog</span>`
+              <td>${cat ? `<select class="form-control form-control-sm" data-f="field_key">${catalog.filter((c) => !reqKeys.includes(c.key)).map((c) => `<option value="${c.key}" ${sel(f.field_key === c.key)}>${c.key}</option>`).join('')}</select><span class="badge badge-light">katalog</span>`
                 : `<input class="form-control form-control-sm" data-f="field_key" value="${h.esc(f.field_key)}" placeholder="nama_field"><span class="badge badge-info">custom</span>`}</td>
               <td><input class="form-control form-control-sm" data-f="label" value="${h.esc(f.label)}"></td>
               <td>${cat ? `<span class="small">${C.FIELD_TYPES[f.data_type]}</span>`
@@ -131,13 +142,13 @@
         fr.addEventListener('click', (e) => {
           const b = e.target.closest('[data-act]'); if (!b) return;
           const i = Number(b.closest('tr').dataset.i);
-          if (b.dataset.act === 'del') fields.splice(i, 1);
+          if (b.dataset.act === 'del' && !fields[i].locked) fields.splice(i, 1);
           if (b.dataset.act === 'up' || b.dataset.act === 'down') { const j = b.dataset.act === 'up' ? i - 1 : i + 1; [fields[i], fields[j]] = [fields[j], fields[i]]; }
           drawFields();
         });
         root.querySelector('#addCatalog').addEventListener('click', () => {
-          const c = catalog.find((x) => !fields.some((f) => f.field_key === x.key)) || catalog[0];
-          if (!c) return;
+          const c = catalog.find((x) => !reqKeys.includes(x.key) && !fields.some((f) => f.field_key === x.key));
+          if (!c) { alert('Semua field katalog fase ini sudah ada di form.'); return; }
           fields.push({ source: 'CATALOG', field_key: c.key, label: c.label, data_type: c.dataType, options: (c.options || []).join(', '), mode: c.mode, expression: '', repeat_per: c.repeatPer,
             is_visible: true, is_editable: c.mode === 'ENTERED', is_required: false, min_value: '', max_value: '' });
           drawFields();
@@ -201,7 +212,18 @@
     const rows = JSON.parse(f.get('fields') || '[]');
     const errs = [];
     const keys = new Set();
+    const req = E.requiredFieldKeys(phase);
+    for (const k of req) if (!rows.some((r) => r.source === 'CATALOG' && r.field_key === k)) errs.push(`Field wajib "${k}" tidak boleh dihapus`);
     const out = rows.map((r, i) => {
+      if (r.source === 'CATALOG' && req.includes(r.field_key)) {
+        // field wajib: isi dikunci sesuai katalog; label & urutan mengikuti editor
+        const c = C.CATALOG_FIELDS.find((x) => x.key === r.field_key);
+        if (keys.has(c.key)) errs.push(`Field "${c.key}" dobel`); keys.add(c.key);
+        const label = String(r.label || '').trim();
+        if (!label) errs.push(`Field wajib "${c.key}": label wajib diisi`);
+        const prev = DB.t('programPhaseFields').find((x) => x.program_channel_id === pcId && x.phase === phase && x.field_key === c.key);
+        return Object.assign(E.catalogFieldRow(c, phase), prev ? { min_value: prev.min_value, max_value: prev.max_value } : {}, { label, sort_order: i + 1 });
+      }
       const key = String(r.field_key || '').trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_');
       if (!key) errs.push(`Baris ${i + 1}: nama field wajib`);
       if (keys.has(key)) errs.push(`Field "${key}" dobel`); keys.add(key);
@@ -603,7 +625,6 @@
           const monOk = Math.max(0, Math.min(100, Number($('#sMonOk').value) || 0)) / 100;
           const r = E.periodCalc(ch, code, { baseline: base, growth_pct: g, class_id: c.class_id, monthly, monitoring_approved: monOk, compliance: comp });
           const regObj = E.registrationObjects([c]);
-          const n = ch.leadMeasures.length;
           const monObj = { EVIDENCE_COMPLETE_PCT: comp.length ? comp.reduce((s, x) => s + x, 0) / comp.length * 100 : null, ACHIEVEMENT_PCT: [{ brand_code: code, value: r.achievement_pct }] };
           const payObj = { PAYOUT_AMOUNT: (r.conditional_amount || 0) + (r.fix_amount || 0), ACHIEVEMENT_PCT: [{ brand_code: code, value: r.achievement_pct }] };
           const row = (l, v, cls = '') => `<tr><td>${l}</td><td class="num ${cls}">${v}</td></tr>`;
@@ -682,7 +703,7 @@
           const st = SM.setupOf(ch);
           if (!st.lm_as_detail_example || !cls || !pillar) return 'Detail aktivasi';
           const b = E.brandOf(ch, brandCode);
-          for (const l of ch.leadMeasures.filter((x) => x.pillar_name === pillar)) { const r = E.lmTarget(b, cls.code, l); if (r && r.applies) return `Contoh dari saran lead measure: ${l.name} ${E.lmTargetText(r)}`; }
+          for (const l of (b ? b.leadMeasures : []).filter((x) => x.pillar_name === pillar)) { const r = E.lmTarget(b, cls.code, l); if (r && r.applies) return `Contoh dari saran lead measure: ${l.name} ${E.lmTargetText(r)}`; }
           return 'Detail aktivasi';
         }
         function renderAlloc() {

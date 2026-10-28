@@ -271,7 +271,10 @@
       for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) b.member_codes = (b.member_codes || []).filter((m) => m !== 'LIGHT');
       if (!DB.t('programChannelBrands').some((x) => x.program_channel_id === pc.id && x.brand_code === 'LIGHT')) {
         const n = DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id).length;
-        DB.insert('programChannelBrands', { program_channel_id: pc.id, brand_code: 'LIGHT', member_codes: ['BRIGHT'], est_growth_pct: null, ir_growth_pct: null, sort_order: n + 1 });
+        const light = DB.insert('programChannelBrands', { program_channel_id: pc.id, brand_code: 'LIGHT', member_codes: ['BRIGHT'], est_growth_pct: null, ir_growth_pct: null, sort_order: n + 1 });
+        // contoh JTBD, lead measure & target Light+ disalin dari Wardah (bisa diubah di Pilar → Light+)
+        const wrd = DB.t('programChannelBrands').find((x) => x.program_channel_id === pc.id && x.brand_code === 'WRD');
+        if (wrd) { light.lm_targets = JSON.parse(JSON.stringify(wrd.lm_targets || {})); window.Engine.copyBrandJtbds(wrd.id, light.id); }
       }
       pc.channel_type = 'PASSIVE';
       pc.setup = demoSetup('PASSIVE');

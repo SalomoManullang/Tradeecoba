@@ -213,4 +213,33 @@
     x.updated_by = UI.currentUser().id; x.updated_at = new Date().toISOString();
     done('success', `Rumus "${esc(x.name)}" ${x.is_active ? 'diaktifkan' : 'dinonaktifkan'}.`, '/master/formulas');
   };
+
+  // ---------------------------------------------------------------- field wajib form fase (Admin IT)
+  route('/master/required-fields', () => {
+    UI.requireSetup();
+    const it = isIT();
+    const phases = window.Catalog.PHASES;
+    const usage = (phase, key) => DB.where('programPhaseFields', (x) => x.phase === phase && x.field_key === key).length;
+    return {
+      title: 'Field wajib', html: `
+      <div class="page-head"><div><h1>Field wajib form</h1><div class="sub">Field yang dicentang otomatis ada di form setiap channel (fase yang belum dipublish) dan Admin HO hanya bisa mengubah label & urutannya.
+        ${it ? '' : ' Hanya Admin IT yang dapat mengubah daftar ini.'}</div></div></div>
+      <form data-action="reqfields.save"><fieldset ${it ? '' : 'disabled'}>
+      <div class="row g-3">${phases.map((ph) => `<div class="col-lg-4"><div class="card h-100"><div class="card-header">${esc(ph.label)}</div><div class="card-body p-0">
+        <table class="table table-sm mb-0"><thead><tr><th style="width:60px" class="text-center">Wajib</th><th>Field</th><th>Tipe</th><th class="num">Dipakai</th></tr></thead><tbody>
+        ${window.Catalog.CATALOG_FIELDS.filter((c) => c.phases.includes(ph.code)).map((c) => `<tr><td class="text-center"><input type="checkbox" name="req_${ph.code}" value="${c.key}" ${h.chk(E.requiredFieldKeys(ph.code).includes(c.key))}></td>
+          <td><div class="fw-semibold">${esc(c.label)}</div><div class="small text-muted"><code>${c.key}</code> · ${window.Catalog.MODES[c.mode]} · ${window.Catalog.REPEAT[c.repeatPer]}</div></td>
+          <td class="small">${window.Catalog.FIELD_TYPES[c.dataType]}</td><td class="num small">${usage(ph.code, c.key)} form</td></tr>`).join('')}</tbody></table></div></div></div>`).join('')}</div>
+      ${it ? '<button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan field wajib</button>' : ''}
+      </fieldset></form>
+      <div class="small text-muted mt-2">Form yang fasenya sudah PUBLISHED tidak berubah otomatis. Field custom (dibuat Admin HO) tidak bisa dijadikan wajib dari sini.</div>`,
+    };
+  });
+  actions['reqfields.save'] = (f) => {
+    if (!isIT()) throw new Error('Hanya Admin IT yang dapat mengubah field wajib.');
+    const before = JSON.parse(JSON.stringify(DB.state.requiredFields || {}));
+    DB.state.requiredFields = Object.fromEntries(window.Catalog.PHASES.map((ph) => [ph.code, f.all('req_' + ph.code)]));
+    E.audit(null, 'requiredFields', null, 'update', before, DB.state.requiredFields);
+    done('success', 'Field wajib disimpan. Form fase DRAFT di semua channel otomatis memuat field ini.', '/master/required-fields');
+  };
 })();

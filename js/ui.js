@@ -246,7 +246,7 @@
       { icon: 'flaticon2-graph-1', title: 'Monitoring & Payout', items: [['Monitoring', '/monitoring'], ['Ringkasan payout', '/payout'], ['Inbox approval', '/inbox']] },
       { icon: 'flaticon2-layers-1', title: 'Master Data', items: [
         ...(is(...SETUP_ROLES) ? [['Data Sell Out', '/master/sales']] : []), ['Master Toko', '/master/stores'],
-        ...(is(...SETUP_ROLES) ? [['Channel & Brand', '/master/data'], ['Library rumus', '/master/formulas']] : [])] },
+        ...(is(...SETUP_ROLES) ? [['Channel & Brand', '/master/data'], ['Library rumus', '/master/formulas'], ['Field wajib', '/master/required-fields']] : [])] },
     ];
     if (is(...SETUP_ROLES)) groups.splice(1, 0, { icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Program baru', '/setup/new']] });
     const saved = sideGroupState();

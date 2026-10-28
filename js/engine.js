@@ -73,7 +73,41 @@
     const master = DB.t('channels').find((c) => c.code === pcRow.channel_code) || {};
     return (master.name || pcRow.channel_code) + (CHANNEL_TYPES[pcRow.channel_type] ? ` · ${CHANNEL_TYPES[pcRow.channel_type]}` : '');
   }
+  // JTBD & lead measure milik brand (programJtbds.program_channel_brand_id); pilar tetap per channel.
+  // Data lama (JTBD per channel): dipakai brand pertama yang punya skema sendiri (id lead measure tetap, evidence lama tetap terbaca)
+  // dan disalin ke brand lain yang punya skema sendiri. Brand yang mengikuti skema brand lain memakai milik brand acuannya.
+  function copyBrandJtbds(fromId, toId, onlyJtbdIds) {
+    const map = {};
+    for (const j of DB.where('programJtbds', (x) => x.program_channel_brand_id === fromId && (!onlyJtbdIds || onlyJtbdIds.includes(x.id)))) {
+      const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_channel_brand_id: toId }));
+      for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) map[l.id] = DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id })).id;
+    }
+    const to = DB.byId('programChannelBrands', toId);
+    if (to && to.lm_targets) for (const t of Object.values(to.lm_targets)) t.rows = Object.fromEntries(Object.entries(t.rows || {}).map(([k, v]) => [map[k] || k, v]));
+    return map;
+  }
+  function migrateBrandJtbds(pc) {
+    const pils = DB.where('programPillars', (x) => x.program_channel_id === pc.id).map((x) => x.id);
+    const legacy = DB.where('programJtbds', (j) => pils.includes(j.program_pillar_id) && !j.program_channel_brand_id);
+    if (!legacy.length) return;
+    const brands = DB.where('programChannelBrands', (b) => b.program_channel_id === pc.id).sort(bySort);
+    if (!brands.length) return;
+    const follow = (pc.setup && pc.setup.scheme_follow) || {};
+    const owners = brands.filter((b) => !follow[b.brand_code]);
+    const [first, ...rest] = owners.length ? owners : brands;
+    for (const j of legacy) j.program_channel_brand_id = first.id;
+    for (const b of rest) copyBrandJtbds(first.id, b.id, legacy.map((j) => j.id));
+    DB.save();
+  }
+  // lead measure untuk sekumpulan brand (kode), tanpa duplikat (brand pengikut & acuannya memakai lead measure yang sama)
+  function leadMeasuresFor(ch, brandCodes) {
+    const seen = new Set();
+    return ch.brands.filter((b) => brandCodes.includes(b.brand_code)).flatMap((b) => b.leadMeasures).filter((l) => (seen.has(l.id) ? false : seen.add(l.id)));
+  }
+  const regLeadMeasures = (ch, reg) => leadMeasuresFor(ch, (reg.brands || []).filter((b) => b.class_id || b.class_code).map((b) => b.brand_code));
+
   function loadChannel(pcRow) {
+    migrateBrandJtbds(pcRow);
     const ch = clone(pcRow);
     const master = DB.t('channels').find((c) => c.code === ch.channel_code) || {};
     ch.channel_name = channelName(ch);
@@ -89,22 +123,43 @@
       });
       return brand;
     });
+    const brandById = Object.fromEntries(ch.brands.map((b) => [b.id, b]));
     ch.pillars = DB.where('programPillars', (x) => x.program_channel_id === ch.id).sort(bySort).map((pl) => {
       const pil = clone(pl);
       pil.jtbds = DB.where('programJtbds', (j) => j.program_pillar_id === pl.id).sort(bySort).map((j) => {
         const jt = clone(j);
+        const owner = brandById[j.program_channel_brand_id] || null;
+        jt.brand_code = owner ? owner.brand_code : null;
         jt.lead_measures = DB.where('programLeadMeasures', (l) => l.program_jtbd_id === j.id).sort(bySort)
-          .map((l) => Object.assign(clone(l), { value_type: C.lmType(l.value_type), jtbd_name: j.name, pillar_id: pl.id, pillar_name: pl.name }));
+          .map((l) => Object.assign(clone(l), { value_type: C.lmType(l.value_type), jtbd_id: j.id, jtbd_name: j.name, pillar_id: pl.id, pillar_name: pl.name,
+            brand_code: jt.brand_code, brand_name: owner ? owner.brand_name : '' }));
         return jt;
       });
       return pil;
     });
+    // semua lead measure channel (seluruh brand); per brand lihat brand.leadMeasures / brand.pillars
     ch.leadMeasures = ch.pillars.flatMap((pl) => pl.jtbds.flatMap((j) => j.lead_measures));
+    const follow = (ch.setup && ch.setup.scheme_follow) || {};
+    const rowOf = Object.fromEntries(ch.brands.map((b) => [b.brand_code, b]));
+    for (const b of ch.brands) {
+      const src = follow[b.brand_code] && rowOf[follow[b.brand_code]] ? follow[b.brand_code] : b.brand_code;
+      b.jtbd_source = src; // kode brand pemilik JTBD & target yang dipakai brand ini
+      b.pillars = ch.pillars.map((pl) => Object.assign({}, pl, { jtbds: pl.jtbds.filter((j) => j.brand_code === src) }));
+      b.leadMeasures = b.pillars.flatMap((pl) => pl.jtbds.flatMap((j) => j.lead_measures));
+      if (src !== b.brand_code) { b.own_lm_targets = b.lm_targets; b.lm_targets = rowOf[src].lm_targets; }
+    }
     ch.formulas = DB.where('programFormulas', (f) => f.program_channel_id === ch.id).map(clone);
     ch.phases = {};
     for (const ph of C.PHASES) {
+      const req = requiredFieldKeys(ph.code);
+      const fields = DB.where('programPhaseFields', (f) => f.program_channel_id === ch.id && f.phase === ph.code).sort(bySort).map(clone);
+      fields.forEach((f) => { f.locked = f.source === 'CATALOG' && req.includes(f.field_key); });
+      // fase belum dipublish: field wajib yang belum ada langsung ditambahkan (tersimpan saat form disimpan)
+      if (!window.SetupModel || window.SetupModel.phaseStatus(pcRow, ph.code) === 'DRAFT') {
+        for (const k of req) if (!fields.some((f) => f.field_key === k)) fields.push(Object.assign(catalogFieldRow(C.CATALOG_FIELDS.find((c) => c.key === k), ph.code), { locked: true, virtual: true }));
+      }
       ch.phases[ph.code] = {
-        fields: DB.where('programPhaseFields', (f) => f.program_channel_id === ch.id && f.phase === ph.code).sort(bySort).map(clone),
+        fields,
         layers: DB.where('programApprovalLayers', (l) => l.program_channel_id === ch.id && l.phase === ph.code).sort((a, b) => a.layer_order - b.layer_order).map(clone),
       };
     }
@@ -182,8 +237,10 @@
   // Kepatuhan pilar dari evidence Monitoring yang sudah approved di dalam rentang [start, end]
   function pillarCompliance(ch, registrationId, start, end) {
     const mons = DB.where('monitorings', (m) => m.registration_id === registrationId && m.status === 'approved' && m.end >= start && m.end <= end);
+    const reg = DB.byId('registrations', registrationId);
+    const mine = new Set((reg ? regLeadMeasures(ch, reg) : ch.leadMeasures).map((l) => l.id));
     return ch.pillars.map((pl) => {
-      const lms = pl.jtbds.flatMap((j) => j.lead_measures);
+      const lms = pl.jtbds.flatMap((j) => j.lead_measures).filter((l) => mine.has(l.id));
       if (!lms.length || !mons.length) return 0;
       const perMon = mons.map((m) => lms.filter((l) => (m.evidence || {})[l.id]).length / lms.length);
       return perMon.reduce((s, x) => s + x, 0) / perMon.length;
@@ -277,8 +334,9 @@
     });
   }
   function monitoringObjects(ch, reg, evidence, period) {
-    const n = ch.leadMeasures.length;
-    return { EVIDENCE_COMPLETE_PCT: n ? ch.leadMeasures.filter((l) => (evidence || {})[l.id]).length / n * 100 : null, ACHIEVEMENT_PCT: achievementPerBrand(ch, reg, period.months) };
+    const lms = regLeadMeasures(ch, reg);
+    const n = lms.length;
+    return { EVIDENCE_COMPLETE_PCT: n ? lms.filter((l) => (evidence || {})[l.id]).length / n * 100 : null, ACHIEVEMENT_PCT: achievementPerBrand(ch, reg, period.months) };
   }
   function payoutObjects(ch, reg, calc, period) {
     return { PAYOUT_AMOUNT: calc.amount, ACHIEVEMENT_PCT: achievementPerBrand(ch, reg, period.months) };
@@ -433,6 +491,24 @@
   }
   const currentLayer = (rec) => (rec.current_layer_id ? DB.byId('programApprovalLayers', rec.current_layer_id) : null);
 
+  // ---------------------------------------------------------------- field wajib form fase (diatur Admin IT)
+  // DB.state.requiredFields = { REGISTRATION: [field_key katalog], MONITORING: [...], PAYOUT: [...] }
+  // Field wajib otomatis ada di form fase yang masih DRAFT; Admin HO hanya bisa mengubah label & urutannya.
+  const DEFAULT_REQUIRED = {
+    REGISTRATION: ['baseline', 'growth', 'target_class', 'avg_target', 'total_target', 'conditional_rebate'],
+    MONITORING: ['evidence_upload'],
+    PAYOUT: ['payout_amount', 'transfer_evidence'],
+  };
+  function requiredFieldKeys(phase) {
+    if (!DB.state.requiredFields) { DB.state.requiredFields = clone(DEFAULT_REQUIRED); DB.save(); }
+    return (DB.state.requiredFields[phase] || []).filter((k) => C.CATALOG_FIELDS.some((c) => c.key === k && c.phases.includes(phase)));
+  }
+  // baris field dari definisi katalog (dipakai field wajib yang belum ada di form)
+  function catalogFieldRow(c, phase) {
+    return { source: 'CATALOG', phase, field_key: c.key, label: c.label, data_type: c.dataType, options: c.options || null, mode: c.mode, expression: null, formula_id: null,
+      repeat_per: c.repeatPer, is_visible: true, is_editable: c.mode === 'ENTERED', is_required: c.mode === 'ENTERED', min_value: null, max_value: null };
+  }
+
   // ---------------------------------------------------------------- library rumus field form (dikelola Admin IT)
   // formulaLibrary: { id, name, phase, data_type, expression, description, is_active, updated_by, updated_at }
   // Field form menyimpan formula_id + salinan expression (versi saat form disimpan); runtime memakai salinan itu.
@@ -482,7 +558,7 @@
   function lmTargetTable(ch, b) {
     const esc = UI.h.esc;
     const brand = brandOf(ch, b.brand_code);
-    const rows = ch.leadMeasures.map((l) => [l, lmTarget(brand, b.class_code, l)]).filter(([, r]) => r && r.applies);
+    const rows = (brand ? brand.leadMeasures : []).map((l) => [l, lmTarget(brand, b.class_code, l)]).filter(([, r]) => r && r.applies);
     if (!rows.length) return '<em>Target lead measure belum diatur.</em>';
     return `<table class="table table-sm table-bordered doc-table"><thead><tr><th>Pilar</th><th>Lead measure</th><th>Target kelas ${esc(b.class_code)}</th></tr></thead><tbody>${
       rows.map(([l, r]) => `<tr><td>${esc(l.pillar_name)}</td><td>${esc(l.name)}</td><td>${esc(lmTargetText(r))}</td></tr>`).join('')}</tbody></table>`;
@@ -496,7 +572,7 @@
       brands: `<table class="table table-sm table-bordered doc-table"><thead><tr><th>Brand</th><th>Kelas</th><th>Baseline / bln</th><th>Growth</th><th>Target / bln</th><th>Fix maks</th><th>Conditional</th><th>Total</th></tr></thead><tbody>${
         ctx.brands.map((b) => `<tr><td>${esc(b.brand_name)}</td><td>${esc(b.class_code)}</td><td class="num">${UI.h.rp(Math.round(b.baseline))}</td><td class="num">${b.growth_pct}%</td>
           <td class="num">${UI.h.rp(Math.round(b.target_monthly || 0))}</td><td class="num">${b.fix_max_pct}%</td><td class="num">${b.conditional_pct}%</td><td class="num">${b.total_pct}%</td></tr>`).join('')}</tbody></table>`,
-      pillars: `<ul>${ctx.ch.pillars.map((pl) => `<li><strong>${esc(pl.name)}</strong><ul>${pl.jtbds.flatMap((j) => j.lead_measures).map((l) => `<li>${esc(l.name)}${l.description ? ` — ${esc(l.description)}` : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`,
+      pillars: `<ul>${ctx.ch.pillars.map((pl) => `<li><strong>${esc(pl.name)}</strong><ul>${leadMeasuresFor(ctx.ch, ctx.brands.map((b) => b.brand_code)).filter((l) => l.pillar_id === pl.id).map((l) => `<li>${esc(l.name)}${l.description ? ` — ${esc(l.description)}` : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`,
     };
     const sections = (content && content.sections) || [];
     return sections.map((s) => {
@@ -579,15 +655,17 @@
   function cloneChannel(pc, programId, actorId, extra) {
     // status publish per channel × fase: hasil clone selalu mulai dari DRAFT
     const npc = DB.insert('programChannels', Object.assign(clone(pc), { program_id: programId, phase_status: { REGISTRATION: 'DRAFT', MONITORING: 'DRAFT', PAYOUT: 'DRAFT' } }, extra || {}));
+    const brandMap = {};
     for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id)) {
       const nb = DB.insert('programChannelBrands', Object.assign(clone(b), { program_channel_id: npc.id }));
+      brandMap[b.id] = nb.id;
       for (const c of DB.where('programClasses', (x) => x.program_channel_brand_id === b.id)) DB.insert('programClasses', Object.assign(clone(c), { program_channel_brand_id: nb.id }));
     }
     const lmMap = {};
     for (const pl of DB.where('programPillars', (x) => x.program_channel_id === pc.id)) {
       const npl = DB.insert('programPillars', Object.assign(clone(pl), { program_channel_id: npc.id }));
       for (const j of DB.where('programJtbds', (x) => x.program_pillar_id === pl.id)) {
-        const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_pillar_id: npl.id }));
+        const nj = DB.insert('programJtbds', Object.assign(clone(j), { program_pillar_id: npl.id, program_channel_brand_id: brandMap[j.program_channel_brand_id] || null }));
         for (const l of DB.where('programLeadMeasures', (x) => x.program_jtbd_id === j.id)) lmMap[l.id] = DB.insert('programLeadMeasures', Object.assign(clone(l), { program_jtbd_id: nj.id })).id;
       }
     }
@@ -697,10 +775,11 @@
       }
       if (ch.pillars.length) {
         for (const b of ch.brands) {
+          if (b.jtbd_source === b.brand_code && !b.leadMeasures.length) W(ch, `${b.brand_name}: belum punya JTBD & lead measure.`);
           const missing = b.classes.filter((c) => !(b.lm_targets || {})[c.code]).map((c) => c.code);
           if (missing.length) W(ch, `${b.brand_name}: target lead measure kelas ${missing.join(', ')} belum diatur.`);
           for (const c of b.classes) {
-            const empty = ch.leadMeasures.filter((l) => { const r = lmTarget(b, c.code, l); return r && r.applies && r.items.some((x) => !x.text); }).length;
+            const empty = b.leadMeasures.filter((l) => { const r = lmTarget(b, c.code, l); return r && r.applies && r.items.some((x) => !x.text); }).length;
             if (empty) W(ch, `${b.brand_name} kelas ${c.code}: ${empty} lead measure belum punya target.`);
           }
         }
@@ -721,7 +800,7 @@
     CHANNEL_TYPES, channelName, cloneChannel, loadProgram, formulaFor, brandOf, resolveClass, resolveTier, commitment, periodCalc, pillarCompliance, monitoringApproval, payoutCalc,
     registrationObjects, monitoringObjects, payoutObjects, generateDocuments,
     eligibility, minBaseline, firstDo, soSiRatio, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
-    fmtLmTarget, lmTarget, lmTargetText, formulaLibrary,
+    fmtLmTarget, lmTarget, lmTargetText, formulaLibrary, requiredFieldKeys, catalogFieldRow, leadMeasuresFor, regLeadMeasures, copyBrandJtbds,
     renderDocument, unknownPlaceholders, defaultSections, audit, createChannelDefaults, cloneProgram,
     deleteChannel, deleteProgram, deletePillarTree, validateProgram,
   };

@@ -10,10 +10,11 @@
     const program = E.loadProgram(reg.program_id);
     return { program, ch: program.channels.find((c) => c.id === reg.program_channel_id) };
   }
-  // Target lead measure peserta: satu baris per brand yang diikuti, sesuai kelasnya (dan section bila ada)
+  // Target lead measure peserta: per brand yang diikuti toko & memakai lead measure ini (brand pemilik atau pengikut skemanya)
   function targetHtml(ch, reg, l) {
     return (reg.brands || []).filter((b) => b.class_code).map((b) => {
       const brand = E.brandOf(ch, b.brand_code);
+      if (!brand || brand.jtbd_source !== l.brand_code) return '';
       const r = E.lmTarget(brand, b.class_code, l);
       if (!r) return '';
       return `<div class="small"><span class="badge badge-light">${esc(brand.brand_name)} · ${esc(b.class_code)}</span> ${r.applies ? `<strong>${esc(E.lmTargetText(r))}</strong>` : '<span class="text-muted">tidak berlaku</span>'}</div>`;
@@ -28,11 +29,11 @@
         const regs = DB.where('registrations', (r) => r.program_channel_id === ch.id && r.status === 'approved' && inScope(user, store(r.customer_id)));
         if (!regs.length) return '';
         const pers = E.periodsOf(p.period_start, p.period_end, ch.monitoring_frequency);
-        return `<div class="card mb-3"><div class="card-header">${esc(p.name)} · ${esc(ch.channel_name)}&nbsp;<span class="small text-muted fw-normal">· ${C.FREQUENCIES[ch.monitoring_frequency]} · ${ch.leadMeasures.length} lead measure ${esc(ch.pillar_framework_name || '')}</span></div>
+        return `<div class="card mb-3"><div class="card-header">${esc(p.name)} · ${esc(ch.channel_name)}&nbsp;<span class="small text-muted fw-normal">· ${C.FREQUENCIES[ch.monitoring_frequency]} · lead measure ${esc(ch.pillar_framework_name || '')} per brand</span></div>
           <div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead><tr><th>Toko</th>${pers.map((x) => `<th>${esc(x.label)}</th>`).join('')}</tr></thead><tbody>
           ${regs.map((r) => `<tr><td><a href="#/registration/participant/${r.id}" class="fw-semibold">${esc(store(r.customer_id).name)}</a><div class="small text-muted">${r.customer_id}</div></td>
             ${pers.map((per) => { const m = DB.t('monitorings').find((x) => x.registration_id === r.id && x.period_key === per.key);
-              if (m && m.status !== 'returned') return `<td><a href="#/monitoring/item/${m.id}">${h.badge(m.status)}</a><div class="small text-muted">${Object.keys(m.evidence || {}).length}/${ch.leadMeasures.length} evidence</div></td>`;
+              if (m && m.status !== 'returned') return `<td><a href="#/monitoring/item/${m.id}">${h.badge(m.status)}</a><div class="small text-muted">${Object.keys(m.evidence || {}).length}/${E.regLeadMeasures(ch, r).length} evidence</div></td>`;
               return `<td>${user.role === 'CBD' ? `<a class="btn btn-sm ${m ? 'btn-outline-info' : 'btn-outline-brand'}" href="#/monitoring/form/${r.id}/${per.key}">${m ? 'Revisi' : 'Isi'}</a>` : '<span class="text-muted small">belum</span>'}</td>`; }).join('')}</tr>`).join('')}
           </tbody></table></div></div>`;
       }).join('')).join('') || '<div class="card"><div class="card-body text-muted">Belum ada peserta yang disetujui dalam scope Anda.</div></div>'}</div></div>`,
@@ -54,20 +55,21 @@
     const lmFields = fields.filter((f) => f.repeat_per === 'LEAD_MEASURE');
     const other = fields.filter((f) => f.repeat_per === 'NONE');
     const s = store(reg.customer_id);
+    const lms = E.regLeadMeasures(ch, reg);
     return {
       title: `Monitoring ${s.name}`, html: `<div class="cps cps-app">
       ${UI.detailHead({ back: '/monitoring', crumb: `<a href="#/monitoring">Monitoring</a> / ${esc(program.name)} · ${esc(ch.channel_name)}`,
         title: `Monitoring ${esc(per.label)} · ${esc(s.name)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
-        facts: [['Periode', `${h.date(per.start)} – ${h.date(per.end)}`], ['Customer ID', reg.customer_id], ['Lead measure', `${ch.leadMeasures.length}`]] })}
+        facts: [['Periode', `${h.date(per.start)} – ${h.date(per.end)}`], ['Customer ID', reg.customer_id], ['Lead measure', `${lms.length}`]] })}
       ${UI.errorsHtml(pend && pend.errors)}
       <div class="cps-work">
       <form data-action="mon.submit" data-reg="${reg.id}" data-per="${per.key}">
       <div class="card mb-3"><div class="card-header">${esc(ch.pillar_framework_name || 'Pilar')} — evidence per lead measure</div><div class="table-responsive"><table class="table table-sm mb-0">
-        <thead><tr><th>Pilar · JTBD</th><th>Lead measure</th>${lmFields.map((f) => `<th>${esc(f.label)}${f.is_required ? ' <span class="text-danger">*</span>' : ''}</th>`).join('')}</tr></thead>
-        <tbody>${ch.leadMeasures.map((l) => `<tr><td class="small text-muted">${esc(l.pillar_name)}<br>${esc(l.jtbd_name)}</td>
+        <thead><tr><th>Brand · Pilar · JTBD</th><th>Lead measure</th>${lmFields.map((f) => `<th>${esc(f.label)}${f.is_required ? ' <span class="text-danger">*</span>' : ''}</th>`).join('')}</tr></thead>
+        <tbody>${lms.map((l) => `<tr><td class="small text-muted"><span class="badge badge-light">${esc(l.brand_name)}</span><br>${esc(l.pillar_name)}<br>${esc(l.jtbd_name)}</td>
           <td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}${C.lmUnit(l) ? ` · ${esc(C.lmUnit(l))}` : ''}</div>${targetHtml(ch, reg, l)}</td>
           ${lmFields.map((f) => `<td style="min-width:240px">${UI.fieldInput(f, f.field_key === 'evidence_upload' ? (ex ? (ex.evidence || {})[l.id] : '') : ex ? ((ex.data.lm || {})[l.id] || {})[f.field_key] : '', { prefix: `lm_${l.id}_`, bare: true })}</td>`).join('')}</tr>`).join('')
-          || '<tr><td colspan="3" class="text-muted">Channel belum punya lead measure.</td></tr>'}</tbody></table></div></div>
+          || '<tr><td colspan="3" class="text-muted">Brand yang diikuti toko belum punya lead measure.</td></tr>'}</tbody></table></div></div>
       <div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body">
         ${other.map((f) => UI.fieldInput(f, ex ? ex.data[f.field_key] : '')).join('') || '<span class="small text-muted">Tidak ada field lain.</span>'}
         ${ex ? '<div class="mb-3"><label class="form-label">Catatan revisi</label><textarea name="note" class="form-control" rows="2"></textarea></div>' : ''}
@@ -85,7 +87,8 @@
     const per = E.periodsOf(program.period_start, program.period_end, ch.monitoring_frequency).find((x) => x.key === form.dataset.per);
     const fields = ch.phases.MONITORING.fields.filter((x) => x.is_visible);
     const errors = []; const evidence = {}; const lmData = {};
-    for (const l of ch.leadMeasures) {
+    const lms = E.regLeadMeasures(ch, reg);
+    for (const l of lms) {
       const { values, errors: errs } = UI.readFieldValues(fields.filter((x) => x.repeat_per === 'LEAD_MEASURE'), (k) => f.get(k), (k) => f.file(k), `lm_${l.id}_`);
       errs.forEach((e) => errors.push(`${l.name}: ${e}`));
       if (values.evidence_upload) evidence[l.id] = values.evidence_upload;
@@ -102,7 +105,7 @@
     const mon = ex ? Object.assign(ex, row) : DB.insert('monitorings', Object.assign({ registration_id: reg.id, period_key: per.key, period_label: per.label, start: per.start, end: per.end,
       status: 'in_review', current_layer_id: null, submitted_by: user.id, created_at: now }, row));
     const next = E.submit('monitoring', mon, user.id, !!ex, f.get('note'));
-    done('success', `Monitoring ${esc(per.label)} diajukan (${Object.keys(evidence).length}/${ch.leadMeasures.length} evidence). ${next ? `Menunggu ${esc(C.APPROVAL_ROLES[next.role_code])}.` : 'Langsung disetujui.'}`, `/monitoring/item/${mon.id}`);
+    done('success', `Monitoring ${esc(per.label)} diajukan (${Object.keys(evidence).length}/${lms.length} evidence). ${next ? `Menunggu ${esc(C.APPROVAL_ROLES[next.role_code])}.` : 'Langsung disetujui.'}`, `/monitoring/item/${mon.id}`);
   };
 
   route('/monitoring/item/:id', ({ id }, q, { user, year }) => {
@@ -115,18 +118,19 @@
     const canAct = m.status === 'in_review' && layer && layer.role_code === user.role;
     const s = store(reg.customer_id);
     const comp = E.pillarCompliance(ch, reg.id, m.start, m.end);
+    const lms = E.regLeadMeasures(ch, reg);
     return {
       title: `Monitoring ${s.name}`, html: `<div class="cps cps-app">
       ${UI.detailHead({ back: '/monitoring', crumb: `<a href="#/monitoring">Monitoring</a> / <a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`,
         title: `Monitoring ${esc(m.period_label)} ${h.badge(m.status)}`, sub: `${esc(program.name)} · ${esc(ch.channel_name)}`,
         facts: [['Toko', `<a href="#/registration/participant/${reg.id}">${esc(s.name)}</a>`], ['Periode', `${h.date(m.start)} – ${h.date(m.end)}`],
-          ['Evidence', `${Object.keys(m.evidence || {}).length} / ${ch.leadMeasures.length}`]],
+          ['Evidence', `${Object.keys(m.evidence || {}).length} / ${lms.length}`]],
         actions: m.status === 'returned' && user.role === 'CBD' ? `<a href="#/monitoring/form/${reg.id}/${m.period_key}" class="btn btn-brand"><i class="bi bi-pencil"></i> Revisi</a>` : '' })}
       <div class="row g-3"><div class="col-lg-8">
         ${canAct ? UI.approvalBox('monitoring', m.id, layer, `/monitoring/item/${m.id}`) : ''}
         <div class="card mb-3"><div class="card-header">Evidence</div><div class="table-responsive"><table class="table table-sm mb-0">
-          <thead><tr><th>Pilar</th><th>Lead measure</th><th>Evidence</th></tr></thead>
-          <tbody>${ch.leadMeasures.map((l) => `<tr><td class="small text-muted">${esc(l.pillar_name)}</td><td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}</div>${targetHtml(ch, reg, l)}</td>
+          <thead><tr><th>Brand · Pilar</th><th>Lead measure</th><th>Evidence</th></tr></thead>
+          <tbody>${lms.map((l) => `<tr><td class="small text-muted"><span class="badge badge-light">${esc(l.brand_name)}</span><br>${esc(l.pillar_name)}</td><td>${esc(l.name)}<div class="small text-muted">${esc(l.description || '')}</div>${targetHtml(ch, reg, l)}</td>
             <td>${(m.evidence || {})[l.id] ? `<i class="bi bi-paperclip lm-ok"></i> ${esc(m.evidence[l.id])}` : '<i class="bi bi-dash-circle lm-no"></i> <span class="small text-muted">tidak ada</span>'}</td></tr>`).join('')}</tbody></table></div></div>
         <div class="card"><div class="card-header">Kelengkapan evidence per pilar <span class="small text-muted fw-normal">&nbsp;(hanya monitoring yang disetujui · informasi)</span></div><div class="card-body small">
           ${ch.pillars.map((pl, i) => `<div class="d-flex justify-content-between"><span>${esc(pl.name)}</span><strong>${h.pct(comp[i] * 100, 0)}</strong></div>`).join('')}

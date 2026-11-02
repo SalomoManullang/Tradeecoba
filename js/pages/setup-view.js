@@ -9,7 +9,7 @@
   const { h } = UI;
   // Form konfigurasi yang punya mode lihat; form aksi cepat (clone, tipe, channel, exception, publish) selalu bisa diisi
   const VIEW_FORMS = ['setup.header', 'setup.saveBrands', 'setup.savePillars', 'setup.saveLmTargets', 'setup.saveFormulas',
-    'setup.savePhaseForm', 'setup.saveLayers', 'setup.saveEligibility', 'setup.saveThreshold', 'setup.saveDoc', 'setup.saveDocsConfig',
+    'setup.savePhaseForm', 'setup.saveLayers', 'setup.saveEligibility', 'setup.savePayoutRules', 'setup.saveThreshold', 'setup.saveDoc', 'setup.saveDocsConfig',
     'setup.saveLmExample', 'setup.saveScheme', 'setup.saveLimits', 'setup.saveTerms'];
   const NOTE_MIN = 140; // catatan sependek ini tidak dilipat
 
@@ -203,7 +203,7 @@
     });
   }
 
-  // Bagian form (eligibility: Syarat pendaftaran · Syarat payout · Jadwal) = kotak bergaris yang bisa dilipat.
+  // Bagian form (eligibility: Syarat pendaftaran · Pencairan: Syarat payout · Jadwal) = kotak bergaris yang bisa dilipat.
   // Kolom milik satu bagian dipindah ke dalam kotaknya (tetap di form yang sama); tombol simpan tetap di luar.
   function enhanceSections(root) {
     root.querySelectorAll('.cps .card-body.row').forEach((body) => {

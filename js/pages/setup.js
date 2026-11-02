@@ -50,10 +50,10 @@
 
   // Bagian konfigurasi channel dikelompokkan per fase; Monitoring & Pencairan masih kerangka ("Menyusul") kecuali termin pencairan
   const PHASE_TABS = {
-    REGISTRATION: [['eligibility', 'Eligibility & threshold'], ['brands', 'Brand'], ['scheme', 'Skema kelas'],
-      ['pillars', 'Pilar & saran lead measure'], ['limits', 'Batas & exception'], ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
+    REGISTRATION: [['brands', 'Brand'], ['scheme', 'Skema kelas'], ['pillars', 'Pilar & saran lead measure'], ['eligibility', 'Eligibility & threshold'],
+      ['limits', 'Batas & exception'], ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
     MONITORING: [['monitoring', 'Kerangka', true], ['phases/MONITORING', 'Form & approval', true]],
-    PAYOUT: [['terms', 'Termin & conditional rebate'], ['formulas', 'Rumus', true], ['phases/PAYOUT', 'Form & approval', true]],
+    PAYOUT: [['payout-rules', 'Syarat payout & jadwal'], ['terms', 'Termin & conditional rebate'], ['formulas', 'Rumus', true], ['phases/PAYOUT', 'Form & approval', true]],
   };
   const phaseOfSub = (sub) => (Object.entries(PHASE_TABS).find(([, tabs]) => tabs.some(([k]) => k === sub)) || ['REGISTRATION'])[0];
   const statusTag = (st) => `<span class="cps-phase-st st-${st.toLowerCase()}">${h.STATUS[st][0]}</span>`;
@@ -71,7 +71,7 @@
     const steps = [
       ['header', '1', 'Header', `#/setup/${p.id}/header`],
       ['channels', '2', 'Channel', `#/setup/${p.id}/channels`],
-      ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/eligibility` : `#/setup/${p.id}/channels`],
+      ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/brands` : `#/setup/${p.id}/channels`],
       ['simulate', '4', 'Simulasi', `#/setup/${p.id}/simulate`],
       ['validate', '5', 'Validasi & publish', `#/setup/${p.id}/validate`],
       ['audit', '', 'Audit log', `#/setup/${p.id}/audit`],
@@ -258,7 +258,7 @@
         ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td>
           <td>${E.CHANNEL_TYPES[ch.channel_type] ? `<span class="badge badge-light">${E.CHANNEL_TYPES[ch.channel_type]}</span>` : '<span class="text-muted small">-</span>'}</td><td class="num">${ch.brands.length}</td>
           <td class="num">${ch.pillars.length} / ${ch.leadMeasures.length}</td><td>${UI.layerPath(ch.phases.REGISTRATION.layers)}</td>
-          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/eligibility" class="btn btn-sm btn-brand">Konfigurasi</a>
+          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/brands" class="btn btn-sm btn-brand">Konfigurasi</a>
             ${editable(p) ? `<a href="#" class="btn btn-sm btn-link text-danger" data-click="setup.deleteChannel" data-id="${p.id}" data-pc="${ch.id}" data-confirm="Hapus channel ${esc(ch.channel_name)} beserta konfigurasinya?">Hapus</a>` : ''}</td></tr>`).join('')
           || '<tr><td colspan="6" class="text-muted p-4">Belum ada channel.</td></tr>'}</tbody></table></div></div></div>
       <div class="col-lg-4"><div class="card"><div class="card-header">Tambah channel</div><div class="card-body">
@@ -285,7 +285,7 @@
     E.createChannelDefaults(pc, UI.currentUser().id);
     E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code, channel_type: type });
     touch(pid);
-    done('success', 'Channel ditambahkan. Lanjut atur eligibility & jadwal.', `/setup/${pid}/ch/${pc.id}/eligibility`);
+    done('success', 'Channel ditambahkan. Lanjut pilih brand peserta.', `/setup/${pid}/ch/${pc.id}/brands`);
   };
   clicks['setup.deleteChannel'] = (d) => {
     assertDraft(Number(d.id));

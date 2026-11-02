@@ -278,17 +278,15 @@
     done('success', `Approval layer ${phase} disimpan (${rows.length} layer).`, `/setup/${pid}/ch/${pcId}/phases/${phase}`);
   };
 
-  // ---------------------------------------------------------------- 3a · eligibility & jadwal (sebelum pilih brand)
-  // Syarat pendaftaran · syarat payout (rasio SO:SI, MOU 2026) · jadwal monitoring & payout · exception toko oleh Admin HO.
-  // Baseline minimal per brand ada di 3b Brand (butuh brand terpilih).
+  // ---------------------------------------------------------------- eligibility & threshold (fase Pendaftaran, setelah pilar)
+  // Syarat pendaftaran · threshold di bawah kelas terendah · exception toko oleh Admin HO.
+  // Syarat payout (rasio SO:SI) & jadwal monitoring / payout ada di fase Pencairan (halaman payout-rules).
   route('/setup/:id/ch/:pc/eligibility', ({ id, pc }) => {
     const p = getProgram(id);
     const ch = getChannel(p, pc);
     const nv = (v) => (v === null || v === undefined ? '' : v);
     const stores = DB.t('stores').filter((s) => s.channel_code === ch.channel_code);
     const elig = stores.map((s) => Object.assign({ s }, E.eligibility(p, ch, s.customer_id)));
-    const freqOpts = (cur, list) => list.map((k) => `<option value="${k}" ${sel(cur === k)}>${C.FREQUENCIES[k]}</option>`).join('');
-    const per = (fq) => E.periodsOf(p.period_start, p.period_end, fq).map((x) => x.label).join(', ');
     const others = DB.where('programs', (x) => x.year === p.year && x.id !== p.id);
     const excl = new Set(ch.elig_exclusive_program_ids || []);
     const exceptions = ch.elig_exceptions || [];
@@ -299,7 +297,7 @@
       title: `Eligibility · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'eligibility')}
       <div class="row g-3"><div class="col-xl-8">
       <form data-action="setup.saveEligibility" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
-      <div class="card mb-3"><div class="card-header"><span class="step-chip">3a</span>&nbsp;Eligibility & jadwal — ${esc(ch.channel_name)}</div><div class="card-body row g-3">
+      <div class="card mb-3"><div class="card-header"><i class="bi bi-person-check"></i>&nbsp;Eligibility — ${esc(ch.channel_name)}</div><div class="card-body row g-3">
         ${sec('<i class="bi bi-person-check"></i> Syarat pendaftaran <span class="fw-normal text-muted">· dicek saat CBD/CDT mendaftarkan toko</span>')}
         <div class="col-md-4"><label class="form-label">Min. bulan sell out dikirim</label><input name="elig_min_sell_out_months" type="number" class="form-control" value="${nv(ch.elig_min_sell_out_months)}" placeholder="kosong = tidak dicek">
           <div class="form-text">Dari data tahun ${E.baselineMonths(p)[0].slice(0, 4)}. <span class="warn-mark" title="Tidak ada di sales_program 2026; dikonfirmasi">⚠</span></div></div>
@@ -312,22 +310,8 @@
             || `<span class="small text-muted">Belum ada program lain di tahun ${p.year}.</span>`}</div>
           <div class="form-text">Toko yang sudah terdaftar (dan tidak ditolak) di program yang dicentang tidak bisa didaftarkan di sini, seperti aturan JBP CS 2026 terhadap PLP, PSF, LMT, dst.</div></div>
 
-        ${sec('<i class="bi bi-cash-coin"></i> Syarat payout <span class="fw-normal text-muted">· dicek tiap termin; tidak memenuhi → payout tidak dibayar</span>')}
-        <div class="col-md-4"><label class="form-label">Rasio sell out : sell in min</label><div class="input-group"><input name="elig_ratio_min" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_min)}" placeholder="96"><span class="input-group-text">%</span></div></div>
-        <div class="col-md-4"><label class="form-label">Rasio sell out : sell in maks</label><div class="input-group"><input name="elig_ratio_max" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_max)}" placeholder="100"><span class="input-group-text">%</span></div></div>
-        <div class="col-md-4"><label class="form-label">&nbsp;</label><label class="d-block mb-0 pt-2"><input type="checkbox" name="elig_ratio_at_registration" value="1" ${chk(ch.elig_ratio_at_registration)}> Cek juga saat pendaftaran</label>
-          <div class="form-text">Pakai data tahun ${E.baselineMonths(p)[0].slice(0, 4)}.</div></div>
-        <div class="col-12"><div class="form-text mt-0">MOU 2026: <em>"Rebate akan diberikan jika toko mencapai target sell out dan sell-in minimal 95% sell out-nya."</em> Rasio dihitung dari bulan-bulan termin payout, semua brand yang didaftarkan. Definisi <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> dikonfirmasi.</div></div>
-
-        ${sec('<i class="bi bi-calendar3"></i> Jadwal')}
-        <div class="col-md-4"><label class="form-label">Frekuensi monitoring <span class="text-danger">*</span></label><select name="monitoring_frequency" class="form-control">${freqOpts(ch.monitoring_frequency, ['MONTHLY', 'QUARTERLY', 'SEMESTER'])}</select>
-          <div class="form-text">${per(ch.monitoring_frequency || 'QUARTERLY')}</div></div>
-        <div class="col-md-4"><label class="form-label">Payout · Conditional <span class="text-danger">*</span></label><select name="pay_CONDITIONAL" class="form-control">${freqOpts(ch.payoutSchedule.CONDITIONAL, ['QUARTERLY', 'SEMESTER'])}</select>
-          <div class="form-text">${per(ch.payoutSchedule.CONDITIONAL || 'QUARTERLY')}</div></div>
-        <div class="col-md-4"><label class="form-label">Payout · Fix <span class="text-danger">*</span></label><select name="pay_FIX" class="form-control">${freqOpts(ch.payoutSchedule.FIX, ['QUARTERLY', 'SEMESTER'])}</select>
-          <div class="form-text">${per(ch.payoutSchedule.FIX || 'SEMESTER')}</div></div>
-        <div class="col-12"><div class="form-text mt-0">Fix dibayar sesuai porsi periode Monitoring yang disetujui di termin itu, jadi termin Fix tidak boleh lebih pendek dari periode Monitoring.</div></div>
-        <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan eligibility & jadwal</button></div>
+        <div class="col-12"><div class="form-text mt-0">Rasio sell out : sell in (syarat payout) dan jadwal monitoring / payout diatur di fase <a href="#/setup/${p.id}/ch/${ch.id}/payout-rules">Pencairan → Syarat payout & jadwal</a>.</div></div>
+        <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan eligibility</button></div>
       </div></div></fieldset></form>
 
       ${(() => { const th = SM.setupOf(ch).threshold; const tb = th.brands || {};
@@ -371,9 +355,53 @@
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
     assertDraft(pid, pcId, 'REGISTRATION');
     const pc = DB.byId('programChannels', pcId);
-    const v = { elig_min_sell_out_months: toNum(f.get('elig_min_sell_out_months')), elig_ratio_min: toNum(f.get('elig_ratio_min')), elig_ratio_max: toNum(f.get('elig_ratio_max')),
-      elig_ratio_at_registration: f.has('elig_ratio_at_registration'), elig_prior_payout_required: f.get('elig_prior_payout_required') === '1',
-      elig_exclusive_program_ids: f.all('excl_program').map(Number), monitoring_frequency: f.get('monitoring_frequency') };
+    const v = { elig_min_sell_out_months: toNum(f.get('elig_min_sell_out_months')), elig_prior_payout_required: f.get('elig_prior_payout_required') === '1',
+      elig_exclusive_program_ids: f.all('excl_program').map(Number) };
+    const before = Object.fromEntries(Object.keys(v).map((k) => [k, pc[k]]));
+    Object.assign(pc, v);
+    E.audit(pid, 'programChannel', pcId, 'update', before, v);
+    touch(pid);
+    done('success', 'Eligibility disimpan. Lanjut ke Batas & exception.', `/setup/${pid}/ch/${pcId}/eligibility`);
+  };
+
+  // ---------------------------------------------------------------- Pencairan · syarat payout & jadwal
+  // Rasio sell out : sell in dicek tiap termin payout (opsional juga saat pendaftaran) · frekuensi monitoring · jadwal payout Conditional & Fix.
+  route('/setup/:id/ch/:pc/payout-rules', ({ id, pc }) => {
+    const p = getProgram(id);
+    const ch = getChannel(p, pc);
+    const nv = (v) => (v === null || v === undefined ? '' : v);
+    const freqOpts = (cur, list) => list.map((k) => `<option value="${k}" ${sel(cur === k)}>${C.FREQUENCIES[k]}</option>`).join('');
+    const per = (fq) => E.periodsOf(p.period_start, p.period_end, fq).map((x) => x.label).join(', ');
+    const sec = (t) => `<div class="col-12"><div class="elig-sec">${t}</div></div>`;
+    return {
+      title: `Syarat payout & jadwal · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'payout-rules')}
+      <form data-action="setup.savePayoutRules" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'PAYOUT')}>
+      <div class="card mb-3"><div class="card-header"><i class="bi bi-cash-coin"></i>&nbsp;Syarat payout & jadwal — ${esc(ch.channel_name)}</div><div class="card-body row g-3">
+        ${sec('<i class="bi bi-cash-coin"></i> Syarat payout <span class="fw-normal text-muted">· dicek tiap termin; tidak memenuhi → payout tidak dibayar</span>')}
+        <div class="col-md-4"><label class="form-label">Rasio sell out : sell in min</label><div class="input-group"><input name="elig_ratio_min" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_min)}" placeholder="96"><span class="input-group-text">%</span></div></div>
+        <div class="col-md-4"><label class="form-label">Rasio sell out : sell in maks</label><div class="input-group"><input name="elig_ratio_max" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_max)}" placeholder="100"><span class="input-group-text">%</span></div></div>
+        <div class="col-md-4"><label class="form-label">&nbsp;</label><label class="d-block mb-0 pt-2"><input type="checkbox" name="elig_ratio_at_registration" value="1" ${chk(ch.elig_ratio_at_registration)}> Cek juga saat pendaftaran</label>
+          <div class="form-text">Pakai data tahun ${E.baselineMonths(p)[0].slice(0, 4)}.</div></div>
+        <div class="col-12"><div class="form-text mt-0">MOU 2026: <em>"Rebate akan diberikan jika toko mencapai target sell out dan sell-in minimal 95% sell out-nya."</em> Rasio dihitung dari bulan-bulan termin payout, semua brand yang didaftarkan. Definisi <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> dikonfirmasi.</div></div>
+
+        ${sec('<i class="bi bi-calendar3"></i> Jadwal')}
+        <div class="col-md-4"><label class="form-label">Frekuensi monitoring <span class="text-danger">*</span></label><select name="monitoring_frequency" class="form-control">${freqOpts(ch.monitoring_frequency, ['MONTHLY', 'QUARTERLY', 'SEMESTER'])}</select>
+          <div class="form-text">${per(ch.monitoring_frequency || 'QUARTERLY')}</div></div>
+        <div class="col-md-4"><label class="form-label">Payout · Conditional <span class="text-danger">*</span></label><select name="pay_CONDITIONAL" class="form-control">${freqOpts(ch.payoutSchedule.CONDITIONAL, ['QUARTERLY', 'SEMESTER'])}</select>
+          <div class="form-text">${per(ch.payoutSchedule.CONDITIONAL || 'QUARTERLY')}</div></div>
+        <div class="col-md-4"><label class="form-label">Payout · Fix <span class="text-danger">*</span></label><select name="pay_FIX" class="form-control">${freqOpts(ch.payoutSchedule.FIX, ['QUARTERLY', 'SEMESTER'])}</select>
+          <div class="form-text">${per(ch.payoutSchedule.FIX || 'SEMESTER')}</div></div>
+        <div class="col-12"><div class="form-text mt-0">Fix dibayar sesuai porsi periode Monitoring yang disetujui di termin itu, jadi termin Fix tidak boleh lebih pendek dari periode Monitoring.</div></div>
+        <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan syarat payout & jadwal</button></div>
+      </div></div></fieldset></form></div>`,
+    };
+  });
+  actions['setup.savePayoutRules'] = (f, form) => {
+    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
+    assertDraft(pid, pcId, 'PAYOUT');
+    const pc = DB.byId('programChannels', pcId);
+    const v = { elig_ratio_min: toNum(f.get('elig_ratio_min')), elig_ratio_max: toNum(f.get('elig_ratio_max')), elig_ratio_at_registration: f.has('elig_ratio_at_registration'),
+      monitoring_frequency: f.get('monitoring_frequency') };
     if (v.elig_ratio_min !== null && v.elig_ratio_max !== null && v.elig_ratio_min > v.elig_ratio_max) throw new Error('Rasio min lebih besar dari rasio maks');
     if (!C.FREQUENCIES[v.monitoring_frequency]) throw new Error('Frekuensi monitoring wajib dipilih');
     const pay = {};
@@ -383,7 +411,8 @@
     }
     const len = { MONTHLY: 1, QUARTERLY: 3, SEMESTER: 6 };
     if (len[pay.FIX] < len[v.monitoring_frequency]) throw new Error(`Payout Fix ${C.FREQUENCIES[pay.FIX]} lebih pendek dari Monitoring ${C.FREQUENCIES[v.monitoring_frequency]}: ada termin Fix tanpa periode Monitoring sehingga Fix = 0.`);
-    const before = Object.fromEntries(Object.keys(v).map((k) => [k, pc[k]]));
+    const before = Object.assign(Object.fromEntries(Object.keys(v).map((k) => [k, pc[k]])),
+      { payout: Object.fromEntries(DB.where('programPayoutSchedules', (x) => x.program_channel_id === pcId).map((x) => [x.component, x.frequency])) });
     Object.assign(pc, v);
     for (const comp of ['CONDITIONAL', 'FIX']) {
       const ex = DB.t('programPayoutSchedules').find((x) => x.program_channel_id === pcId && x.component === comp);
@@ -391,7 +420,7 @@
     }
     E.audit(pid, 'programChannel', pcId, 'update', before, Object.assign({}, v, { payout: pay }));
     touch(pid);
-    done('success', 'Eligibility & jadwal disimpan. Lanjut pilih brand peserta.', `/setup/${pid}/ch/${pcId}/eligibility`);
+    done('success', 'Syarat payout & jadwal disimpan.', `/setup/${pid}/ch/${pcId}/payout-rules`);
   };
   actions['setup.saveThreshold'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);

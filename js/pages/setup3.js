@@ -320,7 +320,7 @@
       <div class="card"><div class="card-header"><i class="bi bi-binoculars"></i>&nbsp;Fase Monitoring ${soonTag}</div><div class="card-body">
         <p class="small text-muted">Konfigurasi fase Monitoring akan diperbarui menyusul. Sampai saat itu, pengaturan yang sudah ada tetap dipakai:</p>
         <ul class="small mb-0">
-          <li>Frekuensi monitoring: <strong>${esc((C.FREQUENCIES || {})[ch.monitoring_frequency] || ch.monitoring_frequency || '-')}</strong> — di ${link('eligibility', 'Eligibility & threshold')}.</li>
+          <li>Frekuensi monitoring: <strong>${esc((C.FREQUENCIES || {})[ch.monitoring_frequency] || ch.monitoring_frequency || '-')}</strong> — di ${link('payout-rules', 'Syarat payout & jadwal')} (fase Pencairan).</li>
           <li>Lead measure & evidence: ${ch.leadMeasures.length} lead measure — di ${link('pillars', 'Pilar & saran lead measure')}.</li>
           <li>Form & approval Monitoring: ${ch.phases.MONITORING.layers.length} approval layer — di ${link('phases/MONITORING', 'Form & approval')}.</li>
         </ul></div></div></div></div>`,

@@ -1,6 +1,7 @@
 // Program Setup: lapisan tampilan supaya halaman tidak terasa penuh.
-//   1. Catatan panjang di awal kartu dilipat jadi satu baris ("Selengkapnya").
-//   2. Mode lihat / mode edit per form konfigurasi; di mode lihat angka besar diformat (40.000.000).
+//   1. Catatan panjang di awal kartu pindah ke panel "(?) Bantuan"; catatan review (⚠, Perlu konfirmasi, Menyusul) hanya tampil bila toggle aktif.
+//   2. Fase DRAFT langsung bisa diisi; bar simpan menempel di bawah (N perubahan · Batal · Simpan · Simpan & lanjut).
+//      Fase PUBLISHED / CLOSED = mode lihat, angka besar diformat (40.000.000).
 //   3. Bagian form eligibility dilipat per bagian; kelas & tier dan kondisi approval layer tampil sebagai ringkasan satu baris yang bisa dibuka;
 //      kolom Diulang / Min / Maks di tabel field fase masuk "Pengaturan lanjutan".
 // Hanya bekerja di atas DOM yang sudah dirender (setup.js / setup2.js); tidak mengubah state, aksi, validasi, atau data.
@@ -47,7 +48,7 @@
     });
   }
 
-  // ---------------------------------------------------------------- 2 · mode lihat / edit
+  // ---------------------------------------------------------------- 2 · DRAFT langsung bisa diisi; mode lihat hanya untuk fase yang sudah PUBLISHED / CLOSED
   function setMode(form, mode) {
     const f = forms.get(form);
     const fs = form.querySelector(':scope > fieldset');
@@ -55,38 +56,30 @@
     form.classList.toggle('cps-viewing', view);
     if (fs && !f.locked) fs.disabled = view;
     if (view && !audit) formatNumbers(form); else restoreNumbers(form);
-    f.dirty = false;
-    if (f.bar) {
-      f.bar.classList.toggle('is-edit', !view);
-      f.bar.querySelector('.cps-modebar-text').textContent = view ? 'Mode lihat' : 'Mode edit · simpan untuk menerapkan perubahan';
-    }
+    f.dirty.clear();
   }
 
+  let structN = 0;
+  let lastDirty = null;
   function enhanceForm(form) {
     if (forms.has(form)) return;
     const fs = form.querySelector(':scope > fieldset');
     const isNew = form.dataset.action === 'setup.header' && !form.dataset.id;
-    const f = { locked: !!(fs && fs.disabled), bar: null, dirty: false };
+    const f = { locked: !!(fs && fs.disabled), isNew, dirty: new Set() };
     forms.set(form, f);
-    if (isNew) return; // program baru langsung diisi
-    if (!f.locked) {
-      f.bar = ui(`<div class="cps-modebar"><span class="cps-modebar-text"></span>
-        <span class="cps-modebar-act">
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-cps-cancel><i class="bi bi-x-lg"></i> Batal</button>
-          <button type="button" class="btn btn-sm btn-outline-brand" data-cps-edit><i class="bi bi-pencil"></i> Edit</button>
-        </span></div>`);
-      form.before(f.bar);
-      f.bar.querySelector('[data-cps-edit]').addEventListener('click', () => setMode(form, 'edit'));
-      f.bar.querySelector('[data-cps-cancel]').addEventListener('click', () => {
-        if (f.dirty && !confirm('Batalkan perubahan yang belum disimpan?')) return;
-        UI.render(); // gambar ulang dari data tersimpan
-      });
-      form.addEventListener('input', () => { f.dirty = true; });
-      form.addEventListener('change', () => { f.dirty = true; });
-    }
-    // gagal validasi header (UI.retry) → tetap di mode edit supaya isian bisa langsung diperbaiki
-    const retryErrors = form.closest('.cps') && form.closest('.cps').querySelector('.alert-danger ul');
-    setMode(form, audit || retryErrors ? 'edit' : 'view');
+    if (isNew) return; // program baru: tombol simpan form sendiri
+    setMode(form, f.locked ? 'view' : 'edit');
+    if (f.locked) return;
+    // tombol simpan di dalam form diganti bar simpan di bawah layar (tetap dipakai sebagai submitter)
+    form.querySelectorAll('button').forEach((b) => { if ((b.getAttribute('type') || 'submit') === 'submit') b.classList.add('cps-inline-save'); });
+    const mark = (key) => { f.dirty.add(key); lastDirty = form; updateBar(); };
+    form.addEventListener('input', (e) => mark(e.target));
+    form.addEventListener('change', (e) => mark(e.target));
+    // tambah / hapus / geser baris lewat tombol di form juga dihitung sebagai perubahan
+    form.addEventListener('click', (e) => {
+      const b = e.target.closest('button[type="button"], [data-act]');
+      if (b && form.contains(b) && !b.closest('[data-cps-ui]')) mark('s' + (++structN));
+    });
   }
   // Isi form yang digambar ulang oleh draw() saat mode lihat ikut diformat
   function refreshViewing(root) {
@@ -94,7 +87,165 @@
     root.querySelectorAll('form.cps-viewing').forEach((form) => formatNumbers(form));
   }
 
-  // ---------------------------------------------------------------- 1 · catatan panjang dilipat
+  // ---------------------------------------------------------------- 2 · bar simpan menempel di bawah: N perubahan · Batal · Simpan · Simpan & lanjut
+  let bar = null;
+  const editableForms = () => [...document.querySelectorAll('#app .cps form[data-action]')].filter((x) => forms.has(x) && !forms.get(x).locked && !forms.get(x).isNew);
+  const dirtyForms = () => editableForms().filter((x) => forms.get(x).dirty.size);
+  const nextInfo = () => document.querySelector('#app [data-cps-next]');
+  const isDirty = () => dirtyForms().length > 0;
+  function saveTarget() { const d = dirtyForms(); return d.includes(lastDirty) ? lastDirty : d[0] || null; }
+
+  // Bar ada di akhir .cps (sticky bawah, selebar isi); dibuat ulang setiap halaman digambar ulang
+  function ensureBar() {
+    const host = document.querySelector('#app .cps');
+    if (bar && host.contains(bar)) return bar;
+    bar = ui(`<div class="cps-savebar" hidden><div class="cps-savebar-in">
+      <a class="btn btn-sm btn-ghost cps-savebar-prev" data-sb="prev"><i class="bi bi-arrow-left"></i> Kembali</a>
+      <span class="cps-savebar-text"></span>
+      <span class="cps-savebar-act">
+        <button type="button" class="btn btn-sm btn-ghost" data-sb="cancel">Batal</button>
+        <button type="button" class="btn btn-sm btn-outline-brand" data-sb="save"><i class="bi bi-save"></i> Simpan</button>
+        <button type="button" class="btn btn-sm btn-brand" data-sb="next">Simpan & lanjut <i class="bi bi-arrow-right"></i></button>
+        <a class="btn btn-sm btn-brand" data-sb="go">Lanjut <i class="bi bi-arrow-right"></i></a>
+      </span></div></div>`);
+    host.appendChild(bar);
+    bar.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-sb]');
+      if (!b) return;
+      const act = b.dataset.sb;
+      if (act === 'cancel') { if (confirm('Batalkan perubahan yang belum disimpan?')) UI.render(); return; }
+      if (act === 'save' || act === 'next') save(act === 'next');
+    });
+    return bar;
+  }
+  function save(withNext) {
+    const form = saveTarget();
+    if (!form) return;
+    const others = dirtyForms().filter((x) => x !== form);
+    if (others.length && !confirm('Ada perubahan di bagian lain halaman ini yang belum disimpan dan akan hilang. Simpan bagian yang terakhir diubah saja?')) return;
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const nx = nextInfo();
+    UI.setNext(withNext && nx ? nx.dataset.cpsNext : null);
+    const btn = form.querySelector('.cps-inline-save');
+    form.requestSubmit(btn || undefined);
+  }
+  function updateBar() {
+    const onSetup = !!document.querySelector('#app .cps');
+    const list = onSetup ? editableForms() : [];
+    const nx = onSetup ? nextInfo() : null;
+    const show = !!(list.length || nx);
+    if (!show) { if (bar) bar.hidden = true; return; }
+    const b = ensureBar();
+    b.hidden = false;
+    const d = dirtyForms();
+    const n = d.reduce((s, x) => s + forms.get(x).dirty.size, 0);
+    b.classList.toggle('is-dirty', n > 0);
+    b.querySelector('.cps-savebar-text').innerHTML = n ? `<i class="bi bi-pencil-square"></i> <strong>${n} perubahan</strong> belum disimpan${d.length > 1 ? ` di ${d.length} bagian` : ''}`
+      : list.length ? '<i class="bi bi-check2"></i> Semua perubahan tersimpan' : '<i class="bi bi-lock"></i> Fase ini read-only';
+    const label = nx ? nx.dataset.cpsNextLabel : '';
+    const vis = (k, on) => { b.querySelector(`[data-sb="${k}"]`).hidden = !on; };
+    const pv = document.querySelector('#app [data-cps-prev]');
+    vis('cancel', n > 0); vis('save', n > 0); vis('next', n > 0 && !!nx); vis('go', !n && !!nx); vis('prev', !!pv);
+    if (pv) { const a = b.querySelector('[data-sb="prev"]'); a.href = '#' + pv.dataset.cpsPrev; a.innerHTML = `<i class="bi bi-arrow-left"></i> ${h.esc(pv.dataset.cpsPrevLabel)}`; }
+    if (nx) {
+      b.querySelector('[data-sb="next"]').innerHTML = `Simpan & lanjut: ${h.esc(label)} <i class="bi bi-arrow-right"></i>`;
+      const go = b.querySelector('[data-sb="go"]');
+      go.href = '#' + nx.dataset.cpsNext;
+      go.innerHTML = `Lanjut: ${h.esc(label)} <i class="bi bi-arrow-right"></i>`;
+    }
+  }
+  // Pindah halaman (link / pemilih channel) saat masih ada perubahan → konfirmasi dulu
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#/"]');
+    if (!a || !isDirty()) return;
+    if (!confirm('Perubahan di halaman ini belum disimpan dan akan hilang. Tetap pindah?')) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  document.addEventListener('change', (e) => {
+    const s = e.target.closest && e.target.closest('[data-cps-goto]');
+    if (s) {
+      if (isDirty() && !confirm('Perubahan di halaman ini belum disimpan dan akan hilang. Tetap pindah?')) { s.value = s.querySelector('option[selected]') ? s.querySelector('option[selected]').value : s.value; return; }
+      location.hash = s.value;
+      return;
+    }
+    const r = e.target.closest && e.target.closest('[data-cps-review]');
+    if (r) setReview(r.checked);
+  });
+
+  // "Penjelasan lengkap" di judul langkah membuka panel Bantuan (hanya tampil bila halaman punya catatan panjang)
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-cps-help-open]')) openHelp(null); });
+  document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-cps-help-open]')) { e.preventDefault(); openHelp(null); } });
+
+  // ---------------------------------------------------------------- catatan review (⚠, "Perlu konfirmasi", "Menyusul") disembunyikan kecuali toggle aktif
+  const REVIEW_KEY = 'tradee2027-show-review';
+  function getReview() { try { return localStorage.getItem(REVIEW_KEY) === '1'; } catch (e) { return false; } }
+  function setReview(on) {
+    try { localStorage.setItem(REVIEW_KEY, on ? '1' : '0'); } catch (e) { /* storage tidak tersedia */ }
+    applyReview();
+  }
+  function applyReview() {
+    const on = audit || getReview();
+    document.body.classList.toggle('cps-review-on', on);
+    document.querySelectorAll('[data-cps-review]').forEach((c) => { c.checked = on; });
+  }
+
+  // ---------------------------------------------------------------- 1 · catatan panjang pindah ke panel (?) Bantuan
+  let drawer = null;
+  const headTitle = (head) => {
+    const c = head.cloneNode(true);
+    c.querySelectorAll('[data-cps-ui], .cps-confirm, .cps-soon, .step-chip, .warn-mark, .btn, .cps-phase-st').forEach((x) => x.remove());
+    return c.textContent.replace(/\s+/g, ' ').trim();
+  };
+  function ensureDrawer() {
+    if (drawer) return drawer;
+    drawer = ui(`<aside class="cps-help" hidden aria-label="Bantuan"><div class="cps-help-head"><strong><i class="bi bi-question-circle"></i> Bantuan</strong>
+      <button type="button" class="btn btn-sm btn-ghost" data-help-close aria-label="Tutup"><i class="bi bi-x-lg"></i></button></div><div class="cps-help-body"></div></aside>`);
+    document.body.appendChild(drawer);
+    drawer.querySelector('[data-help-close]').addEventListener('click', () => { drawer.hidden = true; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer && !drawer.hidden) drawer.hidden = true; });
+    window.addEventListener('hashchange', () => { if (drawer) drawer.hidden = true; });
+    return drawer;
+  }
+  function openHelp(focusNote) {
+    const d = ensureDrawer();
+    const notes = [...document.querySelectorAll('#app .cps-help-src')];
+    d.querySelector('.cps-help-body').innerHTML = '';
+    let prevCard = null;
+    notes.forEach((p) => {
+      const card = p.closest('.card');
+      const head = card.querySelector(':scope > .card-header');
+      const sec = document.createElement('section');
+      sec.className = 'cps-help-sec' + (p === focusNote ? ' is-focus' : '') + (card === prevCard ? ' is-cont' : '');
+      sec.innerHTML = card === prevCard ? '' : `<h6>${h.esc(headTitle(head))}</h6>`;
+      prevCard = card;
+      const body = p.cloneNode(true);
+      body.hidden = false;
+      body.classList.remove('cps-help-src', 'small', 'text-muted', 'mb-3', 'mb-2', 'form-text');
+      sec.appendChild(body);
+      d.querySelector('.cps-help-body').appendChild(sec);
+      if (p === focusNote) setTimeout(() => sec.scrollIntoView({ block: 'start' }), 0);
+    });
+    d.hidden = false;
+  }
+  function enhanceHelp(root) {
+    // catatan pembuka kartu + penjelasan panjang lain langsung di badan kartu (teks kecil abu-abu / form-text)
+    root.querySelectorAll('.cps .card-body > p.small.text-muted:first-child, .cps .card-body > div.small.text-muted, .cps .card-body > .form-text').forEach((p) => {
+      if (bound.has(p) || p.textContent.trim().length < NOTE_MIN || p.querySelector('input, select, button, a.btn')) return;
+      const head = p.closest('.card') && p.closest('.card').querySelector(':scope > .card-header');
+      if (!head) return; // tanpa header kartu: dilipat seperti biasa (enhanceNotes)
+      bound.add(p);
+      p.classList.add('cps-help-src');
+      p.hidden = !audit;
+      if (!head.querySelector('.cps-help-btn') && !root.querySelector('[data-cps-help-open]')) { // halaman channel: cukup "Penjelasan lengkap" di judul langkah
+        const btn = ui('<span class="cps-help-btn" role="button" tabindex="0" title="Penjelasan bagian ini"><i class="bi bi-question-circle"></i> Bantuan</span>');
+        const act = head.querySelector(':scope > .btn, :scope > button, :scope > a.btn');
+        if (act) act.before(btn); else head.appendChild(btn);
+        btn.addEventListener('click', () => openHelp(p));
+        btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHelp(p); } });
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------- catatan pendek tanpa header kartu dilipat
   function enhanceNotes(root) {
     root.querySelectorAll('.cps .card-body > p.small.text-muted:first-child').forEach((p) => {
       if (bound.has(p) || p.textContent.trim().length < NOTE_MIN) return;
@@ -242,14 +393,18 @@
   // ---------------------------------------------------------------- jalankan setelah setiap render / draw()
   function enhance() {
     const root = document.getElementById('app');
-    if (!root || !root.querySelector('.cps')) return;
+    if (!root || !root.querySelector('.cps')) { updateBar(); return; }
     root.querySelectorAll('.cps form[data-action]').forEach((form) => { if (VIEW_FORMS.includes(form.dataset.action)) enhanceForm(form); });
+    enhanceHelp(root);
+    const ho = root.querySelector('[data-cps-help-open]'); if (ho) ho.hidden = !root.querySelector('.cps-help-src');
     enhanceNotes(root);
     enhanceSections(root);
     enhanceClasses(root);
     enhanceLayers(root);
     enhancePhaseFields(root);
     refreshViewing(root);
+    applyReview();
+    updateBar();
   }
   const app = document.getElementById('app');
   const mo = new MutationObserver(() => {
@@ -270,6 +425,9 @@
       document.querySelectorAll('.cps .class-card.is-folded, .cps .layer-card.is-folded').forEach((c) => c.classList.remove('is-folded'));
       document.querySelectorAll('.cps table.phase-fields.cps-adv-off').forEach((t) => t.classList.remove('cps-adv-off'));
       document.querySelectorAll('.cps .cps-sec-box.is-folded').forEach((b) => b.classList.remove('is-folded'));
+      document.querySelectorAll('.cps .cps-help-src').forEach((x) => { x.hidden = false; });
+      document.querySelectorAll('.cps tr.cps-cls-detail[hidden], .cps tr.cps-brand-detail[hidden]').forEach((x) => { x.hidden = false; });
+      applyReview();
     },
   };
 })();

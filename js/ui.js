@@ -455,7 +455,7 @@
       if (err instanceof Redirect) { go(err.to); return; }
       console.error(err);
       showFormError(form, esc(err.message));
-    }
+    } finally { nextTo = null; }
   });
 
   // Gagal simpan: error tampil di atas form tanpa menggambar ulang halaman, jadi isian yang belum tersimpan tidak hilang
@@ -612,7 +612,10 @@
   }
 
   // Simpan + flash + pindah halaman
-  function done(type, message, to) { DB.save(); flash(type, message); go(to); }
+  // "Simpan & lanjut" (setup-view.js) mengganti tujuan sesudah simpan berhasil lewat UI.setNext(path) tepat sebelum submit
+  let nextTo = null;
+  function setNext(path) { nextTo = path || null; }
+  function done(type, message, to) { DB.save(); flash(type, message); go(nextTo && type === 'success' ? nextTo : to); nextTo = null; }
 
   // Gagal validasi: render ulang halaman yang sama dengan error + nilai form yang sudah diisi
   let pending = null;
@@ -633,7 +636,7 @@
 
   window.UI = {
     h, session, currentUser, currentYear, inScope, store, route, go, render, flash, redirect, fail, requireRole, requireSetup,
-    actions, clicks, download, parseCsv, toCsv, fieldInput, readFieldValues, logHtml, layerPath, approvalBox, errorsHtml, detailHead, done, parseHash, pendingFor,
+    actions, clicks, download, parseCsv, toCsv, fieldInput, readFieldValues, logHtml, layerPath, approvalBox, errorsHtml, detailHead, done, setNext, parseHash, pendingFor,
     retry, takePending,
   };
 })();

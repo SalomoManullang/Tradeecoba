@@ -85,7 +85,8 @@
         <div id="followNote"></div>
         ${iss.length ? `<div class="alert alert-danger py-2 small">${esc(iss.join('; '))}. Diblokir saat publish Pendaftaran.</div>` : ''}
         <div class="small text-muted mb-2">Kelas toko ditentukan dari baseline: baseline ≥ min dan &lt; maks masuk kelas itu (Rp juta / bulan; batas atas boleh kosong). <strong>Growth</strong> = target growth tier (step kelipatan 5%, naik per tier); target 2027 = baseline × 12 × (1 + growth). <strong>Total conditional = semester rebate + yearly rebate</strong> (dihitung, tidak diisi).</div>
-        <div class="table-responsive"><table class="table table-sm scheme-table mb-2"><thead><tr><th style="width:100px">Kelas</th><th style="width:230px">Baseline / bulan <span class="text-muted fw-normal">min – maks</span></th>
+        <div class="d-flex justify-content-end mb-1"><span class="cps-cls-all small text-brand" role="button" tabindex="0" id="clsAll">Buka semua tier</span></div>
+        <div class="table-responsive"><table class="table table-sm scheme-table mb-2"><thead><tr><th style="width:100px">Kelas</th><th style="width:230px">Baseline / bulan <span class="text-muted fw-normal">Rp juta, min – maks</span></th>
           <th style="width:80px">Tier</th><th style="width:120px">Growth</th><th>Semester rebate</th><th>Yearly rebate</th><th class="num">Total conditional</th><th>Total Vision Compass</th><th></th></tr></thead><tbody id="clsRows"></tbody></table></div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan skema ${esc(brand.brand_name)}</button>
       </div></div></fieldset></form></div></div>`,
@@ -98,6 +99,15 @@
         const box = root.querySelector('#clsRows'); const sel2 = root.querySelector('#follow');
         const n = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
         const inp = (ci, ti, k, v, unit) => `<div class="input-group input-group-sm"><input type="number" step="any" min="0" class="form-control" data-c="${ci}" ${ti === null ? '' : `data-t="${ti}"`} data-k="${k}" value="${nv(v)}" ${k === 'max' ? 'placeholder="∞"' : k === 'min' ? 'placeholder="min"' : ''}>${unit ? `<span class="input-group-text">${unit}</span>` : ''}</div>`;
+        // Kelas terbuka: kelas baru & kelas yang bermasalah; sisanya cukup baris ringkasan
+        const open = new Set(state.map((c, ci) => ci).filter((ci) => !state[ci].code || iss.some((x) => x.includes(`kelas ${state[ci].code}`)) || SM.growthIssues(own[ci] || { tiers: [] }).length));
+        const rangeText = (c) => (c.min === null ? '<span class="text-danger">baseline min kosong</span>' : c.max === null ? `≥ Rp ${fmtNum(c.min, 1)} jt` : `Rp ${fmtNum(c.min, 1)} – ${fmtNum(c.max, 1)} jt`);
+        const sumCells = (c, ci) => `<td class="cls-cell"><span class="cps-cls-tg" role="button" tabindex="0" data-tg="${ci}"><i class="bi bi-chevron-${open.has(ci) ? 'down' : 'right'}"></i> <strong>${h.esc(c.code || 'Kelas baru')}</strong></span></td>
+          <td class="small">${rangeText(c)}</td>
+          <td colspan="5"><div class="cps-tier-chips">${c.tiers.map((t, ti) => `<span class="cps-tier-chip" title="Tier ${ti + 1}: growth ${pct(n(t.growth_pct))} → total conditional ${pct(SM.tierTotal(t))}"><span class="t">T${ti + 1}</span>${pct(n(t.growth_pct))} → <strong>${pct(SM.tierTotal(t))}</strong></span>`).join('') || '<span class="text-danger small">Belum ada tier</span>'}
+            <span class="cps-cls-tg cps-txtbtn" role="button" tabindex="0" data-tg="${ci}"><i class="bi bi-${open.has(ci) ? 'chevron-up' : 'pencil'}"></i> ${open.has(ci) ? 'Tutup' : ro || sel2.value ? 'Lihat tier' : 'Ubah tier'}</span></div></td>
+          <td class="small">${c.vc_pct === null || c.vc_pct === undefined || c.vc_pct === '' ? '-' : pct(n(c.vc_pct))}</td>
+          <td></td>`;
         function draw() {
           const ref = sel2.value;
           const rows = ref ? toState(SM.schemeOf(st, ref).classes) : state;
@@ -109,13 +119,17 @@
             const tail = `<td rowspan="${span}">${inp(ci, null, 'vc_pct', c.vc_pct, '%')}</td>
               <td rowspan="${span}" class="text-right text-nowrap"><button type="button" class="btn btn-sm btn-light" data-act="addTier" data-c="${ci}" title="Tambah tier"><i class="bi bi-plus"></i> Tier</button>
                 <button type="button" class="btn btn-sm btn-light text-danger" data-act="delCls" data-c="${ci}" title="Hapus kelas"><i class="bi bi-trash"></i></button></td>`;
-            if (!c.tiers.length) return `<tr class="cls-first">${head}<td colspan="5" class="text-danger small">Belum ada tier.</td>${tail}</tr>`;
-            return c.tiers.map((t, ti) => `<tr class="${ti === 0 ? 'cls-first' : ''}">${ti === 0 ? head : ''}
+            const hid = open.has(ci) ? '' : 'hidden';
+            const sum = `<tr class="cps-cls-sum ${open.has(ci) ? 'is-open' : ''}" data-sum="${ci}">${sumCells(c, ci)}</tr>`;
+            if (!c.tiers.length) return `${sum}<tr class="cls-first cps-cls-detail" ${hid}>${head}<td colspan="5" class="text-danger small">Belum ada tier.</td>${tail}</tr>`;
+            return sum + c.tiers.map((t, ti) => `<tr class="cps-cls-detail ${ti === 0 ? 'cls-first' : ''}" ${hid}>${ti === 0 ? head : ''}
               <td class="text-nowrap">Tier ${ti + 1} <button type="button" class="btn btn-sm btn-link text-danger p-0" data-act="delTier" data-c="${ci}" data-t="${ti}" title="Hapus tier"><i class="bi bi-x"></i></button></td>
               <td>${inp(ci, ti, 'growth_pct', t.growth_pct, '%')}</td><td>${inp(ci, ti, 'semester_pct', t.semester_pct, '%')}</td><td>${inp(ci, ti, 'yearly_pct', t.yearly_pct, '%')}</td>
               <td class="num fw-semibold" data-total="${ci}-${ti}">${pct(SM.tierTotal(t))}</td>${ti === 0 ? tail : ''}</tr>`).join('');
           }).join('') || '<tr><td colspan="9" class="text-muted small">Belum ada kelas.</td></tr>';
           if (ro || ref) box.querySelectorAll('input,button').forEach((x) => { x.disabled = true; });
+          const tb = root.querySelector('#clsAll');
+          if (tb) tb.textContent = rows.length && rows.every((c, ci) => open.has(ci)) ? 'Tutup semua tier' : 'Buka semua tier';
           root.querySelector('#addCls').disabled = ro || !!ref;
         }
         box.addEventListener('input', (e) => {
@@ -123,6 +137,17 @@
           const tgt = x.dataset.t === undefined ? state[ci] : state[ci].tiers[x.dataset.t];
           tgt[k] = k === 'code' ? x.value.trim().toUpperCase() : n(x.value);
           if (x.dataset.t !== undefined) box.querySelector(`[data-total="${ci}-${x.dataset.t}"]`).textContent = pct(SM.tierTotal(tgt));
+          const sr = box.querySelector(`[data-sum="${ci}"]`);
+          if (sr) sr.innerHTML = sumCells(state[ci], Number(ci));
+        });
+        const toggleCls = (ci) => { if (open.has(ci)) open.delete(ci); else open.add(ci); draw(); };
+        box.addEventListener('click', (e) => { const t = e.target.closest('[data-tg]'); if (t) toggleCls(Number(t.dataset.tg)); });
+        box.addEventListener('keydown', (e) => { const t = e.target.closest('[data-tg]'); if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleCls(Number(t.dataset.tg)); } });
+        root.querySelector('#clsAll').addEventListener('click', () => {
+          const total = (sel2.value ? SM.schemeOf(st, sel2.value).classes : state).length;
+          const all = total && [...Array(total).keys()].every((i) => open.has(i));
+          open.clear(); if (!all) for (let i = 0; i < total; i++) open.add(i);
+          draw();
         });
         box.addEventListener('click', (e) => {
           const btn = e.target.closest('[data-act]'); if (!btn || sel2.value) return;
@@ -132,12 +157,17 @@
             c.tiers.push({ growth_pct: n(last.growth_pct) === null ? null : n(last.growth_pct) + 5, semester_pct: nv(last.semester_pct) === '' ? null : last.semester_pct, yearly_pct: null }); // step kelipatan 5%
           }
           if (btn.dataset.act === 'delTier') c.tiers.splice(Number(btn.dataset.t), 1);
-          if (btn.dataset.act === 'delCls') state.splice(Number(btn.dataset.c), 1);
+          if (btn.dataset.act === 'delCls') {
+            const ci = Number(btn.dataset.c);
+            state.splice(ci, 1);
+            const moved = [...open].filter((i) => i !== ci).map((i) => (i > ci ? i - 1 : i)); open.clear(); moved.forEach((i) => open.add(i));
+          }
           draw();
         });
         root.querySelector('#addCls').addEventListener('click', () => {
           const last = state[state.length - 1];
           state.push({ code: '', orig: null, min: last && last.max !== null ? last.max : null, max: null, vc_pct: null, tiers: last ? last.tiers.map((t) => ({ growth_pct: t.growth_pct, semester_pct: null, yearly_pct: null })) : [{ growth_pct: null, semester_pct: null, yearly_pct: null }] });
+          open.add(state.length - 1);
           draw();
         });
         sel2.addEventListener('change', draw);

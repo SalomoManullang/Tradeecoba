@@ -65,7 +65,111 @@
         || `<tr><td colspan="${SM.PHASES.length + 1}" class="text-center text-muted py-4">Belum ada channel.</td></tr>`}</tbody></table></div>`;
   }
 
-  // Header program + stepper alur setup + kartu kerja channel (pemilih channel → tab fase → bagian fase)
+  // Status satu bagian konfigurasi channel untuk panel "Daftar langkah": done · partial · todo · info (halaman ringkasan)
+  function sectionStatus(ch, k) {
+    const pc = DB.byId('programChannels', ch.id) || {};
+    const st = SM.setupOf(ch);
+    const n = ch.brands.length;
+    const of = (ok, total, unit) => ({ s: !total || !ok ? 'todo' : ok >= total ? 'done' : 'partial', hint: total ? `${ok}/${total}${unit ? ' ' + unit : ''}` : '' });
+    const isSet = (v) => v !== null && v !== undefined && v !== '';
+    if (k === 'brands') return { s: n ? 'done' : 'todo', hint: n ? `${n} brand` : '' };
+    if (k === 'scheme') {
+      const ok = ch.brands.filter((b) => {
+        if ((st.scheme_follow || {})[b.brand_code]) return true;
+        const cls = SM.hasSchemes(st) ? SM.schemeOf(st, b.brand_code).classes : b.classes;
+        return cls.length && cls.every((c) => !c.tiers || (c.tiers.length && !SM.growthIssues(c).length));
+      }).length;
+      return of(ok, n, 'brand');
+    }
+    if (k === 'pillars') {
+      if (!ch.pillars.length) return { s: 'todo', hint: '' };
+      const ok = ch.brands.filter((b) => lmClasses(ch, b).every((c) => (b.lm_targets || {})[c.code])).length;
+      return ok < n ? of(ok, n, 'target') : { s: 'done', hint: `${ch.pillars.length} pilar` };
+    }
+    if (k === 'eligibility') {
+      const any = isSet(pc.elig_min_sell_out_months) || pc.elig_prior_payout_required || (pc.elig_exclusive_program_ids || []).length || isSet((st.threshold || {}).value);
+      return { s: any ? 'done' : 'todo', hint: '' };
+    }
+    if (k === 'limits') return { s: Object.values(st.rules || {}).some(isSet) ? 'done' : 'todo', hint: '' };
+    if (k.startsWith('phases/')) {
+      const ph = ch.phases[k.split('/')[1]];
+      return { s: ph.fields.length && ph.layers.length ? 'done' : ph.fields.length || ph.layers.length ? 'partial' : 'todo', hint: ph.layers.length ? `${ph.layers.length} layer` : '' };
+    }
+    if (k === 'documents') {
+      const types = Object.keys(C.DOC_TYPES);
+      return of(types.filter((t) => ch.documents[t] && ch.documents[t].latest && (ch.documents[t].latest.content.sections || []).length).length, types.length);
+    }
+    if (k === 'monitoring') return { s: 'info', hint: '' };
+    if (k === 'payout-rules') return { s: DB.where('programPayoutSchedules', (x) => x.program_channel_id === ch.id).length ? 'done' : 'todo', hint: '' };
+    if (k === 'terms') return { s: !st.terms.length ? 'todo' : SM.termErrors(st).length ? 'partial' : 'done', hint: st.terms.length ? `${st.terms.length} termin` : '' };
+    if (k === 'formulas') return of(C.FORMULA_SLOTS.filter((x) => { const f = E.formulaFor(ch, x.code, null); return f && String(f.expression || '').trim(); }).length, C.FORMULA_SLOTS.length);
+    return { s: 'todo', hint: '' };
+  }
+  const ST_ICON = { done: 'bi-check-circle-fill', partial: 'bi-circle-half', todo: 'bi-circle', info: 'bi-info-circle' };
+  const ST_TITLE = { done: 'Sudah diisi', partial: 'Sebagian', todo: 'Belum diisi', info: 'Ringkasan' };
+
+  // Satu kalimat "yang diisi di sini" per bagian (selalu tampil; penjelasan panjang tetap di Bantuan)
+  const SECTION_INFO = {
+    brands: 'Pilih brand yang ikut program di channel ini, sub-brand yang memakai skemanya, dan baseline minimal untuk mendaftar.',
+    scheme: 'Atur kelas toko (rentang baseline) serta target growth dan rebate tiap tier, untuk setiap brand.',
+    pillars: 'Tentukan pilar channel, lalu JTBD, lead measure, dan target per kelas untuk setiap brand.',
+    eligibility: 'Tentukan syarat toko boleh mendaftar dan threshold-nya.',
+    limits: 'Tentukan batas persen benefit di channel ini dan siapa yang menyetujui exception bila batas terlampaui.',
+    'phases/REGISTRATION': 'Atur field yang diisi CBD/CDT saat mendaftarkan toko, dan urutan approval-nya.',
+    documents: 'Atur template MoU dan SKN yang dibuat otomatis untuk toko yang disetujui.',
+    monitoring: 'Ringkasan pengaturan Monitoring yang sudah ada; konfigurasi lengkap menyusul.',
+    'phases/MONITORING': 'Atur field laporan monitoring dan urutan approval-nya.',
+    'payout-rules': 'Atur syarat rasio pencairan, frekuensi monitoring, dan jadwal payout Conditional & Fix.',
+    terms: 'Atur termin pencairan (semester / tahunan) dan porsi tiap termin.',
+    formulas: 'Rumus perhitungan payout yang dipakai channel ini (dibuat Admin IT).',
+    'phases/PAYOUT': 'Atur field form pencairan dan urutan approval sampai final.',
+  };
+
+  // Navigasi channel yang selalu terlihat: channel · tab fase · langkah bernomor fase aktif · judul "Langkah N dari M" + ringkasan
+  function outline(p, ch, sub) {
+    const cur = phaseOfSub(sub);
+    const items = SM.PHASES.map(([ph, l]) => ({ ph, l, st: SM.phaseStatus(ch, ph), rows: PHASE_TABS[ph].map(([k, label, later]) => Object.assign({ k, label, later }, sectionStatus(ch, k))) }));
+    const prog = (rows) => { const c = rows.filter((r) => r.s !== 'info'); return [c.filter((r) => r.s === 'done').length, c.length]; };
+    const curItem = items.find((x) => x.ph === cur);
+    const idx = Math.max(0, curItem.rows.findIndex((r) => r.k === sub));
+    const curRow = curItem.rows[idx];
+    const href = (k) => `#/setup/${p.id}/ch/${ch.id}/${k}`;
+    return `<div class="cps-chrow"><label class="mb-0" for="cpsCh">Channel</label>
+        <select id="cpsCh" class="form-control form-control-sm" data-cps-goto>${p.channels.map((c) => `<option value="#/setup/${p.id}/ch/${c.id}/${sub}" ${sel(c.id === ch.id)}>${esc(c.channel_name)}</option>`).join('')}</select>
+        <a class="btn btn-sm btn-outline-brand" href="#/setup/${p.id}/channels"><i class="bi bi-plus-lg"></i> Channel</a>
+        <label class="cps-ol-switch mb-0"><input type="checkbox" data-cps-review> Tampilkan catatan review</label></div>
+      <ul class="cps-phtabs">${items.map(({ ph, l, st, rows }) => { const [d, t] = prog(rows);
+        return `<li><a class="${ph === cur ? 'active' : ''}" href="${href(rows[0].k)}"><span class="cps-phtab-l">${l}</span>${statusTag(st)}<span class="cps-phtab-count">${d}/${t} selesai</span></a></li>`; }).join('')}</ul>
+      <ol class="cps-stepper">${curItem.rows.map((r, i) => `<li class="st-${r.s} ${r.k === sub ? 'active' : ''}"><a href="${href(r.k)}" title="${i + 1}. ${r.label}: ${ST_TITLE[r.s]}${r.hint ? ' · ' + r.hint : ''}">
+        <span class="cps-step-n">${r.s === 'done' && r.k !== sub ? '<i class="bi bi-check-lg"></i>' : i + 1}</span><span class="cps-step-l">${r.label}${r.later ? soonTag : ''}${r.k === 'pillars' ? confirmTag : ''}</span></a></li>`).join('')}</ol>
+      <div class="cps-steptitle"><div class="cps-steptitle-n">Langkah ${idx + 1} dari ${curItem.rows.length} · ${PL[cur]}</div>
+        <h2>${curRow.label} <span class="cps-steptitle-st st-${curRow.s}"><i class="bi ${ST_ICON[curRow.s]}"></i> ${ST_TITLE[curRow.s]}${curRow.hint ? ` · ${curRow.hint}` : ''}</span></h2>
+        <p>${SECTION_INFO[curRow.k] || ''} <span class="cps-help-open" role="button" tabindex="0" data-cps-help-open hidden><i class="bi bi-question-circle"></i> Penjelasan lengkap</span></p></div>`;
+  }
+  // Bagian sebelumnya (tombol "← Kembali" di bar bawah)
+  function prevStep(p, ch, sub) {
+    const flat = SM.PHASES.flatMap(([ph]) => PHASE_TABS[ph].map(([k, l]) => [`/setup/${p.id}/ch/${ch.id}/${k}`, l, k]));
+    const i = flat.findIndex((x) => x[2] === sub);
+    return i > 0 ? flat[i - 1] : [`/setup/${p.id}/channels`, 'Daftar channel'];
+  }
+
+  // Tujuan "Simpan & lanjut": bagian berikutnya di fase yang sama → fase berikutnya → channel berikutnya → Simulasi
+  function nextStep(p, step, ch, sub) {
+    if (ch) {
+      const flat = SM.PHASES.flatMap(([ph]) => PHASE_TABS[ph].map(([k, l]) => [`/setup/${p.id}/ch/${ch.id}/${k}`, l, k]));
+      const i = flat.findIndex((x) => x[2] === sub);
+      if (i >= 0 && i < flat.length - 1) return flat[i + 1];
+      const nextCh = p.channels[p.channels.findIndex((c) => c.id === ch.id) + 1];
+      return nextCh ? [`/setup/${p.id}/ch/${nextCh.id}/brands`, `Channel ${nextCh.channel_name}`] : [`/setup/${p.id}/simulate`, 'Simulasi'];
+    }
+    const first = p.channels[0];
+    if (step === 'header') return [`/setup/${p.id}/channels`, 'Channel'];
+    if (step === 'channels') return first ? [`/setup/${p.id}/ch/${first.id}/brands`, `Konfigurasi ${first.channel_name}`] : null;
+    if (step === 'simulate') return [`/setup/${p.id}/validate`, 'Validasi & publish'];
+    return null;
+  }
+
+  // Header program + langkah program (breadcrumb ringkas) + area kerja channel (tab fase + langkah bernomor di atas, isi selebar penuh)
   function nav(p, step, ch, sub) {
     const first = p.channels[0];
     const steps = [
@@ -79,16 +183,14 @@
     const phase = ch ? phaseOfSub(sub) : null;
     const st = ch ? SM.phaseStatus(ch, phase) : null;
     const lock = !ch || st === 'DRAFT' ? ''
-      : st === 'PUBLISHED' ? `<div class="alert alert-success py-2 small mb-3"><i class="bi bi-lock"></i>&nbsp;<span>Fase <strong>${PL[phase]}</strong> channel ${esc(ch.channel_name)} PUBLISHED: bagian fase ini <strong>read-only</strong>${phase === 'REGISTRATION' ? ' (template MoU / SKN tetap bisa direvisi)' : ''}. Fase lain di channel ini tetap bisa diedit.</span></div>`
-      : `<div class="alert alert-dark py-2 small mb-3"><i class="bi bi-archive"></i>&nbsp;<span>Fase <strong>${PL[phase]}</strong> channel ${esc(ch.channel_name)} CLOSED: read-only, termasuk template dokumen. Tetap tersedia untuk audit & laporan.</span></div>`;
-    // Kartu kerja channel; ditutup di akhir template tiap route channel
-    const href = (k) => `#/setup/${p.id}/ch/${ch.id}/${k}`;
-    const chNav = ch ? `<div class="cps-work"><div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-arrow-repeat"></i> Ulangi untuk setiap channel</div>
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">${p.channels.map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/setup/${p.id}/ch/${c.id}/${sub}">${esc(c.channel_name)}</a>`).join('')}</div>
-        <ul class="nav nav-tabs phase-tabs mb-0">${SM.PHASES.map(([ph, l]) => `<li class="nav-item"><a class="nav-link ${ph === phase ? 'active' : ''}" href="${href(PHASE_TABS[ph][0][0])}">${l}
-          ${ph === 'REGISTRATION' ? '' : soonTag}${statusTag(SM.phaseStatus(ch, ph))}</a></li>`).join('')}</ul>
-        <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-brand sub-tabs mb-0">${PHASE_TABS[phase].map(([k, l, later]) => `<li class="nav-item"><a class="nav-link ${sub === k ? 'active' : ''}"
-          href="${href(k)}">${l}${later ? soonTag : ''}${k === 'pillars' ? confirmTag : ''}</a></li>`).join('')}</ul></div>` : '';
+      : st === 'PUBLISHED' ? `<div class="cps-lock st-published" title="Fase lain di channel ini tetap bisa diedit.${phase === 'REGISTRATION' ? ' Template MoU / SKN tetap bisa direvisi.' : ''}"><i class="bi bi-lock"></i> ${PL[phase]} sudah <strong>Published</strong>: bagian ini hanya bisa dilihat${phase === 'REGISTRATION' ? ' (MoU / SKN tetap bisa direvisi)' : ''}.</div>`
+      : `<div class="cps-lock st-closed" title="Tetap tersedia untuk audit & laporan."><i class="bi bi-archive"></i> ${PL[phase]} sudah <strong>Closed</strong>: read-only, termasuk template dokumen.</div>`;
+    const next = nextStep(p, step, ch, sub);
+    const prev = ch ? prevStep(p, ch, sub) : null;
+    const nextEl = (next ? `<span hidden data-cps-next="${next[0]}" data-cps-next-label="${esc(next[1])}"></span>` : '')
+      + (prev ? `<span hidden data-cps-prev="${prev[0]}" data-cps-prev-label="${esc(prev[1])}"></span>` : '');
+    // Area kerja channel: .cps-work ditutup di akhir template tiap route channel; .cps-main (kolom kanan) ikut tertutup otomatis oleh parser
+    const chNav = ch ? `<div class="cps-work cps-top"><div class="cps-nav">${outline(p, ch, sub)}</div><div class="cps-main">${lock}` : lock;
     return `<div class="cps-head"><div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div>
         <div class="small text-muted"><a href="#/setup">Program Setup</a> / ${p.year}</div>
         <h1>${esc(p.name)} <span class="text-muted fw-normal fs-6">${esc(p.code)}</span> <span class="badge badge-light">${SM.summaryLabel(p.id)}</span></h1></div>
@@ -98,8 +200,8 @@
         <div class="cps-fact"><span class="cps-fact-label">Channel</span><span class="cps-fact-value">${p.channels.length}</span></div>
         <div class="cps-fact"><span class="cps-fact-label">Registrasi</span><span class="cps-fact-value">${p.registrationCount}</span></div>
       </div></div>
-      <ol class="flow-steps">${steps.map(([k, n, l, href2]) => `<li class="${step === k ? 'active' : ''}"><a href="${href2}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
-      ${lock}${chNav}`;
+      <ol class="flow-steps flow-crumb">${steps.map(([k, n, l, href2]) => `<li class="${step === k ? 'active' : ''}"><a href="${href2}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
+      ${nextEl}${chNav}`;
   }
 
   // ---------------------------------------------------------------- 0 · daftar program & 1A · clone
@@ -267,8 +369,11 @@
           : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}"><select name="channel_code" class="form-control mb-2">
           ${avail.map((c) => `<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select>
           <div class="d-flex gap-3 mb-2">${Object.entries(E.CHANNEL_TYPES).map(([k, l], i) => `<label class="mb-0"><input type="radio" name="channel_type" value="${k}" ${i === 0 ? 'checked' : ''} required> ${l}</label>`).join('')}</div>
+          <label class="form-label small mb-1">Mulai dari</label><select name="copy_from" class="form-control mb-2">
+            <option value="">Preset standar (brand & skema kosong)</option>
+            ${p.channels.map((c) => `<option value="${c.id}">Salin dari ${esc(c.channel_name)} (brand, skema, pilar, form, approval, dokumen)</option>`).join('')}</select>
           <button class="btn btn-brand">Tambah</button></form>
-          <div class="form-text">Channel baru langsung berisi preset rumus "${C.PRESET_NAME}", form fase, approval layer contoh & template MOU/SKN. Semua bisa diubah.</div>`
+          <div class="form-text">Preset standar berisi rumus "${C.PRESET_NAME}", form fase, approval layer contoh & template MOU/SKN. Salin dari channel lain = tinggal ubah yang berbeda. Semua bisa diubah.</div>`
           : '<div class="small text-muted">Semua channel master (Active & Passive) sudah ditambahkan.</div>'}
       </div></div></div></div></div>`,
     };
@@ -279,13 +384,19 @@
     const code = f.get('channel_code'); const type = f.get('channel_type');
     if (!E.CHANNEL_TYPES[type]) throw new Error('Pilih tipe channel: Active atau Passive.');
     if (DB.t('programChannels').some((c) => c.program_id === pid && c.channel_code === code && c.channel_type === type)) throw new Error(`Channel ${E.CHANNEL_TYPES[type]} ini sudah ada di program.`);
-    const pc = DB.insert('programChannels', { program_id: pid, channel_code: code, channel_type: type, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
-      elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
-      elig_exclusive_program_ids: [], elig_exceptions: [] });
-    E.createChannelDefaults(pc, UI.currentUser().id);
-    E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code, channel_type: type });
+    const src = f.get('copy_from') ? DB.byId('programChannels', Number(f.get('copy_from'))) : null;
+    if (f.get('copy_from') && (!src || src.program_id !== pid)) throw new Error('Channel sumber tidak ditemukan di program ini.');
+    let pc;
+    if (src) pc = E.cloneChannel(src, pid, UI.currentUser().id, { channel_code: code, channel_type: type });
+    else {
+      pc = DB.insert('programChannels', { program_id: pid, channel_code: code, channel_type: type, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
+        elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
+        elig_exclusive_program_ids: [], elig_exceptions: [] });
+      E.createChannelDefaults(pc, UI.currentUser().id);
+    }
+    E.audit(pid, 'programChannel', pc.id, 'create', null, { channel_code: code, channel_type: type, copied_from: src ? src.id : null });
     touch(pid);
-    done('success', 'Channel ditambahkan. Lanjut pilih brand peserta.', `/setup/${pid}/ch/${pc.id}/brands`);
+    done('success', src ? 'Channel ditambahkan dari salinan. Periksa bagian yang berbeda di daftar langkah.' : 'Channel ditambahkan. Lanjut pilih brand peserta.', `/setup/${pid}/ch/${pc.id}/brands`);
   };
   clicks['setup.deleteChannel'] = (d) => {
     assertDraft(Number(d.id));
@@ -307,21 +418,41 @@
       <div class="card"><div class="card-header"><span class="step-chip">3b</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
         <p class="small text-muted mb-3">Baseline <strong>tidak</strong> diatur di sini: CBD/CDT mengisi baseline tiap toko di form Registration. EST & IR growth hanya informasi (<span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span> definisi dikonfirmasi).</p>
         <div class="table-responsive"><table class="table table-sm table-bordered">
-          <thead><tr><th style="width:60px">Ikut</th><th>Brand (skema)</th><th>Sub-brand yang memakai skema ini</th><th style="width:120px">EST growth %</th><th style="width:120px">IR growth %</th><th style="width:170px">Baseline minimal / bln</th><th class="num">Kelas</th><th></th></tr></thead>
+          <thead><tr><th style="width:60px">Ikut</th><th>Brand (skema) <span class="text-muted fw-normal">+ sub-brand</span></th><th style="width:210px">Baseline minimal <span class="text-muted fw-normal">Rp / bulan</span></th><th class="num" style="width:70px">Kelas</th><th style="width:190px"></th></tr></thead>
           <tbody>${master.filter((b) => !usedAsMember.has(b.code) || inCh[b.code]).map((b) => { const x = inCh[b.code];
-            return `<tr><td class="text-center"><input type="checkbox" class="form-check-input position-static" name="brand_codes" value="${b.code}" ${chk(!!x)}></td>
-              <td class="fw-semibold">${esc(b.name)} <code class="small">${b.code}</code></td>
-              <td><div class="d-flex flex-wrap gap-2">${master.filter((m) => m.code !== b.code && !inCh[m.code]).map((m) => `<label class="small mb-0"><input type="checkbox" name="members_${b.code}" value="${m.code}" ${chk(x && (x.member_codes || []).includes(m.code))}> ${esc(m.name)}</label>`).join('') || '<span class="small text-muted">-</span>'}</div></td>
-              <td><div class="input-group input-group-sm"><input name="est_${b.code}" type="number" step="any" class="form-control" value="${x && x.est_growth_pct !== null ? x.est_growth_pct : ''}"><span class="input-group-text">%</span></div></td>
-              <td><div class="input-group input-group-sm"><input name="ir_${b.code}" type="number" step="any" class="form-control" value="${x && x.ir_growth_pct !== null ? x.ir_growth_pct : ''}"><span class="input-group-text">%</span></div></td>
+            const members = master.filter((m) => m.code !== b.code && !inCh[m.code]);
+            const chosen = x ? members.filter((m) => (x.member_codes || []).includes(m.code)) : [];
+            const growthInfo = x && (x.est_growth_pct !== null || x.ir_growth_pct !== null) ? `EST ${x.est_growth_pct === null ? '-' : x.est_growth_pct + '%'} · IR ${x.ir_growth_pct === null ? '-' : x.ir_growth_pct + '%'}` : '';
+            return `<tr class="cps-brand-row"><td class="text-center"><input type="checkbox" class="form-check-input position-static" name="brand_codes" value="${b.code}" ${chk(!!x)}></td>
+              <td><span class="fw-semibold">${esc(b.name)}</span> <code class="small">${b.code}</code>
+                <span class="cps-chips">${chosen.map((m) => `<span class="cps-chip">${esc(m.name)}</span>`).join('')}${growthInfo ? `<span class="cps-chip cps-chip-muted">${growthInfo}</span>` : ''}</span></td>
               <td><div class="input-group input-group-sm"><span class="input-group-text">Rp</span><input name="minb_${b.code}" type="number" class="form-control" value="${(ch.elig_min_baseline || {})[b.code] === undefined || (ch.elig_min_baseline || {})[b.code] === null ? '' : ch.elig_min_baseline[b.code]}"
                 placeholder="${x && x.classes[0] ? h.rpShort(x.classes[0].baseline_min) : 'kelas terendah'}"></div></td>
               <td class="num">${x ? lmClasses(ch, x).length : '-'}</td>
-              <td class="text-right">${x ? `<a href="#/setup/${p.id}/ch/${ch.id}/scheme" class="btn btn-sm btn-outline-brand">Skema kelas</a>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+              <td class="text-right text-nowrap"><span class="cps-brand-tg cps-txtbtn" role="button" tabindex="0" data-btg="${b.code}"><i class="bi bi-chevron-down"></i> Sub-brand & EST/IR</span>
+                ${x ? `<a href="#/setup/${p.id}/ch/${ch.id}/scheme/${b.code}" class="btn btn-sm btn-outline-brand ml-2">Skema kelas</a>` : ''}</td></tr>
+              <tr class="cps-brand-detail" data-bd="${b.code}" hidden><td></td><td colspan="4"><div class="row g-3">
+                <div class="col-md-7"><div class="form-label small mb-1">Sub-brand yang memakai skema ${esc(b.name)}</div>
+                  <div class="d-flex flex-wrap gap-2">${members.map((m) => `<label class="small mb-0"><input type="checkbox" name="members_${b.code}" value="${m.code}" ${chk(x && (x.member_codes || []).includes(m.code))}> ${esc(m.name)}</label>`).join('') || '<span class="small text-muted">-</span>'}</div></div>
+                <div class="col-md-5"><div class="form-label small mb-1">Growth informasi <span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span></div><div class="d-flex gap-2">
+                  <div class="input-group input-group-sm"><span class="input-group-text">EST</span><input name="est_${b.code}" type="number" step="any" class="form-control" value="${x && x.est_growth_pct !== null ? x.est_growth_pct : ''}"><span class="input-group-text">%</span></div>
+                  <div class="input-group input-group-sm"><span class="input-group-text">IR</span><input name="ir_${b.code}" type="number" step="any" class="form-control" value="${x && x.ir_growth_pct !== null ? x.ir_growth_pct : ''}"><span class="input-group-text">%</span></div></div></div>
+              </div></td></tr>`; }).join('')}</tbody></table></div>
         <div class="form-text mb-2">Baseline minimal = syarat pendaftaran per brand (saran baseline toko harus ≥ angka ini). Kosong = batas bawah kelas terendah brand tsb (3c).</div>
         <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan brand</button>
         <span class="form-text d-inline ml-2">Contoh: Light+ punya skema sendiri dengan anggota BrightNow; brand juga bisa mengikuti skema brand lain di Skema kelas.</span>
       </div></div></fieldset></form></div></div>`,
+      after(root) {
+        // baris rincian (sub-brand, EST / IR) dibuka per brand
+        const toggle = (code) => {
+          const d = root.querySelector(`[data-bd="${code}"]`); const t = root.querySelector(`[data-btg="${code}"]`);
+          d.hidden = !d.hidden;
+          t.innerHTML = `<i class="bi bi-chevron-${d.hidden ? 'down' : 'up'}"></i> ${d.hidden ? 'Sub-brand & EST/IR' : 'Tutup'}`;
+        };
+        const form = root.querySelector('form[data-action="setup.saveBrands"]'); // #app tetap ada antar render: listener dipasang di form
+        form.addEventListener('click', (e) => { const t = e.target.closest('[data-btg]'); if (t) toggle(t.dataset.btg); });
+        form.addEventListener('keydown', (e) => { const t = e.target.closest('[data-btg]'); if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(t.dataset.btg); } });
+      },
     };
   });
   actions['setup.saveBrands'] = (f, form) => {

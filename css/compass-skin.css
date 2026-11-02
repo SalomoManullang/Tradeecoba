@@ -1276,7 +1276,9 @@ body:not(.cps-review-on) .cps-help .warn-mark, body:not(.cps-review-on) .cps-hel
 .cps form:not(.cps-viewing) .cps-inline-save { display: none !important; }
 
 /* ---------- Skema kelas: satu baris ringkasan per kelas, rincian tier bisa dibuka */
-.cps .scheme-table tr.cps-cls-sum > td { background: var(--neutral-variant-100); vertical-align: middle; }
+.cps .scheme-table tr.cps-cls-sum { cursor: pointer; }
+.cps .scheme-table tr.cps-cls-sum > td { background: var(--neutral-variant-100); vertical-align: middle; padding: var(--space-4) 12px !important; text-align: left !important; }
+.cps .scheme-table tr.cps-cls-sum:hover > td { background: var(--primary-100); }
 .cps .scheme-table tr.cps-cls-sum.is-open > td { background: var(--primary-100); }
 .cps .cps-cls-tg, .cps .cps-cls-all, .cps .cps-brand-tg { cursor: pointer; user-select: none; white-space: nowrap; }
 .cps .cps-cls-tg:focus-visible, .cps .cps-cls-all:focus-visible, .cps .cps-brand-tg:focus-visible { outline: 2px solid var(--primary-300); border-radius: 4px; }

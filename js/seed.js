@@ -266,6 +266,8 @@
     mkPayout(regs[0], 'FIX', fPer, 'HEAD_FINANCE');
     // status per channel × fase + data contoh deck 2027 (channel CS) — js/setup-model.js
     window.SetupModel.seedDemo();
+    // program demo presentasi (semua langkah terisi) — js/seed-presentation.js
+    if (window.SeedPresentation) window.SeedPresentation.run();
     return DB.state;
   }
 

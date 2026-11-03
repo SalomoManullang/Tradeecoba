@@ -164,71 +164,6 @@
   // ---------------------------------------------------------------- layout Metronic (sama dengan Tradee)
   const BODY_CLASS = 'kt-quick-panel--right kt-demo-panel--right kt-offcanvas-panel--right kt-header--fixed kt-header-mobile--fixed ' +
     'kt-subheader--enabled kt-subheader--transparent kt-aside--enabled kt-aside--fixed kt-aside--minimize';
-  const PROGRAM_ICON = ['flaticon2-shopping-cart-1', 'flaticon2-gift', 'flaticon2-percentage', 'flaticon2-cube', 'flaticon2-delivery-package'];
-
-  const mBadge = (n, color = 'brand') => (n > 0 ? `<span class="kt-menu__link-badge"><span class="kt-badge kt-badge--${color} kt-badge--rounded">${n}</span></span>` : '');
-
-  // Menu header (horizontal) per role — pola sama dengan header/adminsalesHO.php dkk.
-  function headerMenu(user, year, path) {
-    const is = (...roles) => roles.includes(user.role);
-    const programs = DB.where('programs', (p) => p.year === year);
-    // status per channel × fase: Registration = fase Pendaftaran PUBLISHED, Payout = fase Pencairan tidak DRAFT
-    const SM = window.SetupModel;
-    const published = programs.filter((p) => SM.programHas(p.id, 'REGISTRATION', SM.isPublished));
-    const running = programs.filter((p) => SM.programHas(p.id, 'PAYOUT', SM.isRunning));
-    const icon = (p) => PROGRAM_ICON[(p.id - 1) % PROGRAM_ICON.length];
-    const n = inboxCount(user, year);
-    const chs = (p) => DB.where('programChannels', (c) => c.program_id === p.id && SM.isPublished(c, 'REGISTRATION') &&
-      (!user.channel_codes || !user.channel_codes.length || user.channel_codes.includes(c.channel_code)));
-    const chName = (c) => window.Engine.channelName(c);
-    const items = [{ label: `Dashboard ${ROLE_LABEL[user.role]}`, href: '/', active: path === '/' }];
-
-    if (is(...SETUP_ROLES)) {
-      items.push({ label: 'Program Setup', isNew: true, active: path.startsWith('/setup'), children: [
-        ...programs.map((p) => ({ label: `${p.name} (${p.code})`, icon: icon(p), href: `/setup/${p.id}/header`, badge: SM.summaryLabel(p.id) })),
-        { label: 'Program baru', icon: 'flaticon2-plus', href: '/setup/new' },
-        { label: 'Daftar & clone program', icon: 'flaticon2-copy', href: '/setup' },
-      ] });
-    }
-    if (is('CBD')) {
-      items.push({ label: 'Registration', active: path.startsWith('/registration/program') || path === '/registration', children: [
-        ...published.map((p) => ({ label: p.name, icon: icon(p), children: chs(p).map((c) => ({ label: chName(c), icon: 'flaticon2-architecture-and-city', href: `/registration/program/${p.id}/${c.id}` })) })),
-        { label: 'Semua program', icon: 'flaticon2-list-2', href: '/registration' },
-      ] });
-      items.push({ label: 'Monitoring', active: path.startsWith('/monitoring'), href: '/monitoring' });
-    }
-    items.push({ label: 'Approval', badge: n, active: path.startsWith('/inbox') || path.startsWith('/registration/participant'), children: [
-      { label: 'Inbox Approval', icon: 'flaticon2-checkmark', href: '/inbox', badge: n },
-      { label: 'Peserta', icon: 'flaticon-customer', href: '/registration/participants' },
-    ] });
-    if (is('ADMIN_DC', 'FINANCE', 'HEAD_FINANCE', ...SETUP_ROLES)) {
-      items.push({ label: 'Payout', active: path.startsWith('/payout'), children: running.map((p) => ({ label: p.name, icon: icon(p), href: `/payout/program/${p.id}` }))
-        .concat([{ label: 'Ringkasan payout', icon: 'flaticon2-list-2', href: '/payout' }]) });
-    }
-    return items;
-  }
-
-  function renderHeaderItem(it) {
-    const label = `<span class="kt-menu__link-text">${esc(it.label)}${it.isNew ? '<span class="menu-new">BARU</span>' : ''}</span>`;
-    if (!it.children) {
-      return `<li class="kt-menu__item ${it.active ? 'kt-menu__item--active' : ''}" aria-haspopup="true"><a href="#${it.href}" class="kt-menu__link">${label}</a></li>`;
-    }
-    return `<li class="kt-menu__item kt-menu__item--submenu kt-menu__item--rel ${it.active ? 'kt-menu__item--active' : ''}" data-hmenu aria-haspopup="true">
-      <a href="javascript:;" class="kt-menu__link kt-menu__toggle">${label}${mBadge(it.badge)}<i class="kt-menu__hor-arrow la la-angle-down"></i></a>
-      <div class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--left"><ul class="kt-menu__subnav">${it.children.map(renderSubItem).join('') ||
-        '<li class="kt-menu__item"><span class="kt-menu__link"><span class="kt-menu__link-text text-muted">Belum ada</span></span></li>'}</ul></div></li>`;
-  }
-
-  function renderSubItem(it) {
-    const badge = typeof it.badge === 'string' ? `<span class="kt-menu__link-badge"><span class="kt-badge kt-badge--metal kt-badge--inline">${esc(it.badge)}</span></span>` : mBadge(it.badge);
-    const inner = `<i class="kt-menu__link-icon ${it.icon || 'flaticon2-architecture-and-city'}"></i><span class="kt-menu__link-text">${esc(it.label)}</span>${badge}`;
-    if (!it.children) return `<li class="kt-menu__item" aria-haspopup="true"><a href="#${it.href}" class="kt-menu__link">${inner}</a></li>`;
-    return `<li class="kt-menu__item kt-menu__item--submenu" data-hover aria-haspopup="true">
-      <a href="javascript:;" class="kt-menu__link kt-menu__toggle">${inner}<i class="kt-menu__hor-arrow la la-angle-right"></i></a>
-      <div class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--right"><ul class="kt-menu__subnav">${it.children.map(renderSubItem).join('') ||
-        '<li class="kt-menu__item"><span class="kt-menu__link"><span class="kt-menu__link-text text-muted">Belum ada</span></span></li>'}</ul></div></li>`;
-  }
-
   // Menu aside (ikon di kiri, submenu melayang) — pola sama dengan sidebar/sidebar-awal.php
   // Tiap grup bisa dibuka / ditutup lewat judul atau ikonnya. Default terbuka; pilihan diingat per browser.
   const SIDE_GROUPS_KEY = 'tradee-sidebar-groups';
@@ -238,22 +173,39 @@
     if (path !== base && !path.startsWith(base + '/')) return false;
     return Object.entries(Object.fromEntries(new URLSearchParams(qs || ''))).every(([k, v]) => query[k] === v);
   };
-  function asideMenu(user, path = '/', query = {}) {
+  // Satu-satunya navigasi (top bar hanya tanggal & profil): Dashboard, lalu grup per role.
+  // Registration (CBD) & Payout per program mengikuti status channel × fase: Registration = fase Pendaftaran PUBLISHED, Payout = fase Pencairan tidak DRAFT.
+  function asideMenu(user, year, path = '/', query = {}) {
     const is = (...roles) => roles.includes(user.role);
+    const SM = window.SetupModel;
+    const programs = DB.where('programs', (p) => p.year === year);
+    const chs = (p) => DB.where('programChannels', (c) => c.program_id === p.id && SM.isPublished(c, 'REGISTRATION') &&
+      (!user.channel_codes || !user.channel_codes.length || user.channel_codes.includes(c.channel_code)));
+    const n = inboxCount(user, year);
     const groups = [
-      { icon: 'flaticon-customer', title: 'Status Peserta', items: [['Disetujui', '/registration/participants?status=approved'], ['Menunggu approval', '/registration/participants?status=in_review'],
-        ['Dikembalikan', '/registration/participants?status=returned'], ['Ditolak', '/registration/participants?status=rejected']] },
-      { icon: 'flaticon2-graph-1', title: 'Monitoring & Payout', items: [['Monitoring', '/monitoring'], ['Ringkasan payout', '/payout'], ['Inbox approval', '/inbox']] },
+      { icon: 'flaticon-customer', title: 'Status Peserta', items: [['Semua peserta', '/registration/participants'], ['Disetujui', '/registration/participants?status=approved'],
+        ['Menunggu approval', '/registration/participants?status=in_review'], ['Dikembalikan', '/registration/participants?status=returned'], ['Ditolak', '/registration/participants?status=rejected']] },
+      { icon: 'flaticon2-graph-1', title: 'Monitoring & Payout', items: [['Monitoring', '/monitoring'], ['Ringkasan payout', '/payout'],
+        ...(is('ADMIN_DC', 'FINANCE', 'HEAD_FINANCE', ...SETUP_ROLES) ? programs.filter((p) => SM.programHas(p.id, 'PAYOUT', SM.isRunning)).map((p) => [`Payout ${p.name}`, `/payout/program/${p.id}`]) : []),
+        ['Inbox approval', '/inbox', n]] },
       { icon: 'flaticon2-layers-1', title: 'Master Data', items: [
         ...(is(...SETUP_ROLES) ? [['Data Sell Out', '/master/sales']] : []), ['Master Toko', '/master/stores'],
         ...(is(...SETUP_ROLES) ? [['Channel & Brand', '/master/data'], ['Library rumus', '/master/formulas'], ['Field wajib', '/master/required-fields']] : [])] },
     ];
-    if (is(...SETUP_ROLES)) groups.splice(1, 0, { icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Program baru', '/setup/new']] });
+    if (is('CBD')) {
+      groups.unshift({ icon: 'flaticon2-writing', title: 'Registration', items: [
+        ...programs.filter((p) => SM.programHas(p.id, 'REGISTRATION', SM.isPublished)).flatMap((p) => chs(p).map((c) => [`${p.name} · ${window.Engine.channelName(c)}`, `/registration/program/${p.id}/${c.id}`])),
+        ['Semua program', '/registration']] });
+    }
+    if (is(...SETUP_ROLES)) groups.unshift({ icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Program baru', '/setup/new']] });
     const saved = sideGroupState();
     // item aktif: href paling spesifik yang cocok dengan halaman sekarang
     const all = groups.flatMap((g) => g.items.map(([, href]) => href)).filter((href) => hrefActive(href, path, query));
     const active = all.sort((a, b) => b.length - a.length)[0];
-    return groups.map((g) => {
+    const badge = (c) => (c > 0 ? `<span class="cmp-side-badge">${c}</span>` : '');
+    const home = `<li class="kt-menu__item cmp-side-single${path === '/' ? ' kt-menu__item--active' : ''}"><a href="#/" class="kt-menu__link" title="Dashboard"><i class="kt-menu__link-icon flaticon2-architecture-and-city"></i></a>
+      <a href="#/" class="cmp-single-link">Dashboard ${esc(ROLE_LABEL[user.role])}</a></li>`;
+    return home + groups.map((g) => {
       const key = g.title;
       const has = g.items.some(([, href]) => href === active);
       const open = Object.hasOwn(saved, key) ? saved[key] : true;
@@ -262,31 +214,27 @@
       <div class="kt-menu__submenu"><span class="kt-menu__arrow"></span><div class="kt-menu__wrapper"><ul class="kt-menu__subnav">
         <li class="kt-menu__item kt-menu__item--parent kt-menu__item--submenu-fullheight" aria-haspopup="true"><span class="kt-menu__link cmp-group-toggle" role="button" tabindex="0" aria-expanded="${open}"
           data-click="toggleSideGroup" data-key="${esc(key)}"><span class="kt-menu__link-text">${esc(g.title)}</span><i class="bi bi-chevron-down cmp-group-chev"></i></span></li>
-        ${g.items.map(([l, href]) => `<li class="kt-menu__item${href === active ? ' kt-menu__item--active' : ''}" aria-haspopup="true"><a href="#${href}" class="kt-menu__link"><i class="kt-menu__link-bullet kt-menu__link-bullet--line"><span></span></i><span class="kt-menu__link-text">${esc(l)}</span></a></li>`).join('')}
+        ${g.items.map(([l, href, c]) => `<li class="kt-menu__item${href === active ? ' kt-menu__item--active' : ''}" aria-haspopup="true"><a href="#${href}" class="kt-menu__link"><i class="kt-menu__link-bullet kt-menu__link-bullet--line"><span></span></i><span class="kt-menu__link-text">${esc(l)}</span>${badge(c)}</a></li>`).join('')}
       </ul></div></div></li>`;
     }).join('');
   }
 
-  function yearDropdown() {
-    const years = DB.t('years').filter((y) => y.is_active).sort((a, b) => a.year - b.year);
-    return `<div class="kt-user-card kt-user-card--skin-light kt-notification-item-padding-x" style="padding-bottom:0px">
-        <div class="kt-user-card__name">Choose Year <small>to change Tradee Cycle</small></div></div>
-      <div class="kt-user-card kt-user-card--skin-light kt-notification-item-padding-x"><div class="row">
-        ${years.map((y) => `<div class="col-lg-4 mb-2"><button type="button" class="btn btn-brand btn-elevate kt-login__btn-primary" style="width:100%" data-click="chooseYear" data-year="${y.year}">
-          <p style="font-size:30px; margin:0px; font-weight:600">${y.year}</p></button></div>`).join('')}
-      </div></div>`;
+  // Tanggal & jam realtime di top bar: "Sel, 3 Nov 2026 · 14:05:09", diperbarui tiap detik
+  const DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const pad2 = (v) => String(v).padStart(2, '0');
+  function clockText(now = new Date()) {
+    return `${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()} · ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
   }
+  setInterval(() => { const t = clockText(); document.querySelectorAll('[data-clock]').forEach((el) => { el.textContent = t; }); }, 1000);
 
   // Sidebar bisa diperkecil (240 ↔ 58px); pilihan diingat per browser (bukan data program)
   const SIDEBAR_KEY = 'tradee-sidebar-collapsed';
   function sidebarCollapsed() { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch (e) { return false; } }
 
   // Kerangka COMPASS: Sidebar (240px, 58px saat diperkecil) + NavigationTop (76px) + konten.
-  // Menu header & aside tetap dibangun headerMenu() / asideMenu() dengan hook yang sama (bindMenus).
+  // Navigasi hanya di sidebar (asideMenu); top bar berisi tanggal & jam (kiri) dan profil (kanan).
   function layout(path, user, year, content) {
     const logo = 'assets/paragon/tradee1.png';
-    const now = new Date();
-    const today = `${['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
     const initials = String(user.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
     return `
     <div id="kt_header_mobile" class="kt-header-mobile kt-header-mobile--fixed">
@@ -307,26 +255,15 @@
           </div>
           <div class="cmp-side-menu" id="kt_aside_menu_wrapper">
             <div id="kt_aside_menu" data-ktmenu-vertical="1" data-ktmenu-dropdown="1" data-ktmenu-scroll="0">
-              <ul class="kt-menu__nav">${asideMenu(user, path, parseHash().query)}</ul>
+              <ul class="kt-menu__nav">${asideMenu(user, year, path, parseHash().query)}</ul>
             </div>
           </div>
         </div>
 
         <div class="cmp-main" id="kt_wrapper">
           <div id="kt_header" class="cmp-top">
-            <div class="cmp-top-menu" id="kt_header_menu_wrapper">
-              <div id="kt_header_menu">
-                <ul class="kt-menu__nav">${headerMenu(user, year, path).map(renderHeaderItem).join('')}</ul>
-              </div>
-            </div>
+            <span class="cmp-date" data-clock>${clockText()}</span>
             <div class="cmp-top-right">
-              <span class="cmp-date">${today}</span>
-              <div class="cmp-top-item">
-                <div class="kt-header__topbar-wrapper cmp-icon-btn" data-toggle="dropdown" data-offset="10px,0px" title="Ganti tahun">
-                  <i class="bi bi-calendar3"></i>
-                </div>
-                <div class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-xl">${yearDropdown()}</div>
-              </div>
               <div class="cmp-top-item">
                 <div class="kt-header__topbar-wrapper cmp-user" data-toggle="dropdown" data-offset="10px,0px">
                   <span class="cmp-avatar">${esc(initials)}</span>
@@ -370,13 +307,6 @@
 
   // Submenu Metronic dibuka dengan class kt-menu__item--hover (tanpa KTMenu)
   function bindMenus(root) {
-    root.querySelectorAll('[data-hmenu] > .kt-menu__link').forEach((a) => a.addEventListener('click', (e) => {
-      e.preventDefault();
-      const li = a.parentElement;
-      const open = li.classList.contains('kt-menu__item--hover');
-      root.querySelectorAll('[data-hmenu].kt-menu__item--hover').forEach((x) => x.classList.remove('kt-menu__item--hover'));
-      if (!open) li.classList.add('kt-menu__item--hover');
-    }));
     root.querySelectorAll('[data-hover]').forEach((li) => {
       li.addEventListener('mouseenter', () => li.classList.add('kt-menu__item--hover'));
       li.addEventListener('mouseleave', () => li.classList.remove('kt-menu__item--hover'));
@@ -391,9 +321,6 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clicks.toggleSideGroup(t.dataset, t); }
     }));
   }
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('[data-hmenu]')) document.querySelectorAll('[data-hmenu].kt-menu__item--hover').forEach((x) => x.classList.remove('kt-menu__item--hover'));
-  });
 
   // ---------------------------------------------------------------- form & aksi
   const actions = {};

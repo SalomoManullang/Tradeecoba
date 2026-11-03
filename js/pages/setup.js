@@ -221,20 +221,42 @@
           <td class="num">${DB.where('programChannels', (c) => c.program_id === p.id).length}</td>
           <td class="num">${DB.where('registrations', (x) => x.program_id === p.id).length}</td><td><span class="badge badge-light">${SM.summaryLabel(p.id)}</span></td>
           <td class="text-right text-nowrap"><a href="#/setup/${p.id}/header" class="btn btn-sm btn-outline-brand">${SM.programSummary(p.id).count.DRAFT ? 'Edit' : 'Lihat'}</a>
-            <a href="#/setup?clone=${p.id}" class="btn btn-sm btn-link">Clone</a></td></tr>`).join('')
-          || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div></div>
-      <div class="card" id="clone"><div class="card-header"><span class="step-chip">1A</span>&nbsp;Clone program</div><div class="card-body">
-        <p class="small text-muted">Membuat program <strong>DRAFT</strong> baru dengan semua channel, brand, kelas, tier, pilar, rumus, form fase, approval layer & template dokumen tersalin. Lanjutkan di step 2 untuk mengubah yang berbeda saja.</p>
-        <form data-action="setup.clone" class="row g-2 align-items-end">
-          <div class="col-md-4"><label class="form-label small">Program sumber <span class="text-danger">*</span></label><select name="source_id" class="form-control">
-            ${all.map((o) => `<option value="${o.id}" ${sel(Number(q.clone) === o.id)}>${o.year} · ${esc(o.name)} (${esc(o.code)}) · ${SM.summaryLabel(o.id)}</option>`).join('')}</select></div>
-          <div class="col-md-2"><label class="form-label small">Kode baru <span class="text-danger">*</span></label><input name="code" class="form-control text-uppercase" placeholder="LOYALTY-${year + 1}" required></div>
-          <div class="col-md-3"><label class="form-label small">Nama baru <span class="text-danger">*</span></label><input name="name" class="form-control" placeholder="Loyalty Program ${year + 1}" required></div>
-          <div class="col-md-1"><label class="form-label small">Tahun <span class="text-danger">*</span></label><input name="year" type="number" class="form-control" value="${year}" required></div>
-          <div class="col-md-2"><label class="form-label small">&nbsp;</label><button class="btn btn-brand w-100"><i class="bi bi-copy"></i> Clone</button></div>
-          <div class="col-md-3"><label class="form-label small">Periode mulai <span class="text-danger">*</span></label><input name="period_start" type="date" class="form-control" value="${year}-01-01" required></div>
-          <div class="col-md-3"><label class="form-label small">Periode selesai <span class="text-danger">*</span></label><input name="period_end" type="date" class="form-control" value="${year}-12-31" required></div>
-        </form></div></div></div>`,
+            <button type="button" class="btn btn-sm btn-link" data-clone="${p.id}">Clone</button></td></tr>`).join('')
+          || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div>
+      <dialog class="cps-dialog" id="cloneDlg" aria-labelledby="cloneDlgTitle">
+        <form data-action="setup.clone"><input type="hidden" name="source_id" id="cloneSrc">
+          <div class="cps-dialog-head"><h2 id="cloneDlgTitle"><i class="bi bi-copy"></i> Clone program</h2>
+            <button type="button" class="cps-dialog-x" data-dlg-close title="Tutup" aria-label="Tutup"><i class="bi bi-x-lg"></i></button></div>
+          <div class="cps-dialog-body">
+            <div class="cps-dialog-src">Sumber: <strong id="cloneSrcName"></strong></div>
+            <p class="small text-muted">Membuat program <strong>DRAFT</strong> baru dengan semua channel, brand, kelas, tier, pilar, rumus, form fase, approval layer & template dokumen tersalin. Setelah itu cukup ubah bagian yang berbeda.</p>
+            <div class="row g-2">
+              <div class="col-md-5"><label class="form-label small" for="cloneCode">Kode baru <span class="text-danger">*</span></label><input name="code" id="cloneCode" class="form-control text-uppercase" placeholder="LOYALTY-${year + 1}" required></div>
+              <div class="col-md-7"><label class="form-label small" for="cloneName">Nama baru <span class="text-danger">*</span></label><input name="name" id="cloneName" class="form-control" placeholder="Loyalty Program ${year + 1}" required></div>
+              <div class="col-md-4"><label class="form-label small" for="cloneYear">Tahun <span class="text-danger">*</span></label><input name="year" id="cloneYear" type="number" class="form-control" value="${year}" required></div>
+              <div class="col-md-4"><label class="form-label small" for="cloneStart">Periode mulai <span class="text-danger">*</span></label><input name="period_start" id="cloneStart" type="date" class="form-control" value="${year}-01-01" required></div>
+              <div class="col-md-4"><label class="form-label small" for="cloneEnd">Periode selesai <span class="text-danger">*</span></label><input name="period_end" id="cloneEnd" type="date" class="form-control" value="${year}-12-31" required></div>
+            </div></div>
+          <div class="cps-dialog-foot"><button type="button" class="btn btn-outline-secondary" data-dlg-close>Batal</button>
+            <button class="btn btn-brand"><i class="bi bi-copy"></i> Clone</button></div>
+        </form></dialog></div></div>`,
+      // Clone di tabel membuka pop-up dengan program sumber dari baris tsb; #/setup?clone=<id> juga langsung membukanya
+      after(root) {
+        const dlg = root.querySelector('#cloneDlg');
+        const open = (id) => {
+          const src = DB.byId('programs', Number(id));
+          if (!src) return;
+          root.querySelector('#cloneSrc').value = src.id;
+          root.querySelector('#cloneSrcName').textContent = `${src.name} (${src.code}) · ${src.year}`;
+          dlg.querySelectorAll('.js-form-error').forEach((x) => x.remove());
+          dlg.showModal();
+          root.querySelector('#cloneCode').focus();
+        };
+        root.querySelectorAll('[data-clone]').forEach((b) => b.addEventListener('click', () => open(b.dataset.clone)));
+        dlg.querySelectorAll('[data-dlg-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+        dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+        if (q.clone) open(q.clone);
+      },
     };
   });
 

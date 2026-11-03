@@ -492,6 +492,8 @@
     if (!C.DOC_TYPES[doc]) fail('Dokumen tidak dikenal');
     const d = ch.documents[doc];
     const sections = d.latest ? JSON.parse(JSON.stringify(d.latest.content.sections || [])) : E.defaultSections(doc);
+    let mode = d.latest && d.latest.content.mode === 'upload' ? 'upload' : 'manual';
+    let upload = d.latest && d.latest.content.file ? d.latest.content.file : null;
     const canEdit = SM.phaseStatus(ch, 'REGISTRATION') !== 'CLOSED';
     const generated = DB.where('generatedDocuments', (g) => g.doc_type === doc && d.revisions.some((r) => r.id === g.revision_id));
     return {
@@ -513,12 +515,19 @@
       <ul class="nav nav-pills mb-3">${Object.keys(C.DOC_TYPES).map((k) => `<li class="nav-item"><a class="nav-link ${k === doc ? 'active' : ''}" href="#/setup/${p.id}/ch/${ch.id}/documents/${k}">${k}</a></li>`).join('')}</ul>
       ${SM.phaseStatus(ch, 'REGISTRATION') === 'PUBLISHED' ? `<div class="alert alert-info py-2 small"><span class="step-chip">${PL.REGISTRATION}</span>&nbsp;Setelah publish: template ini tetap bisa diubah. Simpan = revisi baru; dokumen yang sudah dibuat tetap memakai revisinya.</div>` : ''}
       <div class="row g-3"><div class="col-xl-7">
-        <form data-action="setup.saveDoc" data-id="${p.id}" data-pc="${ch.id}" data-doc="${doc}"><fieldset ${canEdit ? '' : 'disabled'}><input type="hidden" name="sections" id="secJson">
+        <form data-action="setup.saveDoc" data-id="${p.id}" data-pc="${ch.id}" data-doc="${doc}"><fieldset ${canEdit ? '' : 'disabled'}><input type="hidden" name="sections" id="secJson"><input type="hidden" name="mode" id="docMode"><input type="hidden" name="upload" id="upJson">
         <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">${doc}</span>&nbsp;Template ${doc} — revisi ${d.latest ? d.latest.revision : '-'}</span>
           <button type="button" class="btn btn-sm btn-outline-brand" id="addSec"><i class="bi bi-plus"></i> Section</button></div><div class="card-body">
+          <div class="doc-mode mb-3" role="radiogroup" aria-label="Cara membuat template">
+            <label class="doc-mode-opt"><input type="radio" name="doc_mode_pick" value="manual" ${chk(mode === 'manual')}> <span><strong>Tulis manual</strong><br><span class="small text-muted">Susun section dengan placeholder, terisi otomatis per toko.</span></span></label>
+            <label class="doc-mode-opt"><input type="radio" name="doc_mode_pick" value="upload" ${chk(mode === 'upload')}> <span><strong>Upload template</strong><br><span class="small text-muted">Pakai file jadi (PDF/Word). Data toko dilampirkan.</span></span></label></div>
+          <div id="upBox" class="mb-2">
+            <input type="file" id="upFile" class="form-control form-control-sm" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            <div class="form-text">PDF, DOC, atau DOCX, maksimal 2 MB. Preview langsung hanya untuk PDF.</div>
+            <div id="upInfo" class="small mt-2"></div></div>
           <div id="secs"></div>
           <div class="d-flex gap-2 mt-2"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan sebagai revisi baru</button>
-            <button type="button" class="btn btn-outline-brand" id="pvBtn"><i class="bi bi-eye"></i> Preview</button></div>
+            <button type="button" class="btn btn-outline-brand" id="pvBtn" data-cps-ui><i class="bi bi-eye"></i> Preview</button></div>
         </div></div></fieldset></form>
       </div>
       <div class="col-xl-5">
@@ -562,11 +571,41 @@
         }));
         root.querySelector('#addSec').addEventListener('click', () => { sections.push({ heading: '', body: '', per_brand: false }); draw(); });
         root.querySelector('#pvBtn').addEventListener('click', () => {
+          if (mode === 'upload') { root.querySelector('#pvOut').innerHTML = E.renderDocument({ mode, file: upload }, sampleDocCtx(p, ch)); return; }
           const bad = E.unknownPlaceholders({ sections });
           root.querySelector('#pvOut').innerHTML = (bad.length ? `<div class="alert alert-danger py-1 small">Placeholder tidak dikenal: ${bad.map(h.esc).join(', ')}</div>` : '') + E.renderDocument({ sections }, sampleDocCtx(p, ch));
         });
-        root.querySelector('#secJson').closest('form').addEventListener('submit', () => { root.querySelector('#secJson').value = JSON.stringify(sections); }, true);
-        if (!canEdit) root.querySelector('#addSec').disabled = true;
+        const docForm = root.querySelector('#secJson').closest('form');
+        docForm.addEventListener('submit', () => {
+          root.querySelector('#secJson').value = JSON.stringify(sections);
+          root.querySelector('#docMode').value = mode;
+          root.querySelector('#upJson').value = upload ? JSON.stringify(upload) : '';
+        }, true);
+        // Pilihan cara membuat template: tulis manual (section) atau upload file jadi
+        const upInfo = root.querySelector('#upInfo');
+        function drawUpload() {
+          upInfo.innerHTML = upload ? `<i class="bi bi-file-earmark-check text-success"></i> <a href="${upload.data}" download="${h.esc(upload.name)}">${h.esc(upload.name)}</a> <span class="text-muted">(${Math.max(1, Math.round(upload.size / 1024))} KB)</span>`
+            : '<span class="text-muted">Belum ada file.</span>';
+        }
+        function applyMode() {
+          const up = mode === 'upload';
+          root.querySelector('#upBox').hidden = !up;
+          el.hidden = up;
+          root.querySelector('#addSec').hidden = up;
+          root.querySelector('.placeholder-pick').closest('.card').hidden = up;
+          root.querySelector('#pvOut').innerHTML = '<span class="text-muted small">Klik Preview.</span>';
+        }
+        docForm.querySelectorAll('[name="doc_mode_pick"]').forEach((r) => r.addEventListener('change', () => { if (r.checked) { mode = r.value; applyMode(); } }));
+        root.querySelector('#upFile').addEventListener('change', (e) => {
+          const file = e.target.files[0]; if (!file) return;
+          if (!/\.(pdf|docx?)$/i.test(file.name)) { upInfo.innerHTML = '<span class="text-danger">Format harus PDF, DOC, atau DOCX.</span>'; e.target.value = ''; return; }
+          if (file.size > 2 * 1024 * 1024) { upInfo.innerHTML = '<span class="text-danger">Ukuran file maksimal 2 MB.</span>'; e.target.value = ''; return; }
+          const rd = new FileReader();
+          rd.onload = () => { upload = { name: file.name, size: file.size, type: file.type, data: rd.result }; drawUpload(); docForm.dispatchEvent(new Event('input', { bubbles: true })); };
+          rd.readAsDataURL(file);
+        });
+        drawUpload(); applyMode();
+        if (!canEdit) { root.querySelector('#addSec').disabled = true; root.querySelector('#upFile').disabled = true; docForm.querySelectorAll('[name="doc_mode_pick"]').forEach((r) => { r.disabled = true; }); }
         const reqBox = root.querySelector('#reqDocs');
         root.querySelector('#addReqDoc').addEventListener('click', () => { reqBox.insertAdjacentHTML('beforeend', root.querySelector('#reqDocTpl').innerHTML); reqBox.lastElementChild.querySelector('input').focus(); });
         reqBox.addEventListener('click', (e) => { const b = e.target.closest('[data-rm-doc]'); if (b) b.closest('.req-doc').remove(); });
@@ -593,13 +632,22 @@
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const doc = form.dataset.doc;
     assertDocsEditable(pid, pcId);
     const sections = JSON.parse(f.get('sections') || '[]').map((s) => ({ heading: String(s.heading || '').trim(), body: String(s.body || ''), per_brand: !!s.per_brand }));
-    if (!sections.length || sections.every((s) => !s.heading && !s.body.trim())) throw new Error('Template tidak boleh kosong');
-    const bad = E.unknownPlaceholders({ sections });
-    if (bad.length) throw new Error(`Placeholder tidak dikenal: ${bad.join(', ')}`);
+    const mode = f.get('mode') === 'upload' ? 'upload' : 'manual';
+    let content;
+    if (mode === 'upload') {
+      const file = f.get('upload') ? JSON.parse(f.get('upload')) : null;
+      if (!file || !file.data) throw new Error('Pilih file template untuk diupload.');
+      content = { mode, file, sections };
+    } else {
+      if (!sections.length || sections.every((s) => !s.heading && !s.body.trim())) throw new Error('Template tidak boleh kosong');
+      const bad = E.unknownPlaceholders({ sections });
+      if (bad.length) throw new Error(`Placeholder tidak dikenal: ${bad.join(', ')}`);
+      content = { mode, sections };
+    }
     let t = DB.t('programDocumentTemplates').find((x) => x.program_channel_id === pcId && x.doc_type === doc);
     if (!t) t = DB.insert('programDocumentTemplates', { program_channel_id: pcId, doc_type: doc, current_revision: 0 });
     const rev = DB.where('programDocumentTemplateRevisions', (r) => r.program_document_template_id === t.id).reduce((m, r) => Math.max(m, r.revision), 0) + 1;
-    DB.insert('programDocumentTemplateRevisions', { program_document_template_id: t.id, revision: rev, content: { sections }, created_by: UI.currentUser().id, created_at: new Date().toISOString() });
+    DB.insert('programDocumentTemplateRevisions', { program_document_template_id: t.id, revision: rev, content, created_by: UI.currentUser().id, created_at: new Date().toISOString() });
     t.current_revision = rev;
     E.audit(pid, 'programDocumentTemplate', t.id, 'revision', { doc, revision: rev - 1 }, { doc, revision: rev });
     done('success', `Template ${doc} disimpan sebagai revisi ${rev}. Dokumen baru memakai revisi ini; dokumen lama tidak berubah.`, `/setup/${pid}/ch/${pcId}/documents/${doc}`);

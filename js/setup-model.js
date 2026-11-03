@@ -179,7 +179,7 @@
     }
     for (const docType of Object.keys(window.Catalog.DOC_TYPES)) {
       const d = ch.documents[docType];
-      if (!d.latest || !(d.latest.content.sections || []).length) errors.push(`Template ${docType} kosong.`);
+      if (!d.latest || !window.Engine.docFilled(d.latest.content)) errors.push(`Template ${docType} kosong.`);
       else { const bad = window.Engine.unknownPlaceholders(d.latest.content); if (bad.length) errors.push(`Template ${docType} memakai placeholder tidak dikenal: ${bad.join(', ')}`); }
     }
     return { errors, warnings };

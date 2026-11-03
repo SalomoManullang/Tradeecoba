@@ -1317,3 +1317,11 @@ body:not(.cps-review-on) .cps-help .warn-mark, body:not(.cps-review-on) .cps-hel
 .cps .cps-step-n { flex: none; width: 22px; height: 22px; font-size: 11px; }
 .cps .cps-step-l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cps .cps-stepper li.active .cps-step-l { overflow: visible; }
+
+/* Template dokumen: pilihan tulis manual / upload */
+.cps .doc-mode { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2, 8px); }
+.cps .doc-mode-opt { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--color-border, #d0d5dd); border-radius: 8px; cursor: pointer; margin: 0; font-weight: 400; }
+.cps .doc-mode-opt:has(input:checked) { border-color: var(--color-brand, #2b59c3); background: var(--color-bg-brand-subtle, rgba(43,89,195,.06)); }
+.cps .doc-mode-opt input { margin-top: 3px; }
+.cps .doc-upload-frame { width: 100%; height: 420px; border: 1px solid var(--color-border, #d0d5dd); border-radius: 6px; }
+@media (max-width: 640px) { .cps .doc-mode { grid-template-columns: 1fr; } }

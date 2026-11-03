@@ -97,7 +97,7 @@
     }
     if (k === 'documents') {
       const types = Object.keys(C.DOC_TYPES);
-      return of(types.filter((t) => ch.documents[t] && ch.documents[t].latest && (ch.documents[t].latest.content.sections || []).length).length, types.length);
+      return of(types.filter((t) => ch.documents[t] && ch.documents[t].latest && E.docFilled(ch.documents[t].latest.content)).length, types.length);
     }
     if (k === 'monitoring') return { s: 'info', hint: '' };
     if (k === 'payout-rules') return { s: DB.where('programPayoutSchedules', (x) => x.program_channel_id === ch.id).length ? 'done' : 'todo', hint: '' };

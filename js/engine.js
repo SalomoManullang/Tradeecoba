@@ -574,6 +574,16 @@
           <td class="num">${UI.h.rp(Math.round(b.target_monthly || 0))}</td><td class="num">${b.fix_max_pct}%</td><td class="num">${b.conditional_pct}%</td><td class="num">${b.total_pct}%</td></tr>`).join('')}</tbody></table>`,
       pillars: `<ul>${ctx.ch.pillars.map((pl) => `<li><strong>${esc(pl.name)}</strong><ul>${leadMeasuresFor(ctx.ch, ctx.brands.map((b) => b.brand_code)).filter((l) => l.pillar_id === pl.id).map((l) => `<li>${esc(l.name)}${l.description ? ` — ${esc(l.description)}` : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`,
     };
+    if (content && content.mode === 'upload') {
+      const f = content.file;
+      if (!f) return '<em>File template belum diupload.</em>';
+      const isPdf = /pdf/i.test(f.type || '') || /\.pdf$/i.test(f.name);
+      return `<div class="doc-upload"><div class="mb-2"><i class="bi bi-file-earmark-text"></i>&nbsp;Template upload: <a href="${f.data}" download="${esc(f.name)}"><strong>${esc(f.name)}</strong></a>
+        <span class="text-muted small">(${Math.max(1, Math.round(f.size / 1024))} KB)</span></div>
+        <div class="small text-muted mb-2">Untuk ${esc(ctx.store.name)} (${esc(ctx.store.customer_id)}) · ${esc(ctx.program.name)} · ${esc(ctx.ch.channel_name)}. Isi file tidak diubah otomatis; data toko dilampirkan di bawah.</div>
+        ${isPdf ? `<iframe src="${f.data}" class="doc-upload-frame" title="${esc(f.name)}"></iframe>` : ''}
+        <h4 class="mt-2">Lampiran: brand & target</h4>${base.brands}</div>`;
+    }
     const sections = (content && content.sections) || [];
     return sections.map((s) => {
       const list = s.per_brand ? ctx.brands : [null];
@@ -594,6 +604,12 @@
       for (const m of `${s.heading} ${s.body}`.matchAll(/\{\{\s*([\w.]+)\s*\}\}/g)) if (!known.has(m[1])) bad.add(m[1]);
     }
     return [...bad];
+  }
+  // Template terisi: mode upload butuh file, mode manual butuh minimal 1 section
+  function docFilled(content) {
+    if (!content) return false;
+    if (content.mode === 'upload') return !!content.file;
+    return (content.sections || []).length > 0;
   }
 
   // ---------------------------------------------------------------- audit log (FR13)
@@ -786,7 +802,7 @@
       }
       for (const docType of Object.keys(C.DOC_TYPES)) {
         const d = ch.documents[docType];
-        if (!d.latest || !(d.latest.content.sections || []).length) E(ch, `Template ${docType} kosong.`);
+        if (!d.latest || !docFilled(d.latest.content)) E(ch, `Template ${docType} kosong.`);
         else { const bad = unknownPlaceholders(d.latest.content); if (bad.length) E(ch, `Template ${docType} memakai placeholder tidak dikenal: ${bad.join(', ')}`); }
       }
     }
@@ -801,7 +817,7 @@
     registrationObjects, monitoringObjects, payoutObjects, generateDocuments,
     eligibility, minBaseline, firstDo, soSiRatio, evalLayer, evaluateApproval, submit, act, currentLayer, logApproval, TABLE, PHASE_OF,
     fmtLmTarget, lmTarget, lmTargetText, formulaLibrary, requiredFieldKeys, catalogFieldRow, leadMeasuresFor, regLeadMeasures, copyBrandJtbds,
-    renderDocument, unknownPlaceholders, defaultSections, audit, createChannelDefaults, cloneProgram,
+    renderDocument, unknownPlaceholders, docFilled, defaultSections, audit, createChannelDefaults, cloneProgram,
     deleteChannel, deleteProgram, deletePillarTree, validateProgram,
   };
 })();

@@ -28,6 +28,12 @@
       mode: f.mode, expression: f.expression || '', formula_id: f.formula_id || null, repeat_per: f.repeat_per, is_visible: f.is_visible, is_editable: f.is_editable, is_required: f.is_required,
       min_value: f.min_value === null || f.min_value === undefined ? '' : f.min_value, max_value: f.max_value === null || f.max_value === undefined ? '' : f.max_value, locked: !!f.locked }));
     const reqKeys = E.requiredFieldKeys(phase);
+    // Admin HO hanya menyalakan / mematikan field (dan menandai wajib diisi); tambah field baru hanya Admin IT
+    const isIT = UI.currentUser().role === 'SUPERADMIN';
+    if (!isIT) for (const c of catalog) if (!fields.some((f) => f.field_key === c.key)) {
+      fields.push({ source: 'CATALOG', field_key: c.key, label: c.label, data_type: c.dataType, options: (c.options || []).join(', '), mode: c.mode, expression: '', formula_id: null,
+        repeat_per: c.repeatPer, is_visible: false, is_editable: c.mode === 'ENTERED', is_required: false, min_value: '', max_value: '', locked: false });
+    }
     const layers = cfg.layers.map((l) => ({ role_code: l.role_code, is_final: l.is_final, conditions: (l.conditions || []).map((c) => ({ ...c })) }));
     const objects = Object.entries(C.AUTO_APPROVE_OBJECTS).filter(([, o]) => o.phases.includes(phase));
     return {
@@ -37,13 +43,15 @@
 
       <form data-action="setup.savePhaseForm" data-id="${p.id}" data-pc="${ch.id}" data-phase="${phase}"><fieldset ${fs(p, ch, phase)}><input type="hidden" name="fields" id="fieldsJson">
       <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3f</span>&nbsp;Form input ${ph.label}</span>
-        <span><button type="button" class="btn btn-sm btn-outline-brand" id="addCatalog"><i class="bi bi-plus"></i> Field katalog</button>
-          <button type="button" class="btn btn-sm btn-outline-brand" id="addCustom"><i class="bi bi-plus"></i> Field custom</button></span></div>
+        ${isIT ? `<span><button type="button" class="btn btn-sm btn-outline-brand" id="addCatalog"><i class="bi bi-plus"></i> Field katalog</button>
+          <button type="button" class="btn btn-sm btn-outline-brand" id="addCustom"><i class="bi bi-plus"></i> Field custom</button></span>` : '<span class="small text-muted fw-normal"><i class="bi bi-info-circle"></i> Tambah field baru: Admin IT</span>'}</div>
         <div class="card-body">
-          ${reqKeys.length ? `<div class="alert alert-light py-2 small mb-2"><i class="bi bi-lock-fill text-warning"></i>&nbsp;${reqKeys.length} field <strong>wajib</strong> ditetapkan Admin IT (<a href="#/master/required-fields">Field wajib</a>): selalu ada di form ini; hanya label & urutannya yang bisa diubah.</div>` : ''}
-          <p class="small text-muted">Field katalog sudah dipahami sistem (mis. baseline, growth, evidence_upload). Field custom bisa ditambah tanpa development; mode <em>Dihitung</em> memakai rumus dari <a href="#/master/formulas">Library rumus</a> yang dibuat Admin IT. Urutan baris = posisi di form.</p>
+          ${reqKeys.length ? `<div class="alert alert-light py-2 small mb-2"><i class="bi bi-lock-fill text-warning"></i>&nbsp;${reqKeys.length} field <strong>wajib</strong> ditetapkan Admin IT (<a href="#/master/required-fields">Field wajib</a>): selalu dipakai di form ini${isIT ? "; hanya label & urutannya yang bisa diubah" : ""}.</div>` : ''}
+          ${isIT ? `<p class="small text-muted">Field katalog sudah dipahami sistem (mis. baseline, growth, evidence_upload). Field custom bisa ditambah tanpa development; mode <em>Dihitung</em> memakai rumus dari <a href="#/master/formulas">Library rumus</a> yang dibuat Admin IT. Urutan baris = posisi di form.</p>
           <div class="table-responsive"><table class="table table-sm table-bordered phase-fields"><thead><tr><th>#</th><th>Field</th><th>Label</th><th>Tipe</th><th>Mode</th><th>Diulang</th>
-            <th title="Visible">Tampil</th><th title="Editable">Edit</th><th title="Required">Wajib</th><th>Min</th><th>Maks</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+            <th title="Visible">Tampil</th><th title="Editable">Edit</th><th title="Required">Wajib</th><th>Min</th><th>Maks</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>`
+          : `<p class="small text-muted">Nyalakan field yang dipakai di form ${ph.label} channel ini dan tandai yang wajib diisi. Field bertanda <i class="bi bi-lock-fill"></i> selalu dipakai. Butuh field yang belum ada? Minta Admin IT menambahkannya.</p>
+          <div class="table-responsive"><table class="table table-sm mb-2 fld-toggle"><thead><tr><th>Field</th><th>Tipe</th><th>Diisi per</th><th class="text-center" style="width:90px">Dipakai</th><th class="text-center" style="width:110px">Wajib diisi</th></tr></thead><tbody id="fRows"></tbody></table></div>`}
           <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan form ${ph.label}</button>
         </div></div></fieldset></form>
 
@@ -58,7 +66,7 @@
           ${phase === 'REGISTRATION' ? (() => { const ex = SM.setupOf(ch).exception;
             return `<div class="alert alert-warning py-2 small mt-3"><i class="bi bi-signpost-split"></i>&nbsp;<span>Bila pendaftaran <strong>ada exception</strong> (${[ex.trigger_total ? 'total persen melebihi batas total channel' : '', ex.trigger_vc ? 'alokasi Vision Compass per pilar melebihi plafon brand' : ''].filter(Boolean).join(' · ') || 'pemicu belum diaktifkan'}),
               pendaftaran diteruskan ke approver exception <strong>${esc(C.APPROVAL_ROLES[ex.approver_role] || ex.approver_role)}</strong> (RSM = RSBL / ABL)${ex.reason_required ? '; CBD wajib mengisi alasan untuk setiap exception' : ''}.
-              Atur di <a href="#/setup/${p.id}/ch/${ch.id}/limits">Batas & exception</a>.</span></div>`; })() : ''}
+              Batas & approver exception bersifat opsional dan diatur di luar setup, lewat tombol <strong>Exception</strong> di kartu program (Daftar program).</span></div>`; })() : ''}
           <button class="btn btn-brand mt-2"><i class="bi bi-save"></i> Simpan approval ${ph.label}</button>
         </div></div></fieldset></form></div></div>`,
       after(root) {
@@ -98,7 +106,21 @@
               ${['is_visible', 'is_editable', 'is_required'].map((k) => `<td class="text-center"><input type="checkbox" ${chk(f[k])} disabled></td>`).join('')}
               <td class="small text-muted">${h.esc(f.min_value)}</td><td class="small text-muted">${h.esc(f.max_value)}</td>
               <td class="text-center text-muted" title="Field wajib tidak bisa dihapus"><i class="bi bi-lock"></i></td></tr>`;
+        const toggleRow = (f, i) => {
+          const calc = f.mode === 'CALCULATED';
+          return `<tr data-i="${i}" class="${f.is_visible ? '' : 'is-off'}"><td><span class="fw-semibold">${h.esc(f.label || f.field_key)}</span>
+              ${f.locked ? '<span class="badge badge-warning ml-1" title="Field wajib dari Admin IT"><i class="bi bi-lock-fill"></i> wajib</span>' : ''}
+              <div class="small text-muted"><code>${h.esc(f.field_key)}</code> · ${f.source === 'CATALOG' ? 'katalog' : 'custom'}${calc ? ' · dihitung otomatis' : ''}</div></td>
+            <td class="small">${C.FIELD_TYPES[f.data_type] || f.data_type}</td><td class="small">${C.REPEAT[f.repeat_per] || '-'}</td>
+            <td class="text-center"><label class="cps-switch mb-0" title="${f.locked ? 'Selalu dipakai' : 'Pakai field ini di form'}"><input type="checkbox" data-f="is_visible" ${chk(f.is_visible || f.locked)} ${f.locked ? 'disabled' : ''}><span></span></label></td>
+            <td class="text-center">${calc ? '<span class="small text-muted">-</span>' : `<input type="checkbox" data-f="is_required" ${chk(f.is_required && (f.is_visible || f.locked))} ${f.locked || !f.is_visible ? 'disabled' : ''}>`}</td></tr>`;
+        };
         function drawFields() {
+          if (!isIT) {
+            fr.innerHTML = fields.map(toggleRow).join('') || '<tr><td colspan="5" class="text-muted">Belum ada field untuk fase ini.</td></tr>';
+            if (ro) fr.querySelectorAll('input').forEach((x) => { x.disabled = true; });
+            return;
+          }
           fr.innerHTML = fields.map((f, i) => {
             if (f.locked) return lockedRow(f, i);
             const cat = f.source === 'CATALOG';
@@ -128,6 +150,7 @@
           const f = fields[tr.dataset.i];
           f[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
           if (k === 'field_key' && f.source === 'CATALOG') { const c = catalog.find((x) => x.key === f.field_key); Object.assign(f, { label: c.label, data_type: c.dataType, mode: c.mode, repeat_per: c.repeatPer, options: (c.options || []).join(', '), is_editable: c.mode === 'ENTERED' }); }
+          if (k === 'is_visible' && !f.is_visible) f.is_required = false;
           if (k === 'mode' && f.mode === 'CALCULATED') { f.is_editable = false; f.is_required = false; }
           if (k === 'mode' && f.mode === 'ENTERED') { f.formula_id = null; f.expression = ''; f.is_editable = true; }
           // pilih rumus → tipe field & rumus mengikuti library
@@ -146,18 +169,18 @@
           if (b.dataset.act === 'up' || b.dataset.act === 'down') { const j = b.dataset.act === 'up' ? i - 1 : i + 1; [fields[i], fields[j]] = [fields[j], fields[i]]; }
           drawFields();
         });
-        root.querySelector('#addCatalog').addEventListener('click', () => {
+        if (isIT) root.querySelector('#addCatalog').addEventListener('click', () => {
           const c = catalog.find((x) => !reqKeys.includes(x.key) && !fields.some((f) => f.field_key === x.key));
           if (!c) { alert('Semua field katalog fase ini sudah ada di form.'); return; }
           fields.push({ source: 'CATALOG', field_key: c.key, label: c.label, data_type: c.dataType, options: (c.options || []).join(', '), mode: c.mode, expression: '', repeat_per: c.repeatPer,
             is_visible: true, is_editable: c.mode === 'ENTERED', is_required: false, min_value: '', max_value: '' });
           drawFields();
         });
-        root.querySelector('#addCustom').addEventListener('click', () => {
+        if (isIT) root.querySelector('#addCustom').addEventListener('click', () => {
           fields.push({ source: 'CUSTOM', field_key: '', label: '', data_type: 'TEXT', options: '', mode: 'ENTERED', expression: '', repeat_per: 'NONE', is_visible: true, is_editable: true, is_required: false, min_value: '', max_value: '' });
           drawFields();
         });
-        root.querySelector('#fieldsJson').closest('form').addEventListener('submit', () => { root.querySelector('#fieldsJson').value = JSON.stringify(fields); }, true);
+        root.querySelector('#fieldsJson').closest('form').addEventListener('submit', () => { root.querySelector('#fieldsJson').value = JSON.stringify(isIT ? fields : fields.map((f) => ({ field_key: f.field_key, is_visible: !!f.is_visible, is_required: !!f.is_required }))); }, true);
 
         const le = root.querySelector('#layers');
         const roleOpts = (cur) => Object.entries(C.APPROVAL_ROLES).map(([k, v]) => `<option value="${k}" ${sel(cur === k)}>${v}</option>`).join('');
@@ -200,7 +223,7 @@
         });
         root.querySelector('#addLayer').addEventListener('click', () => { layers.push({ role_code: 'ADMIN_DC', is_final: false, conditions: [] }); drawLayers(); });
         root.querySelector('#layersJson').closest('form').addEventListener('submit', () => { root.querySelector('#layersJson').value = JSON.stringify(layers); }, true);
-        ['#addCatalog', '#addCustom', '#addLayer'].forEach((s) => { if (ro) root.querySelector(s).disabled = true; });
+        ['#addCatalog', '#addCustom', '#addLayer'].forEach((s) => { const b = root.querySelector(s); if (ro && b) b.disabled = true; });
         drawFields(); drawLayers();
       },
     };
@@ -210,6 +233,7 @@
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const phase = form.dataset.phase;
     assertDraft(pid, pcId, phase);
     const rows = JSON.parse(f.get('fields') || '[]');
+    if (UI.currentUser().role !== 'SUPERADMIN') { saveFieldToggles(pid, pcId, phase, rows); return; }
     const errs = [];
     const keys = new Set();
     const req = E.requiredFieldKeys(phase);
@@ -253,6 +277,31 @@
     touch(pid);
     done('success', `Form ${phase} disimpan (${out.length} field).`, `/setup/${pid}/ch/${pcId}/phases/${phase}`);
   };
+
+  // Admin HO: nyalakan / matikan field yang sudah ada + field katalog fase ini, tandai wajib diisi. Atribut lain (label, tipe, rumus, min/maks) tetap milik Admin IT.
+  function saveFieldToggles(pid, pcId, phase, rows) {
+    const sub = Object.fromEntries(rows.map((r) => [r.field_key, r]));
+    const req = E.requiredFieldKeys(phase);
+    const prev = DB.where('programPhaseFields', (x) => x.program_channel_id === pcId && x.phase === phase).sort((a, b) => a.sort_order - b.sort_order);
+    const flags = (key, mode, cur) => {
+      if (req.includes(key)) return { is_visible: true, is_required: cur.is_required };
+      const r = sub[key]; const vis = r ? !!r.is_visible : !!cur.is_visible;
+      return { is_visible: vis, is_required: vis && mode !== 'CALCULATED' && (r ? !!r.is_required : !!cur.is_required) };
+    };
+    const out = prev.map(({ id, program_channel_id, ...x }) => Object.assign(x, flags(x.field_key, x.mode, x)));
+    for (const c of C.CATALOG_FIELDS.filter((x) => x.phases.includes(phase) && !out.some((o) => o.field_key === x.key))) {
+      const base = E.catalogFieldRow(c, phase);
+      if (req.includes(c.key) || (sub[c.key] && sub[c.key].is_visible)) out.push(Object.assign(base, flags(c.key, c.mode, base)));
+    }
+    out.forEach((x, i) => { x.sort_order = i + 1; });
+    const before = prev.filter((x) => x.is_visible).map((x) => x.field_key);
+    DB.remove('programPhaseFields', (x) => x.program_channel_id === pcId && x.phase === phase);
+    for (const r of out) DB.insert('programPhaseFields', Object.assign({ program_channel_id: pcId }, r));
+    const on = out.filter((x) => x.is_visible);
+    E.audit(pid, 'programPhaseField', pcId, 'toggle', { phase, fields: before }, { phase, fields: on.map((x) => x.field_key) });
+    touch(pid);
+    done('success', `Form ${phase} disimpan (${on.length} field dipakai).`, `/setup/${pid}/ch/${pcId}/phases/${phase}`);
+  }
 
   actions['setup.saveLayers'] = (f, form) => {
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc); const phase = form.dataset.phase;
@@ -330,18 +379,6 @@
           <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan threshold</button>
         </div></div></fieldset></form>`; })()}
 
-      <div class="card"><div class="card-header"><i class="bi bi-shield-check"></i>&nbsp;Exception toko <span class="small text-muted fw-normal">&nbsp;· toko yang tidak lolos aturan tetap boleh didaftarkan</span></div><div class="card-body">
-        ${canExc ? `<form data-action="setup.addException" data-id="${p.id}" data-pc="${ch.id}" class="row g-2 mb-3">
-          <div class="col-md-5"><select name="customer_id" class="form-control form-control-sm" required><option value="">Pilih toko tidak eligible (${notElig.length})</option>
-            ${notElig.map((x) => `<option value="${x.s.customer_id}">${esc(x.s.name)} · ${x.s.customer_id} — ${esc(x.reasons.join('; '))}</option>`).join('')}</select></div>
-          <div class="col-md-5"><input name="reason" class="form-control form-control-sm" required placeholder="Alasan exception (wajib), mis. toko baru strategis"></div>
-          <div class="col-md-2"><button class="btn btn-sm btn-brand w-100"><i class="bi bi-plus"></i> Exception</button></div></form>` : ''}
-        <table class="table table-sm table-bordered mb-0"><thead><tr><th>Toko</th><th>Alasan exception</th><th>Oleh</th><th></th></tr></thead><tbody>
-          ${exceptions.map((x) => { const s = UI.store(x.customer_id) || { name: x.customer_id }; return `<tr><td>${esc(s.name)}<div class="small text-muted">${x.customer_id}</div></td><td>${esc(x.reason)}</td>
-            <td class="small">${esc((DB.byId('users', x.by) || {}).name || '-')}<div class="text-muted">${h.datetime(x.at)}</div></td>
-            <td class="text-right">${canExc ? `<a href="#" class="text-danger small" data-click="setup.delException" data-id="${p.id}" data-pc="${ch.id}" data-cid="${x.customer_id}">hapus</a>` : ''}</td></tr>`; }).join('')
-            || '<tr><td colspan="4" class="text-muted small">Belum ada exception.</td></tr>'}</tbody></table>
-        <div class="form-text">Bisa ditambah setelah publish. Semua exception tercatat di audit log dan terlihat di daftar toko Registration.</div></div></div>
       </div>
       <div class="col-xl-4"><div class="card sticky-summary"><div class="card-header"><i class="bi bi-funnel"></i>&nbsp;Preview eligibility (tersimpan)</div><div class="card-body small">
         <div><strong>${elig.filter((x) => x.eligible).length}</strong> dari ${stores.length} toko ${esc(ch.channel_name)} eligible${exceptions.length ? ` (termasuk ${exceptions.length} exception)` : ''}.</div>
@@ -361,7 +398,7 @@
     Object.assign(pc, v);
     E.audit(pid, 'programChannel', pcId, 'update', before, v);
     touch(pid);
-    done('success', 'Eligibility disimpan. Lanjut ke Batas & exception.', `/setup/${pid}/ch/${pcId}/eligibility`);
+    done('success', 'Eligibility disimpan.', `/setup/${pid}/ch/${pcId}/eligibility`);
   };
 
   // ---------------------------------------------------------------- Pencairan · syarat payout & jadwal
@@ -458,7 +495,7 @@
     pc.elig_exceptions.push(row);
     E.audit(pid, 'eligibilityException', pcId, 'create', null, row);
     touch(pid);
-    done('success', `Exception untuk ${esc(cid)} ditambahkan.`, `/setup/${pid}/ch/${pcId}/eligibility`);
+    done('success', `Exception untuk ${esc(cid)} ditambahkan.`, `/setup/${pid}/exceptions?ch=${pcId}`);
   };
   clicks['setup.delException'] = (d) => {
     const pid = Number(d.id); const pcId = Number(d.pc);

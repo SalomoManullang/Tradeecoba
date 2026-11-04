@@ -51,7 +51,7 @@
   // Bagian konfigurasi channel dikelompokkan per fase; Monitoring & Pencairan masih kerangka ("Menyusul") kecuali termin pencairan
   const PHASE_TABS = {
     REGISTRATION: [['brands', 'Brand'], ['scheme', 'Skema kelas'], ['pillars', 'Pilar & saran lead measure'], ['eligibility', 'Eligibility & threshold'],
-      ['limits', 'Batas & exception'], ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
+      ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
     MONITORING: [['monitoring', 'Kerangka', true], ['phases/MONITORING', 'Form & approval', true]],
     PAYOUT: [['payout-rules', 'Syarat payout & jadwal'], ['terms', 'Termin & conditional rebate'], ['formulas', 'Rumus', true], ['phases/PAYOUT', 'Form & approval', true]],
   };
@@ -178,7 +178,7 @@
       ['config', '3', 'Konfigurasi channel', first ? `#/setup/${p.id}/ch/${first.id}/brands` : `#/setup/${p.id}/channels`],
       ['simulate', '4', 'Simulasi', `#/setup/${p.id}/simulate`],
       ['validate', '5', 'Validasi & publish', `#/setup/${p.id}/validate`],
-      ['audit', '', 'Audit log', `#/setup/${p.id}/audit`],
+      ['audit', '', 'Audit log', `#/setup/${p.id}/audit`, 'bi-clock-history'],
     ];
     const phase = ch ? phaseOfSub(sub) : null;
     const st = ch ? SM.phaseStatus(ch, phase) : null;
@@ -200,7 +200,7 @@
         <div class="cps-fact"><span class="cps-fact-label">Channel</span><span class="cps-fact-value">${p.channels.length}</span></div>
         <div class="cps-fact"><span class="cps-fact-label">Registrasi</span><span class="cps-fact-value">${p.registrationCount}</span></div>
       </div></div>
-      <ol class="flow-steps flow-crumb">${steps.map(([k, n, l, href2]) => `<li class="${step === k ? 'active' : ''}"><a href="${href2}">${n ? `<span class="n">${n}</span>` : '<i class="bi bi-clock-history"></i>'}${l}</a></li>`).join('')}</ol></div>
+      <ol class="flow-steps flow-crumb">${steps.map(([k, n, l, href2, ic]) => `<li class="${step === k ? 'active' : ''}"><a href="${href2}">${n ? `<span class="n">${n}</span>` : `<i class="bi ${ic}"></i>`}${l}</a></li>`).join('')}</ol></div>
       ${nextEl}${chNav}`;
   }
 
@@ -210,19 +210,42 @@
     const all = DB.t('programs').slice().sort((a, b) => b.year - a.year || a.id - b.id);
     const programs = all.filter((p) => p.year === year);
     const types = Object.fromEntries(DB.t('programTypes').map((t) => [t.id, t.name]));
+    // Kartu per program: status ringkas + kelengkapan Pendaftaran per channel (7 langkah)
+    const progStatus = (id) => { const { count, total } = SM.programSummary(id); return !total ? 'DRAFT' : count.PUBLISHED ? 'PUBLISHED' : count.DRAFT ? 'DRAFT' : 'CLOSED'; };
+    const cards = programs.map((p0) => {
+      const p = E.loadProgram(p0.id);
+      const st = progStatus(p.id);
+      const chs = p.channels.map((ch) => {
+        const rows = PHASE_TABS.REGISTRATION.map(([k]) => sectionStatus(ch, k).s);
+        const d = rows.filter((x) => x === 'done').length;
+        return { ch, d, n: rows.length, s: d === rows.length ? 'done' : d ? 'partial' : 'todo' };
+      });
+      const full = chs.filter((x) => x.s === 'done').length;
+      const pctW = chs.length ? Math.round((chs.reduce((a, x) => a + x.d / x.n, 0) / chs.length) * 100) : 0;
+      const editableP = SM.programSummary(p.id).count.DRAFT > 0;
+      const [btnLabel, btnCls, to] = !chs.length ? ['Mulai Setup', 'btn-outline-brand', 'header'] : !editableP ? ['Lihat Setup', 'btn-outline-secondary', 'channels']
+        : full < chs.length ? ['Lanjutkan Setup', 'btn-brand', 'channels'] : ['Validasi & Publish', 'btn-brand', 'validate'];
+      return `<div class="cps-chcard" data-st="${st}">
+        <div class="cps-chcard-top"><div class="cps-chcard-name">${esc(p.name)}</div>${statusTag(st)}</div>
+        <div class="cps-chcard-code">${esc(p.code)} · ${esc(types[p.program_type_id] || '')}</div>
+        <div class="cps-chcard-meta"><i class="bi bi-calendar3"></i> ${h.date(p.period_start)} – ${h.date(p.period_end)}<br>
+          <i class="bi bi-diagram-3"></i> ${chs.length} channel · ${DB.where('registrations', (x) => x.program_id === p.id).length} registrasi · <span class="text-muted">${SM.summaryLabel(p.id)}</span></div>
+        <div class="cps-chcard-prog"><span>Kelengkapan Pendaftaran</span><span>${full} dari ${chs.length} channel</span></div>
+        <div class="cps-chcard-bar ${chs.length && full === chs.length ? 'is-full' : ''}"><span style="width:${pctW}%"></span></div>
+        <div class="cps-chcard-chips">${chs.map((x) => `<a href="#/setup/${p.id}/ch/${x.ch.id}/brands" class="cps-chcard-chip st-${x.s}" title="${x.d} dari ${x.n} langkah">${x.s === 'done' ? '<i class="bi bi-check-lg"></i>' : ''}${esc(x.ch.channel_name)}</a>`).join('') || '<span class="small text-muted">Belum ada channel</span>'}</div>
+        <div class="cps-chcard-foot"><span><button type="button" class="btn btn-sm btn-link" data-clone="${p.id}">Clone</button>
+          <a href="#/setup/${p.id}/exceptions" class="btn btn-sm btn-link" title="Opsional: exception toko, batas benefit & approver exception"><i class="bi bi-shield-check"></i> Exception${(() => { const n = p.channels.reduce((a, c) => a + (c.elig_exceptions || []).length, 0); return n ? ` (${n})` : ''; })()}</a></span>
+          <a href="#/setup/${p.id}/${to}" class="btn ${btnCls}">${btnLabel}</a></div></div>`;
+    }).join('');
+    const count = (s) => programs.filter((p) => !s || progStatus(p.id) === s).length;
+    const filters = [['', 'Semua'], ['PUBLISHED', 'Published'], ['DRAFT', 'Draft'], ['CLOSED', 'Closed']].filter(([s], i) => !i || count(s));
     return {
       title: 'Program Setup', html: `<div class="cps"><div class="cps-list">
-      <div class="page-head"><div><h1>Program Setup ${year}</h1><div class="sub">Konfigurasi program loyalty tanpa code release. Hanya Admin HO & Admin IT (Superadmin).</div></div>
-        <a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Program baru</a></div>
-      <div class="card mb-4"><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0">
-        <thead><tr><th>Kode</th><th>Nama</th><th>Tipe</th><th>Periode</th><th class="num">Channel</th><th class="num">Registrasi</th><th>Status channel × fase</th><th></th></tr></thead>
-        <tbody>${programs.map((p) => `<tr><td><code>${esc(p.code)}</code></td><td class="fw-semibold">${esc(p.name)}</td><td>${esc(types[p.program_type_id])}</td>
-          <td>${h.date(p.period_start)} – ${h.date(p.period_end)}</td>
-          <td class="num">${DB.where('programChannels', (c) => c.program_id === p.id).length}</td>
-          <td class="num">${DB.where('registrations', (x) => x.program_id === p.id).length}</td><td><span class="badge badge-light">${SM.summaryLabel(p.id)}</span></td>
-          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/header" class="btn btn-sm btn-outline-brand">${SM.programSummary(p.id).count.DRAFT ? 'Edit' : 'Lihat'}</a>
-            <button type="button" class="btn btn-sm btn-link" data-clone="${p.id}">Clone</button></td></tr>`).join('')
-          || `<tr><td colspan="8" class="text-center text-muted py-4">Belum ada program di tahun ${year}.</td></tr>`}</tbody></table></div></div>
+      <div class="page-head"><div><h1>Program Setup ${year}</h1><div class="sub">Konfigurasi program loyalty tanpa code release. Hanya Admin HO & Admin IT (Superadmin).</div></div></div>
+      <div class="cps-chhead"><h2>Daftar program <span class="text-muted fw-normal fs-6">· status & kelengkapan Pendaftaran per channel</span></h2>
+        <div class="cps-chhead-r"><div class="cps-seg" role="group">${filters.map(([s, l], i) => `<button type="button" class="${i ? '' : 'active'}" data-f="${s}">${l} (${count(s)})</button>`).join('')}</div>
+          <a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Tambah Program</a></div></div>
+      <div class="cps-chgrid">${cards || `<div class="text-muted p-4">Belum ada program di tahun ${year}. Klik <strong>Tambah Program</strong> untuk mulai.</div>`}</div>
       <dialog class="cps-dialog" id="cloneDlg" aria-labelledby="cloneDlgTitle">
         <form data-action="setup.clone"><input type="hidden" name="source_id" id="cloneSrc">
           <div class="cps-dialog-head"><h2 id="cloneDlgTitle"><i class="bi bi-copy"></i> Clone program</h2>
@@ -240,7 +263,6 @@
           <div class="cps-dialog-foot"><button type="button" class="btn btn-outline-secondary" data-dlg-close>Batal</button>
             <button class="btn btn-brand"><i class="bi bi-copy"></i> Clone</button></div>
         </form></dialog></div></div>`,
-      // Clone di tabel membuka pop-up dengan program sumber dari baris tsb; #/setup?clone=<id> juga langsung membukanya
       after(root) {
         const dlg = root.querySelector('#cloneDlg');
         const open = (id) => {
@@ -256,6 +278,10 @@
         dlg.querySelectorAll('[data-dlg-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
         dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
         if (q.clone) open(q.clone);
+        root.querySelectorAll('.cps-seg [data-f]').forEach((b) => b.addEventListener('click', () => {
+          root.querySelectorAll('.cps-seg [data-f]').forEach((x) => x.classList.toggle('active', x === b));
+          root.querySelectorAll('.cps-chcard').forEach((c) => { c.hidden = !!b.dataset.f && c.dataset.st !== b.dataset.f; });
+        }));
       },
     };
   });
@@ -375,17 +401,33 @@
     // master channel × tipe (Active / Passive) yang belum ada di program
     const taken = (code, type) => p.channels.some((x) => x.channel_code === code && (x.channel_type || null) === type);
     const avail = DB.t('channels').filter((c) => c.is_active && Object.keys(E.CHANNEL_TYPES).some((t) => !taken(c.code, t)));
+    // Kartu per channel: status & kelengkapan mengikuti 7 langkah fase Pendaftaran
+    const cards = p.channels.map((ch) => {
+      const st = SM.phaseStatus(ch, 'REGISTRATION');
+      const rows = PHASE_TABS.REGISTRATION.map(([k, label]) => Object.assign({ k, label }, sectionStatus(ch, k)));
+      const nDone = rows.filter((r) => r.s === 'done').length;
+      const todo = rows.find((r) => r.s !== 'done');
+      const [btnLabel, btnCls, k] = st !== 'DRAFT' || !todo ? ['Lihat Setup', 'btn-outline-secondary', 'brands']
+        : nDone ? ['Lanjutkan Setup', 'btn-brand', todo.k] : ['Mulai Setup', 'btn-outline-brand', todo.k];
+      return `<div class="cps-chcard" data-st="${st}">
+        <div class="cps-chcard-top"><div class="cps-chcard-name">${esc(ch.channel_name)}</div>${statusTag(st)}</div>
+        <div class="cps-chcard-code">${esc(ch.channel_code)}</div>
+        <div class="cps-chcard-meta"><i class="bi bi-tags"></i> ${ch.brands.length} brand · ${ch.pillars.length} pilar</div>
+        <div class="cps-chcard-prog"><span>Kelengkapan setup</span><span>${nDone} dari ${rows.length}</span></div>
+        <div class="cps-chcard-bar ${nDone === rows.length ? 'is-full' : ''}"><span style="width:${Math.round((nDone / rows.length) * 100)}%"></span></div>
+        <div class="cps-chcard-chips">${rows.map((r) => `<a href="#/setup/${p.id}/ch/${ch.id}/${r.k}" class="cps-chcard-chip st-${r.s}" title="${ST_TITLE[r.s]}${r.hint ? ' · ' + r.hint : ''}">${r.s === 'done' ? '<i class="bi bi-check-lg"></i>' : ''}${r.label}</a>`).join('')}</div>
+        <div class="cps-chcard-foot">${editable(p) ? `<a href="#" class="btn btn-sm btn-link text-danger" data-click="setup.deleteChannel" data-id="${p.id}" data-pc="${ch.id}" data-confirm="Hapus channel ${esc(ch.channel_name)} beserta konfigurasinya?">Hapus</a>` : '<span></span>'}
+          <a href="#/setup/${p.id}/ch/${ch.id}/${k}" class="btn ${btnCls}">${btnLabel}</a></div></div>`;
+    }).join('');
+    const count = (s) => p.channels.filter((ch) => !s || SM.phaseStatus(ch, 'REGISTRATION') === s).length;
+    const filters = [['', 'Semua'], ['PUBLISHED', 'Published'], ['DRAFT', 'Draft'], ['CLOSED', 'Closed']].filter(([s], i) => !i || count(s));
     return {
       title: 'Channel', html: `<div class="cps">${nav(p, 'channels')}
-      <div class="row g-3"><div class="col-lg-8"><div class="card"><div class="card-header"><span class="step-chip">2</span>&nbsp;Channel program</div><div class="card-body p-0">
-        <table class="table mb-0"><thead><tr><th>Channel</th><th>Tipe</th><th class="num">Brand</th><th class="num">Pilar / LM</th><th>Approval Registration</th><th></th></tr></thead><tbody>
-        ${p.channels.map((ch) => `<tr><td class="fw-semibold">${esc(ch.channel_name)} <code class="small">${ch.channel_code}</code></td>
-          <td>${E.CHANNEL_TYPES[ch.channel_type] ? `<span class="badge badge-light">${E.CHANNEL_TYPES[ch.channel_type]}</span>` : '<span class="text-muted small">-</span>'}</td><td class="num">${ch.brands.length}</td>
-          <td class="num">${ch.pillars.length} / ${ch.leadMeasures.length}</td><td>${UI.layerPath(ch.phases.REGISTRATION.layers)}</td>
-          <td class="text-right text-nowrap"><a href="#/setup/${p.id}/ch/${ch.id}/brands" class="btn btn-sm btn-brand">Konfigurasi</a>
-            ${editable(p) ? `<a href="#" class="btn btn-sm btn-link text-danger" data-click="setup.deleteChannel" data-id="${p.id}" data-pc="${ch.id}" data-confirm="Hapus channel ${esc(ch.channel_name)} beserta konfigurasinya?">Hapus</a>` : ''}</td></tr>`).join('')
-          || '<tr><td colspan="6" class="text-muted p-4">Belum ada channel.</td></tr>'}</tbody></table></div></div></div>
-      <div class="col-lg-4"><div class="card"><div class="card-header">Tambah channel</div><div class="card-body">
+      <div class="cps-chhead"><h2>Channel program <span class="text-muted fw-normal fs-6">· status & kelengkapan fase Pendaftaran</span></h2>
+        <div class="cps-chhead-r"><div class="cps-seg" role="group">${filters.map(([s, l], i) => `<button type="button" class="${i ? '' : 'active'}" data-f="${s}">${l} (${count(s)})</button>`).join('')}</div>
+          ${editable(p) && avail.length ? '<button type="button" class="btn btn-brand" id="addChBtn"><i class="bi bi-plus-lg"></i> Tambah Channel</button>' : ''}</div></div>
+      <div class="cps-chgrid">${cards || '<div class="text-muted p-4">Belum ada channel. Klik <strong>Tambah Channel</strong> untuk mulai.</div>'}</div>
+      <div class="card" id="addCh" ${editable(p) && avail.length ? 'hidden' : ''}><div class="card-header">Tambah channel</div><div class="card-body">
         <p class="small text-muted">Satu program bisa punya beberapa channel (tetap dihitung satu program). Setiap channel dapat konfigurasi sendiri di step 3. Pilih <strong>Active</strong> atau <strong>Passive</strong>: channel yang sama dengan tipe berbeda menjadi dua channel terpisah.</p>
         ${!editable(p) ? '<div class="small text-muted">Sudah ada fase yang dipublish. Menambah channel setelah publish <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> masih dikonfirmasi (PRD UF9).</div>'
           : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}"><select name="channel_code" class="form-control mb-2">
@@ -397,7 +439,16 @@
           <button class="btn btn-brand">Tambah</button></form>
           <div class="form-text">Preset standar berisi rumus "${C.PRESET_NAME}", form fase, approval layer contoh & template MOU/SKN. Salin dari channel lain = tinggal ubah yang berbeda. Semua bisa diubah.</div>`
           : '<div class="small text-muted">Semua channel master (Active & Passive) sudah ditambahkan.</div>'}
-      </div></div></div></div></div>`,
+      </div></div></div>`,
+      after(root) {
+        const box = root.querySelector('#addCh'); const btn = root.querySelector('#addChBtn');
+        if (btn) btn.addEventListener('click', () => { box.hidden = !box.hidden; if (!box.hidden) box.scrollIntoView({ block: 'nearest' }); });
+        if (btn && !p.channels.length) box.hidden = false;
+        root.querySelectorAll('.cps-seg [data-f]').forEach((b) => b.addEventListener('click', () => {
+          root.querySelectorAll('.cps-seg [data-f]').forEach((x) => x.classList.toggle('active', x === b));
+          root.querySelectorAll('.cps-chcard').forEach((c) => { c.hidden = !!b.dataset.f && c.dataset.st !== b.dataset.f; });
+        }));
+      },
     };
   });
   actions['setup.addChannel'] = (f, form) => {

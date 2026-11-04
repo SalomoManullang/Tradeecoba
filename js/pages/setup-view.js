@@ -141,7 +141,7 @@
     const n = d.reduce((s, x) => s + forms.get(x).dirty.size, 0);
     b.classList.toggle('is-dirty', n > 0);
     b.querySelector('.cps-savebar-text').innerHTML = n ? `<i class="bi bi-pencil-square"></i> <strong>${n} perubahan</strong> belum disimpan${d.length > 1 ? ` di ${d.length} bagian` : ''}`
-      : list.length ? '<i class="bi bi-check2"></i> Semua perubahan tersimpan' : '<i class="bi bi-lock"></i> Fase ini read-only';
+      : list.length ? '<i class="bi bi-check2"></i> Semua perubahan tersimpan' : document.querySelector('#app .cps-lock') ? '<i class="bi bi-lock"></i> Fase ini read-only' : '';
     const label = nx ? nx.dataset.cpsNextLabel : '';
     const vis = (k, on) => { b.querySelector(`[data-sb="${k}"]`).hidden = !on; };
     const pv = document.querySelector('#app [data-cps-prev]');

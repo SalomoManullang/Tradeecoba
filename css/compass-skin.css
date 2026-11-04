@@ -1300,3 +1300,51 @@ body:not(.cps-review-on) .cps-help .warn-mark, body:not(.cps-review-on) .cps-hel
 .cps-dialog-body { padding: 20px 24px; }
 .cps-dialog-src { margin-bottom: var(--space-4); padding: 10px 12px; border-radius: var(--radius-base); background: var(--primary-100); color: var(--primary-700); font-size: 14px; }
 .cps-dialog-foot { display: flex; justify-content: flex-end; gap: var(--space-4); padding: 16px 24px; border-top: 1px solid var(--color-border-default); }
+
+/* Daftar channel: kartu per channel (status & kelengkapan fase Pendaftaran) */
+.cps .cps-chhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin: var(--space-4) 0 var(--space-6); }
+.cps .cps-chhead h2 { margin: 0; font-size: 18px; }
+.cps .cps-chhead-r { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.cps .cps-seg { display: inline-flex; border: 1px solid var(--color-border-default); border-radius: var(--radius-base); overflow: hidden; background: var(--neutral-100); }
+.cps .cps-seg button { border: 0; background: none; padding: 6px 12px; font-size: 12.5px; font-weight: var(--weight-semibold); color: var(--color-text-secondary); cursor: pointer; }
+.cps .cps-seg button + button { border-left: 1px solid var(--color-border-default); }
+.cps .cps-seg button.active { background: var(--primary-600); color: #fff; }
+.cps .cps-chgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-6); }
+.cps .cps-chcard { display: flex; flex-direction: column; padding: var(--space-8); background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); }
+.cps .cps-chcard[hidden] { display: none; }
+.cps .cps-chcard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.cps .cps-chcard-name { font-size: 16px; font-weight: var(--weight-semibold); color: var(--color-text-primary); }
+.cps .cps-chcard-code { font-size: 11.5px; letter-spacing: .02em; text-transform: uppercase; color: var(--color-text-tertiary); }
+.cps .cps-chcard-meta { margin: var(--space-6) 0; font-size: 13px; color: var(--color-text-secondary); }
+.cps .cps-chcard-prog { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: var(--weight-semibold); }
+.cps .cps-chcard-prog span + span { font-weight: 400; color: var(--color-text-secondary); }
+.cps .cps-chcard-bar { height: 6px; margin: var(--space-3) 0 var(--space-5); border-radius: var(--radius-full); background: var(--neutral-variant-200); overflow: hidden; }
+.cps .cps-chcard-bar span { display: block; height: 100%; background: var(--primary-600); border-radius: inherit; }
+.cps .cps-chcard-bar.is-full span { background: var(--success-600, #2e9e5b); }
+.cps .cps-chcard-chips { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
+.cps .cps-chcard-chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px var(--space-3); border-radius: var(--radius-sm); font-size: 11px; line-height: 18px; text-decoration: none;
+  background: var(--neutral-variant-100); color: var(--color-text-secondary); border: 1px solid var(--color-border-subtle); }
+.cps .cps-chcard-chip.st-done { background: var(--success-100); color: var(--success-700); border-color: transparent; }
+.cps .cps-chcard-chip.st-partial { background: var(--primary-100); color: var(--primary-700); border-color: transparent; }
+.cps .cps-chcard-chip:hover { text-decoration: none; filter: brightness(.96); }
+.cps .cps-chcard-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: auto; padding-top: var(--space-8); }
+@media (max-width: 640px) { .cps .cps-chgrid { grid-template-columns: 1fr; } .cps .cps-chhead { align-items: flex-start; } }
+.cps .cps-chgrid + .card { margin-top: var(--space-6); }
+.cps .cps-chgrid + .card, .cps .cps-list + .card { margin-top: var(--space-6); }
+.cps .cps-seg a { padding: 6px 12px; font-size: 12.5px; font-weight: var(--weight-semibold); color: var(--color-text-secondary); text-decoration: none; }
+.cps .cps-seg a + a { border-left: 1px solid var(--color-border-default); }
+.cps .cps-seg a.active { background: var(--primary-600); color: #fff; }
+.cps .cps-seg { flex-wrap: wrap; }
+
+/* Form fase (Admin HO): field dipakai / tidak */
+.cps .fld-toggle td { vertical-align: middle; }
+.cps .fld-toggle tr.is-off td { color: var(--color-text-tertiary); }
+.cps .fld-toggle tr.is-off .fw-semibold { font-weight: 400 !important; }
+.cps .cps-switch { position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer; }
+.cps .cps-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.cps .cps-switch span { position: absolute; inset: 0; border-radius: var(--radius-full); background: var(--neutral-variant-300, #c4c8d0); transition: background 120ms ease; pointer-events: none; }
+.cps .cps-switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform 120ms ease; }
+.cps .cps-switch input:checked + span { background: var(--primary-600); }
+.cps .cps-switch input:checked + span::after { transform: translateX(16px); }
+.cps .cps-switch input:disabled + span { opacity: .55; }
+.cps .cps-switch input:focus-visible + span { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }

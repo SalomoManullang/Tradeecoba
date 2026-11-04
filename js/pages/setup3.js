@@ -216,10 +216,17 @@
     done(iss.length ? 'warning' : 'success', `Skema kelas disimpan.${iss.length ? ` Perlu diperbaiki sebelum publish: ${esc(iss.join('; '))}.` : ''}`, `/setup/${pid}/ch/${pcId}/scheme/${b}`);
   };
 
-  // ---------------------------------------------------------------- Pendaftaran · aturan benefit, batas total & exception per channel
-  route('/setup/:id/ch/:pc/limits', ({ id, pc }) => {
+  // ---------------------------------------------------------------- Exception (tingkat program, opsional) · dibuka dari kartu di Daftar program
+  // Per channel: exception toko + batas persen benefit & approver exception. Tidak dihitung di kelengkapan setup / syarat publish.
+  route('/setup/:id/ch/:pc/limits', ({ id, pc }) => UI.redirect(`/setup/${id}/exceptions?ch=${pc}`));
+  route('/setup/:id/exceptions', ({ id }, q) => {
     const p = getProgram(id);
-    const ch = getChannel(p, pc);
+    // Bukan bagian alur setup: header sendiri, kembali ke Daftar program
+    const head = `<div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div>
+        <div class="small text-muted"><a href="#/setup">Program Setup</a> / ${esc(p.code)}</div><h1>Exception · ${esc(p.name)}</h1>
+        <div class="sub">Opsional dan di luar proses setup: tidak dihitung di kelengkapan dan tidak wajib untuk publish.</div></div></div></div>`;
+    if (!p.channels.length) return { title: 'Exception', html: `<div class="cps">${head}<div class="card"><div class="card-body text-muted">Belum ada channel. Tambahkan channel dulu di <a href="#/setup/${p.id}/channels">Channel</a>.</div></div></div>` };
+    const ch = p.channels.find((c) => c.id === Number(q.ch)) || p.channels[0];
     const st = SM.setupOf(ch);
     const ex = st.exception; const ru = st.rules;
     // kelas × tier yang total (conditional + Vision Compass) / persen benefit-nya di luar aturan channel
@@ -233,27 +240,48 @@
       const by = {}; for (const x of xs) (by[x.b] = by[x.b] || []).push(`${esc(x.c)}${x.t} (${pct(f(x))})`);
       return `<span class="text-warning">${Object.entries(by).map(([bn, v]) => `<strong>${esc(bn)}</strong>: ${v.join(', ')}`).join(' · ')}</span>`; };
     const rng = (n1, v1, n2, v2) => `<div class="d-flex gap-1 align-items-center rng">${pctIn(n1, v1, 'placeholder="min"')}${pctIn(n2, v2, 'placeholder="maks"')}</div>`;
+    // exception toko: toko yang tidak lolos eligibility tetap boleh didaftarkan (boleh diubah saat DRAFT & PUBLISHED)
+    const stores = DB.t('stores').filter((s) => s.channel_code === ch.channel_code);
+    const exceptions = ch.elig_exceptions || [];
+    const canExc = SM.phaseStatus(ch, 'REGISTRATION') !== 'CLOSED';
+    const notElig = stores.map((s) => Object.assign({ s }, E.eligibility(p, ch, s.customer_id))).filter((x) => !x.eligible && !exceptions.some((e) => e.customer_id === x.s.customer_id));
     return {
-      title: `Batas & exception · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'limits')}
+      title: `Exception · ${p.name}`, html: `<div class="cps">${head}
+      <div class="cps-chhead"><h2>Channel</h2>
+        <div class="cps-seg" role="group">${p.channels.map((c) => `<a href="#/setup/${p.id}/exceptions?ch=${c.id}" class="${c.id === ch.id ? 'active' : ''}">${esc(c.channel_name)}${(c.elig_exceptions || []).length ? ` (${c.elig_exceptions.length})` : ''}</a>`).join('')}</div></div>
+
+      <div class="card mb-3"><div class="card-header"><i class="bi bi-shield-check"></i>&nbsp;Exception toko — ${esc(ch.channel_name)} <span class="small text-muted fw-normal">&nbsp;· toko yang tidak lolos eligibility tetap boleh didaftarkan</span></div><div class="card-body">
+        ${canExc ? `<form data-action="setup.addException" data-id="${p.id}" data-pc="${ch.id}" class="row g-2 mb-3">
+          <div class="col-md-5"><select name="customer_id" class="form-control form-control-sm" required><option value="">Pilih toko tidak eligible (${notElig.length})</option>
+            ${notElig.map((x) => `<option value="${x.s.customer_id}">${esc(x.s.name)} · ${x.s.customer_id} — ${esc(x.reasons.join('; '))}</option>`).join('')}</select></div>
+          <div class="col-md-5"><input name="reason" class="form-control form-control-sm" required placeholder="Alasan exception (wajib), mis. toko baru strategis"></div>
+          <div class="col-md-2"><button class="btn btn-sm btn-brand w-100"><i class="bi bi-plus"></i> Exception</button></div></form>` : ''}
+        <table class="table table-sm table-bordered mb-0"><thead><tr><th>Toko</th><th>Alasan exception</th><th>Oleh</th><th></th></tr></thead><tbody>
+          ${exceptions.map((x) => { const s = UI.store(x.customer_id) || { name: x.customer_id }; return `<tr><td>${esc(s.name)}<div class="small text-muted">${x.customer_id}</div></td><td>${esc(x.reason)}</td>
+            <td class="small">${esc((DB.byId('users', x.by) || {}).name || '-')}<div class="text-muted">${h.datetime(x.at)}</div></td>
+            <td class="text-right">${canExc ? `<a href="#" class="text-danger small" data-click="setup.delException" data-id="${p.id}" data-pc="${ch.id}" data-cid="${x.customer_id}">hapus</a>` : ''}</td></tr>`; }).join('')
+            || '<tr><td colspan="4" class="text-muted small">Belum ada exception.</td></tr>'}</tbody></table>
+        <div class="form-text">Bisa ditambah setelah publish. Semua exception tercatat di audit log dan terlihat di daftar toko Registration.</div></div></div>
+
       <form data-action="setup.saveLimits" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
-      <div class="row g-3"><div class="col-xl-7"><div class="card h-100"><div class="card-header"><i class="bi bi-speedometer2"></i>&nbsp;Aturan benefit & batas total — ${esc(ch.channel_name)}</div><div class="card-body">
-          <div class="small text-muted mb-2">Rentang persen yang boleh dipakai kelas di channel ini dan batas total (conditional + Vision Compass). Di luar aturan: warning saat validasi; total di atas batas menjadi exception di form CBD.</div>
+      <div class="row g-3"><div class="col-xl-7"><div class="card h-100"><div class="card-header"><i class="bi bi-speedometer2"></i>&nbsp;Batas benefit (opsional) — ${esc(ch.channel_name)}</div><div class="card-body">
+          <div class="small text-muted mb-2">Kosongkan bila tidak ada batas. Bila diisi: kelas di luar rentang menjadi warning saat validasi, dan total di atas batas menjadi exception di form CBD.</div>
           <table class="table table-sm mb-2"><thead><tr><th>Aturan</th><th style="width:260px">Nilai</th><th>Kelas × tier di luar aturan</th></tr></thead><tbody>
             <tr><td class="fw-semibold">Semester benefit</td><td>${rng('semester_min', ru.semester_min, 'semester_max', ru.semester_max)}</td><td class="small">${list(semOut, (x) => x.sem)}</td></tr>
             <tr><td class="fw-semibold">Yearly benefit</td><td>${rng('yearly_min', ru.yearly_min, 'yearly_max', ru.yearly_max)}</td><td class="small">${list(yrOut, (x) => x.yr)}</td></tr>
             <tr><td class="fw-semibold">Batas total</td><td><div class="rng">${pctIn('total_max_pct', ru.total_max_pct, 'placeholder="tanpa batas"')}</div></td><td class="small">${ru.total_max_pct === null ? '<span class="text-muted">-</span>' : list(over, (x) => x.tot)}</td></tr>
           </tbody></table>
         </div></div></div>
-        <div class="col-xl-5"><div class="card h-100"><div class="card-header"><i class="bi bi-exclamation-diamond"></i>&nbsp;Exception</div><div class="card-body">
+        <div class="col-xl-5"><div class="card h-100"><div class="card-header"><i class="bi bi-exclamation-diamond"></i>&nbsp;Approver exception</div><div class="card-body">
           <label class="form-label">Pemicu exception</label>
-          <ul class="small mb-3"><li>Total persen melebihi batas total channel.</li><li>Alokasi Vision Compass per pilar melebihi plafon brand (target 2027 × persen Vision Compass kelas).</li></ul>
+          <ul class="small mb-3"><li>Total persen melebihi batas total channel (hanya bila batas total diisi).</li><li>Alokasi Vision Compass per pilar melebihi plafon brand (target 2027 × persen Vision Compass kelas).</li></ul>
           <label class="form-label">Approver exception</label>
           <select name="approver_role" class="form-control">${Object.entries(C.APPROVAL_ROLES).map(([k, l]) => `<option value="${k}" ${sel(ex.approver_role === k)}>${esc(l)}</option>`).join('')}</select>
           <div class="form-text mb-3">Contoh: RSM = RSBL / ABL. Bila ada exception, pendaftaran diteruskan ke approver ini.</div>
           <div class="small"><i class="bi bi-chat-left-text"></i> CBD <strong>wajib mengisi alasan</strong> untuk setiap exception.</div>
         </div></div></div></div>
-      <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan batas & exception</button>
-      </fieldset></form></div></div>`,
+      <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan batas & approver</button>
+      </fieldset></form></div>`,
     };
   });
   actions['setup.saveLimits'] = (f, form) => {
@@ -268,7 +296,7 @@
       st.exception = Object.assign({}, st.exception, { approver_role: ap, trigger_total: true, trigger_vc: true, reason_required: true });
       return (s) => ({ rules: s.rules, exception: s.exception });
     });
-    done('success', 'Aturan, batas total & exception disimpan.', `/setup/${pid}/ch/${pcId}/limits`);
+    done('success', 'Batas & approver exception disimpan.', `/setup/${pid}/exceptions?ch=${pcId}`);
   };
 
   // ---------------------------------------------------------------- Pencairan · termin & conditional rebate (semester + yearly)

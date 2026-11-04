@@ -58,12 +58,9 @@
       <div class="cps-work">
       <div class="loop-lane mb-3"><div class="loop-label"><i class="bi bi-diagram-3"></i> Channel</div>
         <div class="d-flex flex-wrap gap-2 align-items-center">${program.channels.filter((c) => canSeeChannel(user, c.channel_code) && regOpen(c)).map((c) => `<a class="btn btn-sm ${c.id === ch.id ? 'btn-brand' : 'btn-outline-brand'}" href="#/registration/program/${program.id}/${c.id}">${esc(c.channel_name)}</a>`).join('')}</div></div>
-      <div class="card mb-2"><div class="card-body"><p class="small text-muted mb-0"><span class="text-muted">Aturan eligibility:</span>
-        ${ch.elig_min_sell_out_months ? `<span>Min ${ch.elig_min_sell_out_months} bulan sell out</span>` : ''}
-        ${ch.elig_ratio_at_registration && ch.elig_ratio_min !== null ? `<span>· SO:SI ${ch.elig_ratio_min}–${ch.elig_ratio_max === null ? '∞' : ch.elig_ratio_max}%</span>` : ''}
-        ${(ch.elig_exclusive_program_ids || []).length ? `<span>· Tidak boleh bersamaan: ${(ch.elig_exclusive_program_ids || []).map((x) => esc((DB.byId('programs', x) || {}).name || x)).join(', ')}</span>` : ''}
-        <span>· Baseline min per brand: ${ch.brands.map((b) => `${esc(b.brand_name)} ${h.rpShort(E.minBaseline(ch, b))}`).join(', ')}</span>
-        ${ch.elig_prior_payout_required ? '<span>· Wajib pernah menerima payout</span>' : ''}</p></div></div>
+      <div class="card mb-2"><div class="card-body"><p class="small text-muted mb-0"><span class="text-muted">Eligible bila baseline ≥ baseline kelas terendah:</span>
+        <span>${ch.brands.map((b) => `${esc(b.brand_name)} ${h.rpShort(E.minBaseline(ch, b))}`).join(', ')}</span>
+        <span>· Toko di bawahnya hanya bisa didaftarkan lewat exception Admin HO.</span></p></div></div>
       <div class="card"><div class="card-header">Toko belum terdaftar</div><div class="table-responsive"><table class="table table-bordered table-striped table-hover mb-0 table-wide">
         <thead><tr><th>Toko</th><th>DC</th><th class="num">Bln SO</th><th class="num">SO:SI</th>${ch.brands.map((b) => `<th class="num">${esc(b.brand_name)}</th>`).join('')}<th></th></tr></thead>
         <tbody>${rows.map(({ s, el }) => `<tr class="${el.eligible ? '' : 'text-muted'}">

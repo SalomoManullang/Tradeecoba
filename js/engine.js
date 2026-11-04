@@ -384,20 +384,8 @@
     const total = brandSales(cid, allCodes, months);
     const soMonths = total.filter((x) => x.sellout > 0).length;
     const ratio = soSiRatio(cid, allCodes, months);
+    // Eligibility toko hanya dari baseline: minimal satu brand dengan saran baseline ≥ baseline kelas terendah brand itu
     const reasons = [];
-    if (ch.elig_min_sell_out_months && soMonths < ch.elig_min_sell_out_months) reasons.push(`Sell out baru ${soMonths} bulan (min ${ch.elig_min_sell_out_months})`);
-    // rasio SO:SI pada dasarnya syarat payout (MOU 2026); di pendaftaran hanya bila dicentang
-    if (ch.elig_ratio_at_registration && ratioOutside(ch, ratio)) reasons.push(`Rasio SO:SI ${ratio === null ? '-' : ratio.toFixed(1) + '%'} di luar ${ratioRule(ch)}`);
-    // program yang tidak boleh diikuti bersamaan (registrasi yang tidak ditolak)
-    for (const pid of ch.elig_exclusive_program_ids || []) {
-      const other = DB.byId('programs', pid);
-      if (other && DB.t('registrations').some((r) => r.program_id === pid && r.customer_id === cid && r.status !== 'rejected')) reasons.push(`Sudah terdaftar di ${other.name} (tidak boleh bersamaan)`);
-    }
-    if (ch.elig_prior_payout_required) {
-      const prev = DB.where('programs', (p) => p.year === program.year - 1).map((p) => p.id);
-      const regs = DB.where('registrations', (r) => prev.includes(r.program_id) && r.customer_id === cid).map((r) => r.id);
-      if (!DB.t('payouts').some((x) => regs.includes(x.registration_id) && x.status === 'paid')) reasons.push('Belum pernah menerima payout di program sebelumnya');
-    }
     // Saran baseline (sama dengan sales_program 2026): total sell in tahun baseline ÷ bulan aktif sejak first DO
     const brands = ch.brands.map((b) => {
       const codes = [b.brand_code, ...(b.member_codes || [])];

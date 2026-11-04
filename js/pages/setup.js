@@ -50,7 +50,7 @@
 
   // Bagian konfigurasi channel dikelompokkan per fase; Monitoring & Pencairan masih kerangka ("Menyusul") kecuali termin pencairan
   const PHASE_TABS = {
-    REGISTRATION: [['brands', 'Brand'], ['scheme', 'Skema kelas'], ['pillars', 'Pilar & saran lead measure'], ['eligibility', 'Eligibility & threshold'],
+    REGISTRATION: [['brands', 'Brand'], ['scheme', 'Skema kelas'], ['pillars', 'Pilar & saran lead measure'],
       ['phases/REGISTRATION', 'Form & approval'], ['documents', 'Dokumen & MoU']],
     MONITORING: [['monitoring', 'Kerangka', true], ['phases/MONITORING', 'Form & approval', true]],
     PAYOUT: [['payout-rules', 'Syarat payout & jadwal'], ['terms', 'Termin & conditional rebate'], ['formulas', 'Rumus', true], ['phases/PAYOUT', 'Form & approval', true]],
@@ -86,10 +86,6 @@
       const ok = ch.brands.filter((b) => lmClasses(ch, b).every((c) => (b.lm_targets || {})[c.code])).length;
       return ok < n ? of(ok, n, 'target') : { s: 'done', hint: `${ch.pillars.length} pilar` };
     }
-    if (k === 'eligibility') {
-      const any = isSet(pc.elig_min_sell_out_months) || pc.elig_prior_payout_required || (pc.elig_exclusive_program_ids || []).length || isSet((st.threshold || {}).value);
-      return { s: any ? 'done' : 'todo', hint: '' };
-    }
     if (k === 'limits') return { s: Object.values(st.rules || {}).some(isSet) ? 'done' : 'todo', hint: '' };
     if (k.startsWith('phases/')) {
       const ph = ch.phases[k.split('/')[1]];
@@ -113,7 +109,6 @@
     brands: 'Pilih brand yang ikut program di channel ini, sub-brand yang memakai skemanya, dan baseline minimal untuk mendaftar.',
     scheme: 'Atur kelas toko (rentang baseline) serta target growth dan rebate tiap tier, untuk setiap brand.',
     pillars: 'Tentukan pilar channel, lalu JTBD, lead measure, dan target per kelas untuk setiap brand.',
-    eligibility: 'Tentukan syarat toko boleh mendaftar dan threshold-nya.',
     limits: 'Tentukan batas persen benefit di channel ini dan siapa yang menyetujui exception bila batas terlampaui.',
     'phases/REGISTRATION': 'Atur field yang diisi CBD/CDT saat mendaftarkan toko, dan urutan approval-nya.',
     documents: 'Atur template MoU dan SKN yang dibuat otomatis untuk toko yang disetujui.',

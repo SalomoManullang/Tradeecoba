@@ -327,79 +327,9 @@
     done('success', `Approval layer ${phase} disimpan (${rows.length} layer).`, `/setup/${pid}/ch/${pcId}/phases/${phase}`);
   };
 
-  // ---------------------------------------------------------------- eligibility & threshold (fase Pendaftaran, setelah pilar)
-  // Syarat pendaftaran · threshold di bawah kelas terendah · exception toko oleh Admin HO.
-  // Syarat payout (rasio SO:SI) & jadwal monitoring / payout ada di fase Pencairan (halaman payout-rules).
-  route('/setup/:id/ch/:pc/eligibility', ({ id, pc }) => {
-    const p = getProgram(id);
-    const ch = getChannel(p, pc);
-    const nv = (v) => (v === null || v === undefined ? '' : v);
-    const stores = DB.t('stores').filter((s) => s.channel_code === ch.channel_code);
-    const elig = stores.map((s) => Object.assign({ s }, E.eligibility(p, ch, s.customer_id)));
-    const others = DB.where('programs', (x) => x.year === p.year && x.id !== p.id);
-    const excl = new Set(ch.elig_exclusive_program_ids || []);
-    const exceptions = ch.elig_exceptions || [];
-    const canExc = SM.phaseStatus(ch, 'REGISTRATION') !== 'CLOSED';
-    const notElig = elig.filter((x) => !x.eligible && !exceptions.some((e) => e.customer_id === x.s.customer_id));
-    const sec = (t) => `<div class="col-12"><div class="elig-sec">${t}</div></div>`;
-    return {
-      title: `Eligibility · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'eligibility')}
-      <div class="row g-3"><div class="col-xl-8">
-      <form data-action="setup.saveEligibility" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
-      <div class="card mb-3"><div class="card-header"><i class="bi bi-person-check"></i>&nbsp;Eligibility — ${esc(ch.channel_name)}</div><div class="card-body row g-3">
-        ${sec('<i class="bi bi-person-check"></i> Syarat pendaftaran <span class="fw-normal text-muted">· dicek saat CBD/CDT mendaftarkan toko</span>')}
-        <div class="col-md-4"><label class="form-label">Min. bulan sell out dikirim</label><input name="elig_min_sell_out_months" type="number" class="form-control" value="${nv(ch.elig_min_sell_out_months)}" placeholder="kosong = tidak dicek">
-          <div class="form-text">Dari data tahun ${E.baselineMonths(p)[0].slice(0, 4)}. <span class="warn-mark" title="Tidak ada di sales_program 2026; dikonfirmasi">⚠</span></div></div>
-        <div class="col-md-4"><label class="form-label">Wajib pernah menerima payout</label><select name="elig_prior_payout_required" class="form-control">
-          <option value="0" ${sel(!ch.elig_prior_payout_required)}>Tidak</option><option value="1" ${sel(ch.elig_prior_payout_required)}>Ya</option></select>
-          <div class="form-text">Di program tahun ${p.year - 1}. <span class="warn-mark" title="Dikonfirmasi">⚠</span></div></div>
-        <div class="col-md-4"><label class="form-label">Baseline minimal per brand</label><div class="form-control bg-light small">baseline kelas terendah di <a href="#/setup/${p.id}/ch/${ch.id}/scheme">Skema kelas</a></div></div>
-        <div class="col-12"><label class="form-label">Tidak boleh diikuti bersamaan dengan program</label>
-          <div class="d-flex flex-wrap gap-3">${others.map((x) => `<label class="mb-0"><input type="checkbox" name="excl_program" value="${x.id}" ${chk(excl.has(x.id))}> ${esc(x.name)} <span class="small text-muted">${esc(x.code)}</span></label>`).join('')
-            || `<span class="small text-muted">Belum ada program lain di tahun ${p.year}.</span>`}</div>
-          <div class="form-text">Toko yang sudah terdaftar (dan tidak ditolak) di program yang dicentang tidak bisa didaftarkan di sini, seperti aturan JBP CS 2026 terhadap PLP, PSF, LMT, dst.</div></div>
-
-        <div class="col-12"><div class="form-text mt-0">Rasio sell out : sell in (syarat payout) dan jadwal monitoring / payout diatur di fase <a href="#/setup/${p.id}/ch/${ch.id}/payout-rules">Pencairan → Syarat payout & jadwal</a>.</div></div>
-        <div class="col-12"><button class="btn btn-brand"><i class="bi bi-save"></i> Simpan eligibility</button></div>
-      </div></div></fieldset></form>
-
-      ${(() => { const th = SM.setupOf(ch).threshold; const tb = th.brands || {};
-        const yn = (name, cur, withDefault) => `<select name="${name}" class="form-control form-control-sm">${withDefault ? `<option value="" ${sel(cur === undefined || cur === null)}>Ikut default channel</option>` : ''}
-          <option value="1" ${sel(cur === true)}>Ya</option><option value="0" ${sel(cur === false || (!withDefault && !cur))}>Tidak</option></select>`;
-        const pctIn = (name, v) => `<div class="input-group input-group-sm"><input name="${name}" type="number" step="any" min="0" class="form-control" value="${nv(v)}"><span class="input-group-text">%</span></div>`;
-        const rpIn = (name, v) => `<div class="input-group input-group-sm"><span class="input-group-text">Rp</span><input name="${name}" type="number" min="0" class="form-control" value="${nv(v)}"></div>`;
-        return `<form data-action="setup.saveThreshold" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
-        <div class="card mb-3"><div class="card-header"><i class="bi bi-arrow-down-short"></i>&nbsp;Threshold di bawah baseline kelas terendah</div><div class="card-body">
-          <div class="small text-muted mb-3">Toko dengan baseline di bawah kelas terendah brand: boleh ikut atau tidak. Bila boleh, berlaku rebate minimum dan target minimum. Diatur per channel (default) dan bisa dibedakan per brand.</div>
-          <div class="table-responsive"><table class="table table-sm mb-2"><thead><tr><th>Berlaku untuk</th><th style="width:190px">Boleh ikut</th><th style="width:150px">Rebate minimum</th><th style="width:210px">Target minimum</th></tr></thead><tbody>
-            <tr class="table-active"><td class="fw-semibold">Default channel</td><td>${yn('th_allowed', th.channel.allowed, false)}</td><td>${pctIn('th_rebate', th.channel.rebate_min)}</td><td>${rpIn('th_target', th.channel.target_min)}</td></tr>
-            ${ch.brands.map((b) => { const x = tb[b.brand_code] || {}; return `<tr><td>${esc(b.brand_name)}</td><td>${yn('th_allowed_' + b.brand_code, x.allowed, true)}</td>
-              <td>${pctIn('th_rebate_' + b.brand_code, x.rebate_min)}</td><td>${rpIn('th_target_' + b.brand_code, x.target_min)}</td></tr>`; }).join('')}</tbody></table></div>
-          <div class="form-text mb-2">Kolom brand yang kosong mengikuti default channel.</div>
-          <button class="btn btn-brand"><i class="bi bi-save"></i> Simpan threshold</button>
-        </div></div></fieldset></form>`; })()}
-
-      </div>
-      <div class="col-xl-4"><div class="card sticky-summary"><div class="card-header"><i class="bi bi-funnel"></i>&nbsp;Preview eligibility (tersimpan)</div><div class="card-body small">
-        <div><strong>${elig.filter((x) => x.eligible).length}</strong> dari ${stores.length} toko ${esc(ch.channel_name)} eligible${exceptions.length ? ` (termasuk ${exceptions.length} exception)` : ''}.</div>
-        ${ch.brands.map((b) => `<div>${esc(b.brand_name)}: ${elig.filter((x) => x.eligible && x.brands.find((y) => y.brand_code === b.brand_code && y.eligible)).length} toko</div>`).join('') || '<div class="text-muted">Brand belum dipilih (3b).</div>'}
-        <div class="text-muted mt-2">Alasan tidak eligible terbanyak: ${esc(Object.entries(elig.filter((x) => !x.eligible).flatMap((x) => x.reasons.map((r) => r.replace(/[\d.,]+%?/g, '#'))).reduce((m, r) => { m[r] = (m[r] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([r, n]) => `${r} (${n})`).join('; ') || '-')}</div>
-        <div class="text-muted mt-2">Saran baseline = total sell in ${E.baselineMonths(p)[0].slice(0, 4)} ÷ bulan aktif sejak first DO.</div>
-      </div></div></div></div></div></div>`,
-    };
-  });
-  actions['setup.saveEligibility'] = (f, form) => {
-    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
-    assertDraft(pid, pcId, 'REGISTRATION');
-    const pc = DB.byId('programChannels', pcId);
-    const v = { elig_min_sell_out_months: toNum(f.get('elig_min_sell_out_months')), elig_prior_payout_required: f.get('elig_prior_payout_required') === '1',
-      elig_exclusive_program_ids: f.all('excl_program').map(Number) };
-    const before = Object.fromEntries(Object.keys(v).map((k) => [k, pc[k]]));
-    Object.assign(pc, v);
-    E.audit(pid, 'programChannel', pcId, 'update', before, v);
-    touch(pid);
-    done('success', 'Eligibility disimpan.', `/setup/${pid}/ch/${pcId}/eligibility`);
-  };
+  // Eligibility tidak lagi diatur di setup: toko eligible bila baseline ≥ baseline kelas terendah brand (Skema kelas); difilter di halaman Registration.
+  // Toko di bawahnya hanya bisa didaftarkan lewat Exception (tombol di kartu program). Link lama diarahkan ke Skema kelas.
+  route('/setup/:id/ch/:pc/eligibility', ({ id, pc }) => UI.redirect(`/setup/${id}/ch/${pc}/scheme`));
 
   // ---------------------------------------------------------------- Pencairan · syarat payout & jadwal
   // Rasio sell out : sell in dicek tiap termin payout (opsional juga saat pendaftaran) · frekuensi monitoring · jadwal payout Conditional & Fix.
@@ -417,8 +347,6 @@
         ${sec('<i class="bi bi-cash-coin"></i> Syarat payout <span class="fw-normal text-muted">· dicek tiap termin; tidak memenuhi → payout tidak dibayar</span>')}
         <div class="col-md-4"><label class="form-label">Rasio sell out : sell in min</label><div class="input-group"><input name="elig_ratio_min" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_min)}" placeholder="96"><span class="input-group-text">%</span></div></div>
         <div class="col-md-4"><label class="form-label">Rasio sell out : sell in maks</label><div class="input-group"><input name="elig_ratio_max" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_max)}" placeholder="100"><span class="input-group-text">%</span></div></div>
-        <div class="col-md-4"><label class="form-label">&nbsp;</label><label class="d-block mb-0 pt-2"><input type="checkbox" name="elig_ratio_at_registration" value="1" ${chk(ch.elig_ratio_at_registration)}> Cek juga saat pendaftaran</label>
-          <div class="form-text">Pakai data tahun ${E.baselineMonths(p)[0].slice(0, 4)}.</div></div>
         <div class="col-12"><div class="form-text mt-0">MOU 2026: <em>"Rebate akan diberikan jika toko mencapai target sell out dan sell-in minimal 95% sell out-nya."</em> Rasio dihitung dari bulan-bulan termin payout, semua brand yang didaftarkan. Definisi <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> dikonfirmasi.</div></div>
 
         ${sec('<i class="bi bi-calendar3"></i> Jadwal')}
@@ -437,7 +365,7 @@
     const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
     assertDraft(pid, pcId, 'PAYOUT');
     const pc = DB.byId('programChannels', pcId);
-    const v = { elig_ratio_min: toNum(f.get('elig_ratio_min')), elig_ratio_max: toNum(f.get('elig_ratio_max')), elig_ratio_at_registration: f.has('elig_ratio_at_registration'),
+    const v = { elig_ratio_min: toNum(f.get('elig_ratio_min')), elig_ratio_max: toNum(f.get('elig_ratio_max')), elig_ratio_at_registration: false,
       monitoring_frequency: f.get('monitoring_frequency') };
     if (v.elig_ratio_min !== null && v.elig_ratio_max !== null && v.elig_ratio_min > v.elig_ratio_max) throw new Error('Rasio min lebih besar dari rasio maks');
     if (!C.FREQUENCIES[v.monitoring_frequency]) throw new Error('Frekuensi monitoring wajib dipilih');
@@ -459,26 +387,6 @@
     touch(pid);
     done('success', 'Syarat payout & jadwal disimpan.', `/setup/${pid}/ch/${pcId}/payout-rules`);
   };
-  actions['setup.saveThreshold'] = (f, form) => {
-    const pid = Number(form.dataset.id); const pcId = Number(form.dataset.pc);
-    assertDraft(pid, pcId, 'REGISTRATION');
-    const pc = DB.byId('programChannels', pcId);
-    const st = SM.setupOf(pc);
-    const before = JSON.parse(JSON.stringify(st.threshold));
-    const yn = (v) => (v === '1' ? true : v === '0' ? false : null);
-    const brands = {};
-    for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pcId)) {
-      const x = { allowed: yn(f.get('th_allowed_' + b.brand_code)), rebate_min: toNum(f.get('th_rebate_' + b.brand_code)), target_min: toNum(f.get('th_target_' + b.brand_code)) };
-      const set = Object.fromEntries(Object.entries(x).filter(([, v]) => v !== null));
-      if (Object.keys(set).length) brands[b.brand_code] = set;
-    }
-    st.threshold = { channel: { allowed: f.get('th_allowed') === '1', rebate_min: toNum(f.get('th_rebate')), target_min: toNum(f.get('th_target')) }, brands };
-    pc.setup = st;
-    touch(pid);
-    E.audit(pid, 'programChannel', pcId, 'threshold', before, st.threshold);
-    done('success', 'Threshold disimpan.', `/setup/${pid}/ch/${pcId}/eligibility`);
-  };
-
   // Exception boleh diubah saat fase Pendaftaran DRAFT & PUBLISHED (keputusan operasional), tidak saat CLOSED
   function assertNotClosed(pid, pcId) {
     if (!DB.byId('programs', pid) || SM.phaseStatus(DB.byId('programChannels', pcId), 'REGISTRATION') === 'CLOSED') throw new Error('Fase Pendaftaran channel ini CLOSED: read-only.');
@@ -508,7 +416,7 @@
     pc.elig_exceptions = pc.elig_exceptions.filter((x) => x !== row);
     E.audit(pid, 'eligibilityException', pcId, 'delete', row, null);
     touch(pid);
-    done('success', 'Exception dihapus.', `/setup/${pid}/ch/${pcId}/eligibility`);
+    done('success', 'Exception dihapus.', `/setup/${pid}/exceptions?ch=${pcId}`);
   };
 
   // ---------------------------------------------------------------- 3h / 7 · template MOU & SKN
@@ -852,11 +760,9 @@
             alloc, lower_to: ($('#pLower') || {}).value });
           const bn = esc((ch.brands.find((b) => b.brand_code === brand) || {}).brand_name || brand);
           if (!r.cls) {
-            const th = r.threshold || {};
             out.innerHTML = `<div class="card"><div class="card-header">Kelas</div><div class="card-body">
               ${r.below ? `<p class="mb-2">Baseline ${rp(Number($('#pBase').value))} <strong>di bawah baseline kelas terendah</strong> ${bn}.</p>
-                ${th.allowed ? `<div class="alert alert-info py-2 small mb-0">Threshold: <strong>boleh ikut</strong> dengan rebate minimum ${pct(th.rebate_min)} dan target minimum ${rp(th.target_min)}.</div>`
-                  : '<div class="alert alert-warning py-2 small mb-0">Threshold: <strong>tidak boleh ikut</strong> untuk brand ini.</div>'}`
+                <div class="alert alert-warning py-2 small mb-0">Toko <strong>tidak eligible</strong> untuk brand ini; hanya bisa didaftarkan lewat <strong>Exception</strong> (tombol di kartu program).</div>`
                 : '<div class="text-muted">Baseline tidak masuk kelas mana pun. Periksa rentang baseline di Skema kelas.</div>'}</div></div>`;
             return;
           }

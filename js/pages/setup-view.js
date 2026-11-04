@@ -10,7 +10,7 @@
   const { h } = UI;
   // Form konfigurasi yang punya mode lihat; form aksi cepat (clone, tipe, channel, exception, publish) selalu bisa diisi
   const VIEW_FORMS = ['setup.header', 'setup.saveBrands', 'setup.savePillars', 'setup.saveLmTargets', 'setup.saveFormulas',
-    'setup.savePhaseForm', 'setup.saveLayers', 'setup.saveEligibility', 'setup.savePayoutRules', 'setup.saveThreshold', 'setup.saveDoc', 'setup.saveDocsConfig',
+    'setup.savePhaseForm', 'setup.saveLayers', 'setup.savePayoutRules', 'setup.saveDoc', 'setup.saveDocsConfig',
     'setup.saveLmExample', 'setup.saveScheme', 'setup.saveLimits', 'setup.saveTerms'];
   const NOTE_MIN = 140; // catatan sependek ini tidak dilipat
 

@@ -250,7 +250,7 @@
       <div class="cps-chhead"><h2>Channel</h2>
         <div class="cps-seg" role="group">${p.channels.map((c) => `<a href="#/setup/${p.id}/exceptions?ch=${c.id}" class="${c.id === ch.id ? 'active' : ''}">${esc(c.channel_name)}${(c.elig_exceptions || []).length ? ` (${c.elig_exceptions.length})` : ''}</a>`).join('')}</div></div>
 
-      <div class="card mb-3"><div class="card-header"><i class="bi bi-shield-check"></i>&nbsp;Exception toko — ${esc(ch.channel_name)} <span class="small text-muted fw-normal">&nbsp;· toko yang tidak lolos eligibility tetap boleh didaftarkan</span></div><div class="card-body">
+      <div class="card mb-3"><div class="card-header"><i class="bi bi-shield-check"></i>&nbsp;Exception toko — ${esc(ch.channel_name)} <span class="small text-muted fw-normal">&nbsp;· toko dengan baseline di bawah kelas terendah tetap boleh didaftarkan</span></div><div class="card-body">
         ${canExc ? `<form data-action="setup.addException" data-id="${p.id}" data-pc="${ch.id}" class="row g-2 mb-3">
           <div class="col-md-5"><select name="customer_id" class="form-control form-control-sm" required><option value="">Pilih toko tidak eligible (${notElig.length})</option>
             ${notElig.map((x) => `<option value="${x.s.customer_id}">${esc(x.s.name)} · ${x.s.customer_id} — ${esc(x.reasons.join('; '))}</option>`).join('')}</select></div>

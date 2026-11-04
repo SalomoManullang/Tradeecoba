@@ -69,7 +69,6 @@
       const ranges = brandRanges(setup, brand).filter((x) => x.min !== null);
       const lowest = ranges.length ? Math.min(...ranges.map((x) => x.min)) : null;
       out.below = lowest !== null && baseline !== null && baseline < lowest;
-      out.threshold = Object.assign({}, setup.threshold.channel, (setup.threshold.brands || {})[brand] || {});
       return out;
     }
     out.tiers = cls.tiers.map((t, i) => {

@@ -106,15 +106,15 @@
 
   // Satu kalimat "yang diisi di sini" per bagian (selalu tampil; penjelasan panjang tetap di Bantuan)
   const SECTION_INFO = {
-    brands: 'Pilih brand yang ikut program di channel ini, sub-brand yang memakai skemanya, dan baseline minimal untuk mendaftar.',
+    brands: 'Pilih brand yang ikut program di channel ini.',
     scheme: 'Atur kelas toko (rentang baseline) serta target growth dan rebate tiap tier, untuk setiap brand.',
     pillars: 'Tentukan pilar channel, lalu JTBD, lead measure, dan target per kelas untuk setiap brand.',
     limits: 'Tentukan batas persen benefit di channel ini dan siapa yang menyetujui exception bila batas terlampaui.',
     'phases/REGISTRATION': 'Atur field yang diisi CBD/CDT saat mendaftarkan toko, dan urutan approval-nya.',
     documents: 'Atur template MoU dan SKN yang dibuat otomatis untuk toko yang disetujui.',
-    monitoring: 'Ringkasan pengaturan Monitoring yang sudah ada; konfigurasi lengkap menyusul.',
+    monitoring: 'Ringkasan pengaturan Monitoring.',
     'phases/MONITORING': 'Atur field laporan monitoring dan urutan approval-nya.',
-    'payout-rules': 'Atur syarat rasio pencairan, frekuensi monitoring, dan jadwal payout Conditional & Fix.',
+    'payout-rules': 'Atur syarat pencairan dan jadwal payout.',
     terms: 'Atur termin pencairan (semester / tahunan) dan porsi tiap termin.',
     formulas: 'Rumus perhitungan payout yang dipakai channel ini (dibuat Admin IT).',
     'phases/PAYOUT': 'Atur field form pencairan dan urutan approval sampai final.',
@@ -364,7 +364,7 @@
     return `<div class="cps">${isNew ? `<div class="page-head cps-detail"><a href="#/setup" class="btn btn-ghost cps-back"><i class="bi bi-arrow-left"></i> Kembali</a><span class="cps-divider"></span><div class="cps-detail-main"><div><div class="small text-muted"><a href="#/setup">Program Setup</a> / ${UI.currentYear()}</div><h1>Program baru</h1>
         <div class="sub">Step 1B · program dibuat dengan status DRAFT</div></div></div></div>` : nav(p, 'header')}
       ${UI.errorsHtml(errors)}
-      ${isNew ? '' : `<div class="card"><div class="card-header"><i class="bi bi-grid-3x3-gap"></i>&nbsp;Status channel × fase <span class="small text-muted fw-normal">&nbsp;· publish per channel & fase di step 5; fase yang PUBLISHED read-only, fase lain tetap bisa diedit</span></div>
+      ${isNew ? '' : `<div class="card"><div class="card-header"><i class="bi bi-grid-3x3-gap"></i>&nbsp;Status channel × fase</div>
         <div class="card-body p-0">${phaseMatrix(p)}</div></div>`}
       <div class="row g-3"><div class="col-12">
         <form data-action="setup.header" data-id="${isNew ? '' : p.id}"><fieldset ${lockAttr}>
@@ -650,7 +650,7 @@
     const filters = [['', 'Semua'], ['PUBLISHED', 'Published'], ['DRAFT', 'Draft'], ['CLOSED', 'Closed']].filter(([s], i) => !i || count(s));
     return {
       title: 'Channel', html: `<div class="cps">${nav(p, 'channels')}
-      <div class="cps-chhead"><h2>Channel program <span class="text-muted fw-normal fs-6">· status & kelengkapan fase Pendaftaran</span></h2>
+      <div class="cps-chhead"><h2>Channel program</h2>
         <div class="cps-chhead-r"><div class="cps-seg" role="group">${filters.map(([s, l], i) => `<button type="button" class="${i ? '' : 'active'}" data-f="${s}">${l} (${count(s)})</button>`).join('')}</div>
           ${editable(p) && avail.length ? '<button type="button" class="btn btn-brand" id="addChBtn"><i class="bi bi-plus-lg"></i> Tambah Channel</button>' : ''}</div></div>
       <div class="cps-chgrid">${cards || '<div class="text-muted p-4">Belum ada channel. Klik <strong>Tambah Channel</strong> untuk mulai.</div>'}</div>

@@ -9,12 +9,6 @@
   const SM = window.SetupModel;
   const PL = SM.PHASE_LABEL;
 
-  const PHASE_EXAMPLE = {
-    REGISTRATION: { form: 'Baseline per brand (diisi CBD/CDT, wajib) · growth per brand · conditional rebate · catatan', approval: 'Admin DC → ABL (auto-approve bila growth per brand ≥ 70%) → Chadev (fase selesai)' },
-    MONITORING: { form: 'Upload evidence per lead measure (file) · catatan monitoring', approval: 'Admin DC → ABL (verifikasi evidence)' },
-    PAYOUT: { form: 'Nominal payout (rupiah) · jadwal payout (quarterly / semester) · bukti transfer (file)', approval: 'Finance → Head of Finance (final approval)' },
-  };
-
   // ---------------------------------------------------------------- 3e + 3f · fase
   route('/setup/:id/ch/:pc/phases', ({ id, pc }) => UI.redirect(`/setup/${id}/ch/${pc}/phases/REGISTRATION`));
   route('/setup/:id/ch/:pc/phases/:phase', ({ id, pc, phase }) => {
@@ -39,7 +33,6 @@
     return {
       title: `${PL[phase]} · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'phases/' + phase)}
       ${phase === 'REGISTRATION' ? '' : `<div class="alert alert-light py-2 small">${soonTag} Fase ${PL[phase]} masih kerangka: editor di bawah dipertahankan dari setup sebelumnya dan akan diperbarui menyusul.</div>`}
-      <div class="small text-muted mb-3"><strong>Contoh ${ph.label}:</strong> form — ${PHASE_EXAMPLE[phase].form}; approval — ${PHASE_EXAMPLE[phase].approval}.</div>
 
       <form data-action="setup.savePhaseForm" data-id="${p.id}" data-pc="${ch.id}" data-phase="${phase}"><fieldset ${fs(p, ch, phase)}><input type="hidden" name="fields" id="fieldsJson">
       <div class="card mb-3"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3f</span>&nbsp;Form input ${ph.label}</span>
@@ -59,9 +52,7 @@
       <div class="card"><div class="card-header d-flex justify-content-between"><span><span class="step-chip">3g</span>&nbsp;Approval layer & auto-approve — ${ph.label}</span>
         <button type="button" class="btn btn-sm btn-outline-brand" id="addLayer"><i class="bi bi-plus"></i> Layer</button></div>
         <div class="card-body">
-          <p class="small text-muted">Role dari daftar tetap (<span class="warn-mark" title="Daftar final masih dikonfirmasi">⚠</span>). Layer terakhir = tempat fase berakhir${phase === 'PAYOUT' ? '; Payout <strong>wajib</strong> diakhiri final approval' : ''}.
-            Bila submission memenuhi <strong>semua</strong> kondisi sebuah layer (AND, <span class="warn-mark" title="OR masih dikonfirmasi">⚠</span>), layer itu disetujui otomatis & dicatat dengan kondisi yang cocok.
-            Objek per brand harus lolos untuk setiap brand. Layer tanpa kondisi selalu butuh orang. Nilai objek kosong = kondisi tidak terpenuhi.</p>
+          <p class="small text-muted">Layer terakhir = akhir fase${phase === 'PAYOUT' ? ' (Payout wajib diakhiri final approval)' : ''}. Layer dengan kondisi disetujui otomatis bila semua kondisinya terpenuhi.</p>
           <div id="layers"></div>
           ${phase === 'REGISTRATION' ? (() => { const ex = SM.setupOf(ch).exception;
             return `<div class="alert alert-warning py-2 small mt-3"><i class="bi bi-signpost-split"></i>&nbsp;<span>Bila pendaftaran <strong>ada exception</strong> (${[ex.trigger_total ? 'total persen melebihi batas total channel' : '', ex.trigger_vc ? 'alokasi Vision Compass per pilar melebihi plafon brand' : ''].filter(Boolean).join(' · ') || 'pemicu belum diaktifkan'}),
@@ -347,7 +338,6 @@
         ${sec('<i class="bi bi-cash-coin"></i> Syarat payout <span class="fw-normal text-muted">· dicek tiap termin; tidak memenuhi → payout tidak dibayar</span>')}
         <div class="col-md-4"><label class="form-label">Rasio sell out : sell in min</label><div class="input-group"><input name="elig_ratio_min" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_min)}" placeholder="96"><span class="input-group-text">%</span></div></div>
         <div class="col-md-4"><label class="form-label">Rasio sell out : sell in maks</label><div class="input-group"><input name="elig_ratio_max" type="number" step="any" class="form-control" value="${nv(ch.elig_ratio_max)}" placeholder="100"><span class="input-group-text">%</span></div></div>
-        <div class="col-12"><div class="form-text mt-0">MOU 2026: <em>"Rebate akan diberikan jika toko mencapai target sell out dan sell-in minimal 95% sell out-nya."</em> Rasio dihitung dari bulan-bulan termin payout, semua brand yang didaftarkan. Definisi <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> dikonfirmasi.</div></div>
 
         ${sec('<i class="bi bi-calendar3"></i> Jadwal')}
         <div class="col-md-4"><label class="form-label">Frekuensi monitoring <span class="text-danger">*</span></label><select name="monitoring_frequency" class="form-control">${freqOpts(ch.monitoring_frequency, ['MONTHLY', 'QUARTERLY', 'SEMESTER'])}</select>

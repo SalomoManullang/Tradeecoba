@@ -654,10 +654,9 @@
         <div class="cps-chhead-r"><div class="cps-seg" role="group">${filters.map(([s, l], i) => `<button type="button" class="${i ? '' : 'active'}" data-f="${s}">${l} (${count(s)})</button>`).join('')}</div>
           ${editable(p) && avail.length ? '<button type="button" class="btn btn-brand" id="addChBtn"><i class="bi bi-plus-lg"></i> Tambah Channel</button>' : ''}</div></div>
       <div class="cps-chgrid">${cards || '<div class="text-muted p-4">Belum ada channel. Klik <strong>Tambah Channel</strong> untuk mulai.</div>'}</div>
-      <div class="card" id="addCh" ${editable(p) && avail.length ? 'hidden' : ''}><div class="card-header">Tambah channel</div><div class="card-body">
-        <p class="small text-muted">Satu program bisa punya beberapa channel (tetap dihitung satu program). Setiap channel dapat konfigurasi sendiri di step 3. Pilih <strong>Active</strong> atau <strong>Passive</strong>: channel yang sama dengan tipe berbeda menjadi dua channel terpisah.</p>
-        ${!editable(p) ? '<div class="small text-muted">Sudah ada fase yang dipublish. Menambah channel setelah publish <span class="warn-mark" title="Masih dikonfirmasi">⚠</span> masih dikonfirmasi (PRD UF9).</div>'
-          : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}"><select name="channel_code" class="form-control mb-2">
+      <div class="card" id="addCh" ${!editable(p) || avail.length ? 'hidden' : ''}><div class="card-header">Tambah channel</div><div class="card-body">
+        <p class="small text-muted">Pilih channel dan tipenya (Active / Passive).</p>
+        ${!editable(p) ? '' : avail.length ? `<form data-action="setup.addChannel" data-id="${p.id}"><select name="channel_code" class="form-control mb-2">
           ${avail.map((c) => `<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select>
           <div class="d-flex gap-3 mb-2">${Object.entries(E.CHANNEL_TYPES).map(([k, l], i) => `<label class="mb-0"><input type="radio" name="channel_type" value="${k}" ${i === 0 ? 'checked' : ''} required> ${l}</label>`).join('')}</div>
           <label class="form-label small mb-1">Mulai dari</label><select name="copy_from" class="form-control mb-2">
@@ -716,7 +715,7 @@
       title: `Brand · ${ch.channel_name}`, html: `<div class="cps">${nav(p, 'config', ch, 'brands')}
       <form data-action="setup.saveBrands" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
       <div class="card"><div class="card-header"><span class="step-chip">3b</span>&nbsp;Brand peserta — ${esc(ch.channel_name)}</div><div class="card-body">
-        <p class="small text-muted mb-3">Baseline <strong>tidak</strong> diatur di sini: CBD/CDT mengisi baseline tiap toko di form Registration. EST & IR growth hanya informasi (<span class="warn-mark" title="Definisi masih dikonfirmasi">⚠</span> definisi dikonfirmasi).</p>
+        <p class="small text-muted mb-3">Baseline diisi CBD/CDT saat pendaftaran.</p>
         <div class="table-responsive"><table class="table table-sm table-bordered">
           <thead><tr><th style="width:60px">Ikut</th><th>Brand (skema) <span class="text-muted fw-normal">+ sub-brand</span></th><th style="width:210px">Baseline minimal <span class="text-muted fw-normal">Rp / bulan</span></th><th class="num" style="width:70px">Kelas</th><th style="width:190px"></th></tr></thead>
           <tbody>${master.filter((b) => !usedAsMember.has(b.code) || inCh[b.code]).map((b) => { const x = inCh[b.code];
@@ -830,16 +829,13 @@
         <div class="card-body">
           <div class="row g-2 mb-3"><div class="col-md-5"><label class="form-label">Nama framework <span class="text-danger">*</span></label>
             <input name="framework" class="form-control" value="${esc(ch.pillar_framework_name)}" required placeholder="Vision Compass"><div class="form-text">Juga dipakai sebagai label Fix Rebate.</div></div>
-            <div class="col-md-7 small text-muted pt-md-4">Pilar berlaku untuk <strong>semua brand</strong> di channel ini. JTBD, lead measure, dan target per kelas diisi <strong>per brand</strong> di langkah 2 (tombol brand di atas).
-              Tanpa bobot (sama seperti 2026): Fix Rebate dibayar per termin bila Monitoring periodenya disetujui.</div></div>
+            <div class="col-md-7 small text-muted pt-md-4">Pilar berlaku untuk semua brand di channel ini.</div></div>
           <div id="tree"></div>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan pilar</button>
         </div></div></fieldset></form>
       <form data-action="setup.saveLmExample" data-id="${p.id}" data-pc="${ch.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}>
       <div class="card mt-3"><div class="card-header"><i class="bi bi-lightbulb"></i>&nbsp;Pilar di form CBD ${confirmTag}</div><div class="card-body small">
-        <div class="text-muted mb-2">CBD mengalokasikan nominal Vision Compass <strong>per pilar</strong> di atas. Plafon per brand = target 2027 × persen Vision Compass kelas (diatur di <a href="#/setup/${p.id}/ch/${ch.id}/scheme">Skema kelas</a>).</div>
         <label class="d-block mb-2"><input type="checkbox" name="lm_as_detail_example" value="1" ${SM.setupOf(ch).lm_as_detail_example ? 'checked' : ''}> Tampilkan saran lead measure pilar tersebut sebagai contoh teks (placeholder) kolom <strong>detail activation</strong></label>
-        <div class="text-muted mb-2">Hubungan teks saran lead measure dengan alokasi belum dipastikan.</div>
         <button class="btn btn-brand btn-sm"><i class="bi bi-save"></i> Simpan</button></div></div></fieldset></form></div></div>`,
       after(root) {
         const el = root.querySelector('#tree');
@@ -947,13 +943,11 @@
       <form data-action="setup.saveLmTargets" data-id="${p.id}" data-pc="${ch.id}" data-b="${brand.id}"><fieldset ${fs(p, ch, 'REGISTRATION')}><input type="hidden" name="targets" id="lmtJson">
       <div class="card"><div class="card-header"><span class="step-chip">3d</span>&nbsp;JTBD, lead measure & target per kelas ${confirmTag} — ${esc(brand.brand_name)}${brand.member_names.length ? ` <span class="small text-muted">(+ ${esc(brand.member_names.join(', '))})</span>` : ''}</div>
         <div class="card-body">${empty ? `<div class="text-muted">${empty}</div>` : `
-          <p class="small text-muted">Pilar berasal dari channel. Klik <strong>+ JTBD</strong> di kolom Pilar, lalu <strong>+ Lead measure</strong> di kolom JTBD; nama, satuan, tipe, dan operator lead measure diubah langsung di kolom kiri.
-            Isi target per kelas di kanan: <strong>sel kosong = tidak berlaku</strong>. Bila kelas dibagi lagi (mis. <em>Face Care</em> &amp; <em>Makeup</em>), klik <i class="bi bi-plus"></i> Section di judul kelas; tombol <i class="bi bi-arrows-collapse-vertical"></i> menggabung section jadi satu target.</p>
-          <div class="d-flex justify-content-between align-items-center mb-1 small text-muted"><span><i class="bi bi-arrows-expand-vertical"></i> Tarik garis di tepi kanan judul kolom untuk melebarkan / mengecilkan kolom: judul <em>Class</em> = seluruh kelas, judul section / Target = kolom itu saja.</span>
+          <p class="small text-muted">Sel kosong = tidak berlaku.</p>
+          <div class="d-flex justify-content-end align-items-center mb-1 small text-muted">
             <button type="button" class="btn btn-sm btn-link p-0" id="lmtResetW">Reset lebar kolom</button></div>
           <datalist id="lmUnits">${['jam', 'etalase', 'bulan', 'creator', 'slide', 'video', 'sesi/minggu', 'SKU', 'toko', 'kali', 'orang/bulan'].map((u) => `<option value="${u}">`).join('')}</datalist>
           <div class="lmt-sheet-wrap"><table class="lmt-sheet" id="lmtSheet"></table></div>
-          <div class="small text-muted mt-2" id="lmtSum"></div>
           <button class="btn btn-brand mt-3"><i class="bi bi-save"></i> Simpan ${esc(brand.brand_name)}</button>`}
         </div></div></fieldset></form></div></div>`,
       after(root) {
@@ -1072,8 +1066,6 @@
           root.querySelector('#lmtSheet').innerHTML = `<colgroup>${colKeys().map((k) => `<col data-col="${h.esc(k)}">`).join('')}</colgroup>
             <thead><tr class="lmt-hr1"><th rowspan="2" class="fz fz1">Pilar${rs('f1')}</th><th rowspan="2" class="fz fz2">JTBD${rs('f2')}</th><th rowspan="2" class="fz fz3">Lead measure${rs('f3')}</th>${head1}</tr>
             <tr class="lmt-hr2">${head2}</tr></thead><tbody>${body}</tbody>`;
-          const nJ = tree.reduce((sum, pl) => sum + pl.jtbds.length, 0);
-          root.querySelector('#lmtSum').textContent = `${tree.length} pilar → ${nJ} JTBD → ${allLms().length} lead measure (${brand.brand_name})`;
           applyWidths();
           root.querySelectorAll('#lmtSheet textarea').forEach(fit);
           if (ro) root.querySelectorAll('#lmtSheet input,#lmtSheet select,#lmtSheet button,#lmtSheet textarea').forEach((x) => { x.disabled = true; });

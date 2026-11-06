@@ -84,7 +84,7 @@
             : 'Mengikuti brand lain = kelas, tier, rebate, Vision Compass, dan rentang baseline brand acuan dipakai seluruhnya.'}</div></div>
         <div id="followNote"></div>
         ${iss.length ? `<div class="alert alert-danger py-2 small">${esc(iss.join('; '))}. Diblokir saat publish Pendaftaran.</div>` : ''}
-        <div class="small text-muted mb-2">Kelas toko ditentukan dari baseline: baseline ≥ min dan &lt; maks masuk kelas itu (Rp juta / bulan; batas atas boleh kosong). <strong>Growth</strong> = target growth tier (step kelipatan 5%, naik per tier); target 2027 = baseline × 12 × (1 + growth). <strong>Total conditional = semester rebate + yearly rebate</strong> (dihitung, tidak diisi).</div>
+        <div class="small text-muted mb-2">Baseline dalam Rp juta / bulan. Total conditional = semester + yearly.</div>
         <div class="d-flex justify-content-end mb-1"><span class="cps-cls-all small text-brand" role="button" tabindex="0" id="clsAll">Ringkas semua kelas</span></div>
         <div class="table-responsive"><table class="table table-sm scheme-table mb-2"><thead><tr><th style="width:100px">Kelas</th><th style="width:230px">Baseline / bulan <span class="text-muted fw-normal">Rp juta, min – maks</span></th>
           <th style="width:80px">Tier</th><th style="width:120px">Growth</th><th>Semester rebate</th><th>Yearly rebate</th><th class="num">Total conditional</th><th>Total Vision Compass</th><th></th></tr></thead><tbody id="clsRows"></tbody></table></div>
@@ -324,8 +324,7 @@
         <div class="alert alert-light py-2 small mt-2 mb-0"><i class="bi bi-info-circle"></i>&nbsp;<span>Pencapaian dinilai per termin; payout termin tidak melebihi porsinya.</span></div>
       </div></div>
       <div class="row g-3"><div class="col-lg-6"><div class="card h-100"><div class="card-header"><i class="bi bi-pie-chart"></i>&nbsp;Porsi termin berlaku untuk ${confirmTag}</div><div class="card-body">
-          <select name="term_basis" class="form-control">${Object.entries(SM.TERM_BASIS).map(([k, l]) => `<option value="${k}" ${sel(st.term_basis === k)}>${l}${k === 'TARGET' ? ' (default)' : ''}</option>`).join('')}</select>
-          <div class="form-text">Belum dipastikan: porsi termin diterapkan ke target, ke nilai benefit, atau keduanya.</div></div></div></div>
+          <select name="term_basis" class="form-control">${Object.entries(SM.TERM_BASIS).map(([k, l]) => `<option value="${k}" ${sel(st.term_basis === k)}>${l}${k === 'TARGET' ? ' (default)' : ''}</option>`).join('')}</select></div></div></div>
         <div class="col-lg-6"><div class="card h-100"><div class="card-header"><i class="bi bi-toggles"></i>&nbsp;Penurunan conditional rebate oleh CBD</div><div class="card-body">
           <label class="d-block mb-2"><input type="checkbox" name="cbd_can_lower_conditional" value="1" ${chk(st.cbd_can_lower_conditional)}> CBD boleh menurunkan conditional rebate sampai 0%</label>
           <label class="d-block mb-0"><input type="checkbox" name="lowering_adds_vc" value="1" ${chk(st.lowering_adds_vc)}> Selisih penurunan menambah plafon Vision Compass brand</label>

@@ -197,7 +197,7 @@
         ...programs.filter((p) => SM.programHas(p.id, 'REGISTRATION', SM.isPublished)).flatMap((p) => chs(p).map((c) => [`${p.name} · ${window.Engine.channelName(c)}`, `/registration/program/${p.id}/${c.id}`])),
         ['Semua program', '/registration']] });
     }
-    if (is(...SETUP_ROLES)) groups.unshift({ icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Program baru', '/setup/new']] });
+    if (is(...SETUP_ROLES)) groups.unshift({ icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Buat Program', '/setup/new']] });
     const saved = sideGroupState();
     // item aktif: href paling spesifik yang cocok dengan halaman sekarang
     const all = groups.flatMap((g) => g.items.map(([, href]) => href)).filter((href) => hrefActive(href, path, query));

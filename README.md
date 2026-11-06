@@ -23,8 +23,8 @@ semua data dummy dibuat dan disimpan di browser (`localStorage`, kunci `tradee20
 
 | Step | Halaman | Isi |
 |---|---|---|
-| 0 / 1A | Daftar program | Status DRAFT / PUBLISHED / CLOSED, **clone** program apa pun → DRAFT baru |
-| 1B | Header | Kode, nama, tipe program (+ tambah tipe), tahun, periode, deskripsi |
+| 0 / 1A | Daftar program | Kartu ringkas + tabel program (Draft / Sebagian dibuka / Dibuka / Ditutup), **salin** program lalu lewat pop-up (pilih channel yang disalin) → DRAFT baru |
+| 1B | Buat Program | Wizard 3 langkah: Informasi (kode, nama, periode) → **Setup Brand** (group brand: brand utama + anggota, level program) → Channel. Edit header tetap di halaman Header |
 | 2 | Channel | LOCOMM / CS / LMT, sekali per program; channel baru otomatis berisi preset |
 | 3a–3h | Konfigurasi channel *(diulang per channel)* | Brand & sub-brand · **kelas & tier per brand** · pillar framework · rumus per slot (+ override brand) · **form & approval layer per fase** (Registration / Monitoring / Payout, kondisi auto-approve) · eligibility & jadwal payout · template MOU/SKN |
 | 4 | Simulasi | Sandbox tanpa menyimpan: kelas, tier, target, conditional/fix, jalur approval, trace rumus |

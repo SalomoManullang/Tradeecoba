@@ -199,84 +199,130 @@
       ${nextEl}${chNav}`;
   }
 
-  // ---------------------------------------------------------------- 0 · daftar program & 1A · clone
+  // ---------------------------------------------------------------- 0 · daftar program & 1A · salin (prototype "Program Setup Mockup" layar 1)
+  // Status ringkas program dari status fase Pendaftaran per channel: Draft · Sebagian dibuka · Dibuka · Ditutup
+  function programState(pid) {
+    const pcs = DB.where('programChannels', (c) => c.program_id === pid);
+    const st = pcs.map((c) => SM.phaseStatus(c, 'REGISTRATION'));
+    const open = st.filter((s) => s === 'PUBLISHED').length;
+    const closed = st.filter((s) => s === 'CLOSED').length;
+    const key = !pcs.length || (!open && !closed) ? 'DRAFT' : closed === pcs.length ? 'CLOSED' : open + closed === pcs.length ? 'OPEN' : 'PARTIAL';
+    const [label, chip] = { DRAFT: ['Draft', 'c-blue'], PARTIAL: ['Sebagian dibuka', 'c-green'], OPEN: ['Dibuka', 'c-green'], CLOSED: ['Ditutup', 'c-grey'] }[key];
+    const groups = !pcs.length ? 'Belum ada channel' : `${pcs.length} channel · ${closed === pcs.length ? 'ditutup' : `${open} dibuka`}`;
+    return { key, label, chip, open, closed, total: pcs.length, groups };
+  }
+  const CH_CHIP = { DRAFT: ['Draft', 'c-blue'], PUBLISHED: ['Dibuka', 'c-green'], CLOSED: ['Ditutup', 'c-grey'] };
+  const userName = (id) => (DB.byId('users', id) || {}).name || '-';
+
   route('/setup', ({}, q, { year }) => {
     UI.requireSetup();
-    const all = DB.t('programs').slice().sort((a, b) => b.year - a.year || a.id - b.id);
-    const programs = all.filter((p) => p.year === year);
-    const types = Object.fromEntries(DB.t('programTypes').map((t) => [t.id, t.name]));
-    // Kartu per program: status ringkas + kelengkapan Pendaftaran per channel (7 langkah)
-    const progStatus = (id) => { const { count, total } = SM.programSummary(id); return !total ? 'DRAFT' : count.PUBLISHED ? 'PUBLISHED' : count.DRAFT ? 'DRAFT' : 'CLOSED'; };
-    const cards = programs.map((p0) => {
-      const p = E.loadProgram(p0.id);
-      const st = progStatus(p.id);
-      const chs = p.channels.map((ch) => {
-        const rows = PHASE_TABS.REGISTRATION.map(([k]) => sectionStatus(ch, k).s);
-        const d = rows.filter((x) => x === 'done').length;
-        return { ch, d, n: rows.length, s: d === rows.length ? 'done' : d ? 'partial' : 'todo' };
-      });
-      const full = chs.filter((x) => x.s === 'done').length;
-      const pctW = chs.length ? Math.round((chs.reduce((a, x) => a + x.d / x.n, 0) / chs.length) * 100) : 0;
-      const editableP = SM.programSummary(p.id).count.DRAFT > 0;
-      const [btnLabel, btnCls, to] = !chs.length ? ['Mulai Setup', 'btn-outline-brand', 'header'] : !editableP ? ['Lihat Setup', 'btn-outline-secondary', 'channels']
-        : full < chs.length ? ['Lanjutkan Setup', 'btn-brand', 'channels'] : ['Validasi & Publish', 'btn-brand', 'validate'];
-      return `<div class="cps-chcard" data-st="${st}">
-        <div class="cps-chcard-top"><div class="cps-chcard-name">${esc(p.name)}</div>${statusTag(st)}</div>
-        <div class="cps-chcard-code">${esc(p.code)} · ${esc(types[p.program_type_id] || '')}</div>
-        <div class="cps-chcard-meta"><i class="bi bi-calendar3"></i> ${h.date(p.period_start)} – ${h.date(p.period_end)}<br>
-          <i class="bi bi-diagram-3"></i> ${chs.length} channel · ${DB.where('registrations', (x) => x.program_id === p.id).length} registrasi · <span class="text-muted">${SM.summaryLabel(p.id)}</span></div>
-        <div class="cps-chcard-prog"><span>Kelengkapan Pendaftaran</span><span>${full} dari ${chs.length} channel</span></div>
-        <div class="cps-chcard-bar ${chs.length && full === chs.length ? 'is-full' : ''}"><span style="width:${pctW}%"></span></div>
-        <div class="cps-chcard-chips">${chs.map((x) => `<a href="#/setup/${p.id}/ch/${x.ch.id}/brands" class="cps-chcard-chip st-${x.s}" title="${x.d} dari ${x.n} langkah">${x.s === 'done' ? '<i class="bi bi-check-lg"></i>' : ''}${esc(x.ch.channel_name)}</a>`).join('') || '<span class="small text-muted">Belum ada channel</span>'}</div>
-        <div class="cps-chcard-foot"><span><button type="button" class="btn btn-sm btn-link" data-clone="${p.id}">Clone</button>
-          <a href="#/setup/${p.id}/exceptions" class="btn btn-sm btn-link" title="Opsional: exception toko, batas benefit & approver exception"><i class="bi bi-shield-check"></i> Exception${(() => { const n = p.channels.reduce((a, c) => a + (c.elig_exceptions || []).length, 0); return n ? ` (${n})` : ''; })()}</a></span>
-          <a href="#/setup/${p.id}/${to}" class="btn ${btnCls}">${btnLabel}</a></div></div>`;
-    }).join('');
-    const count = (s) => programs.filter((p) => !s || progStatus(p.id) === s).length;
-    const filters = [['', 'Semua'], ['PUBLISHED', 'Published'], ['DRAFT', 'Draft'], ['CLOSED', 'Closed']].filter(([s], i) => !i || count(s));
+    const programs = DB.t('programs').filter((p) => p.year === year).sort((a, b) => a.id - b.id);
+    const sources = DB.t('programs').slice().sort((a, b) => b.year - a.year || b.id - a.id);
+    const rows = programs.map((p) => {
+      const s = programState(p.id);
+      const last = DB.where('programAuditLogs', (x) => x.program_id === p.id).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+      const updated = last ? last.created_at : p.updated_at;
+      const by = last && last.actor_id ? userName(last.actor_id) : userName(p.created_by);
+      return { p, s, updated, by };
+    });
+    const allPcs = DB.where('programChannels', (c) => programs.some((p) => p.id === c.program_id));
+    const nOpen = allPcs.filter((c) => SM.phaseStatus(c, 'REGISTRATION') === 'PUBLISHED').length;
+    const stat = (label, value, note, color) => `<div class="pv-stat"><span class="pv-stat-l">${label}</span><span class="pv-stat-v" ${color ? `style="color:${color}"` : ''}>${value}</span><span class="pv-stat-n">${note}</span></div>`;
+    // Channel tiap program sumber untuk dialog salin
+    const srcChannels = Object.fromEntries(sources.map((p) => [p.id, DB.where('programChannels', (c) => c.program_id === p.id).map((c) => {
+      const [l, chip] = CH_CHIP[SM.phaseStatus(c, 'REGISTRATION')];
+      return { id: c.id, name: E.channelName(c), status: l, chip };
+    })]));
     return {
-      title: 'Program Setup', html: `<div class="cps"><div class="cps-list">
-      <div class="page-head"><div><h1>Program Setup ${year}</h1><div class="sub">Konfigurasi program loyalty tanpa code release. Hanya Admin HO & Admin IT (Superadmin).</div></div></div>
-      <div class="cps-chhead"><h2>Daftar program <span class="text-muted fw-normal fs-6">· status & kelengkapan Pendaftaran per channel</span></h2>
-        <div class="cps-chhead-r"><div class="cps-seg" role="group">${filters.map(([s, l], i) => `<button type="button" class="${i ? '' : 'active'}" data-f="${s}">${l} (${count(s)})</button>`).join('')}</div>
-          <a href="#/setup/new" class="btn btn-brand"><i class="bi bi-plus-lg"></i> Tambah Program</a></div></div>
-      <div class="cps-chgrid">${cards || `<div class="text-muted p-4">Belum ada program di tahun ${year}. Klik <strong>Tambah Program</strong> untuk mulai.</div>`}</div>
-      <dialog class="cps-dialog" id="cloneDlg" aria-labelledby="cloneDlgTitle">
-        <form data-action="setup.clone"><input type="hidden" name="source_id" id="cloneSrc">
-          <div class="cps-dialog-head"><h2 id="cloneDlgTitle"><i class="bi bi-copy"></i> Clone program</h2>
-            <button type="button" class="cps-dialog-x" data-dlg-close title="Tutup" aria-label="Tutup"><i class="bi bi-x-lg"></i></button></div>
-          <div class="cps-dialog-body">
-            <div class="cps-dialog-src">Sumber: <strong id="cloneSrcName"></strong></div>
-            <p class="small text-muted">Membuat program <strong>DRAFT</strong> baru dengan semua channel, brand, kelas, tier, pilar, rumus, form fase, approval layer & template dokumen tersalin. Setelah itu cukup ubah bagian yang berbeda.</p>
-            <div class="row g-2">
-              <div class="col-md-5"><label class="form-label small" for="cloneCode">Kode baru <span class="text-danger">*</span></label><input name="code" id="cloneCode" class="form-control text-uppercase" placeholder="LOYALTY-${year + 1}" required></div>
-              <div class="col-md-7"><label class="form-label small" for="cloneName">Nama baru <span class="text-danger">*</span></label><input name="name" id="cloneName" class="form-control" placeholder="Loyalty Program ${year + 1}" required></div>
-              <div class="col-md-4"><label class="form-label small" for="cloneYear">Tahun <span class="text-danger">*</span></label><input name="year" id="cloneYear" type="number" class="form-control" value="${year}" required></div>
-              <div class="col-md-4"><label class="form-label small" for="cloneStart">Periode mulai <span class="text-danger">*</span></label><input name="period_start" id="cloneStart" type="date" class="form-control" value="${year}-01-01" required></div>
-              <div class="col-md-4"><label class="form-label small" for="cloneEnd">Periode selesai <span class="text-danger">*</span></label><input name="period_end" id="cloneEnd" type="date" class="form-control" value="${year}-12-31" required></div>
-            </div></div>
-          <div class="cps-dialog-foot"><button type="button" class="btn btn-outline-secondary" data-dlg-close>Batal</button>
-            <button class="btn btn-brand"><i class="bi bi-copy"></i> Clone</button></div>
-        </form></dialog></div></div>`,
+      title: 'Program Setup', html: `<div class="cps pv">
+      <div class="pv-pagehead"><h1 class="pv-title">Program Setup</h1>
+        <div class="pv-actions"><button type="button" class="btn pv-btn-s" data-clone="${sources[0] ? sources[0].id : ''}" ${sources.length ? '' : 'disabled'}><i class="bi bi-copy"></i> Salin dari Program Lalu</button>
+          <a class="btn pv-btn-p" href="#/setup/new"><i class="bi bi-plus-lg"></i> Buat Program</a></div></div>
+      <div class="pv-stats">
+        ${stat('Total Program', programs.length, `tahun ${year}`)}
+        ${stat('Draft', rows.filter((r) => r.s.key === 'DRAFT').length, 'masih bisa diubah', 'var(--primary-500)')}
+        ${stat('Channel Dibuka', nOpen, `dari ${allPcs.length} channel`, 'var(--success-500, #33995E)')}
+        ${stat('Ditutup', rows.filter((r) => r.s.key === 'CLOSED').length, 'arsip &amp; laporan')}
+      </div>
+      <section class="pv-card">
+        <div class="pv-cardhead"><h2 class="pv-h3">Daftar Program</h2>
+          <div class="pv-actions"><input class="pv-inp" type="search" id="pvSearch" aria-label="Cari program" placeholder="Cari kode atau nama program..." style="width:280px">
+            <select class="pv-inp" id="pvStatus" aria-label="Filter status" style="width:170px"><option value="">Semua Status</option><option value="DRAFT">Draft</option><option value="PARTIAL">Sebagian dibuka</option><option value="OPEN">Dibuka</option><option value="CLOSED">Ditutup</option></select></div></div>
+        <div class="pv-tblbox"><table class="pv-table">
+          <thead><tr><th style="width:150px">Kode</th><th>Nama Program</th><th style="width:190px">Periode</th><th style="width:170px">Channel</th><th style="width:140px">Status</th><th style="width:140px">Diubah</th><th style="width:160px">Aksi</th></tr></thead>
+          <tbody>${rows.map(({ p, s, updated, by }) => `<tr data-st="${s.key}" data-q="${esc((p.code + ' ' + p.name).toLowerCase())}">
+            <td class="fw-bold">${esc(p.code)}</td><td class="fw-bold">${esc(p.name)}</td>
+            <td>${h.date(p.period_start)} – ${h.date(p.period_end)}</td><td>${s.groups}</td>
+            <td><span class="pv-chip ${s.chip}">${s.label}</span></td>
+            <td><div>${h.date(updated)}</div><div class="pv-muted">${esc(by)}</div></td>
+            <td><a href="#/setup/${p.id}/channels" class="fw-bold">Buka Setup</a><button type="button" class="pv-btn-g" data-clone="${p.id}">Salin</button></td></tr>`).join('')
+            || `<tr><td colspan="7" class="pv-empty">Belum ada program di tahun ${year}. Klik <strong>Buat Program</strong> untuk mulai.</td></tr>`}
+            <tr class="pv-noresult" hidden><td colspan="7" class="pv-empty">Tidak ada program yang cocok.</td></tr></tbody></table></div>
+      </section>
+      <dialog class="pv-dialog" id="cloneDlg" aria-labelledby="cloneDlgTitle">
+        <form data-action="setup.clone">
+          <div class="pv-dialog-head"><h2 class="pv-h3" id="cloneDlgTitle">Salin dari Program Lalu</h2>
+            <button type="button" class="pv-btn-g" data-dlg-close aria-label="Tutup"><i class="bi bi-x-lg"></i></button></div>
+          <div class="pv-dialog-body">
+            <label class="pv-field">Program sumber<select class="pv-inp" name="source_id" id="cloneSrc">${sources.map((p) => `<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join('')}</select></label>
+            <div class="pv-grid2">
+              <label class="pv-field">Kode baru<input class="pv-inp text-uppercase" name="code" id="cloneCode" required></label>
+              <label class="pv-field">Nama program<input class="pv-inp" name="name" id="cloneName" required></label>
+              <label class="pv-field">Periode mulai<input class="pv-inp" type="date" name="period_start" id="cloneStart" required></label>
+              <label class="pv-field">Periode selesai<input class="pv-inp" type="date" name="period_end" id="cloneEnd" required></label>
+            </div>
+            <div class="pv-field-wrap">
+              <div class="pv-row-between"><span class="pv-lbl" id="cloneChCount"></span><button type="button" class="pv-btn-g sm" id="cloneAll"></button></div>
+              <div class="pv-cklist" id="cloneChList"></div>
+            </div>
+          </div>
+          <div class="pv-dialog-foot"><button type="button" class="btn pv-btn-s" data-dlg-close>Batal</button>
+            <button class="btn pv-btn-p" id="cloneSubmit">Salin Program</button></div>
+        </form></dialog></div>`,
       after(root) {
+        // filter tabel
+        const search = root.querySelector('#pvSearch'); const status = root.querySelector('#pvStatus');
+        const filter = () => {
+          const t = search.value.trim().toLowerCase(); let n = 0;
+          root.querySelectorAll('.pv-table tbody tr[data-st]').forEach((tr) => { tr.hidden = (status.value && tr.dataset.st !== status.value) || (t && !tr.dataset.q.includes(t)); if (!tr.hidden) n++; });
+          const nr = root.querySelector('.pv-noresult'); if (nr) nr.hidden = n > 0 || !rows.length;
+        };
+        search.addEventListener('input', filter); status.addEventListener('change', filter);
+        // dialog salin: sumber → saran kode/nama/periode tahun berikutnya + daftar channel yang disalin
         const dlg = root.querySelector('#cloneDlg');
+        const $ = (s) => root.querySelector(s);
+        const list = $('#cloneChList');
+        const counts = () => {
+          const boxes = [...list.querySelectorAll('input')]; const n = boxes.filter((b) => b.checked).length;
+          $('#cloneChCount').textContent = `Channel yang disalin · ${n} dari ${boxes.length} dipilih`;
+          $('#cloneAll').textContent = n === boxes.length ? 'Kosongkan' : 'Pilih semua';
+          $('#cloneAll').hidden = !boxes.length;
+          $('#cloneSubmit').textContent = `Salin Program (${n} channel)`;
+        };
+        const fill = () => {
+          const src = DB.byId('programs', Number($('#cloneSrc').value)); if (!src) return;
+          const y = src.year + 1;
+          const bump = (s) => (String(s).match(/\d{4}/) ? String(s).replace(/\d{4}/, (m) => String(Number(m) + 1)) : `${s}-${y}`);
+          $('#cloneCode').value = bump(src.code); $('#cloneName').value = bump(src.name);
+          $('#cloneStart').value = `${y}-01-01`; $('#cloneEnd').value = `${y}-12-31`;
+          const chs = srcChannels[src.id] || [];
+          list.innerHTML = chs.map((c) => `<label class="pv-ck"><input type="checkbox" name="channel_ids" value="${c.id}" checked><span class="pv-ck-name">${esc(c.name)}</span><span class="pv-chip sm ${c.chip}">${c.status}</span></label>`).join('')
+            || '<div class="pv-ck pv-muted">Program sumber belum punya channel.</div>';
+          counts();
+        };
+        list.addEventListener('change', counts);
+        $('#cloneAll').addEventListener('click', () => { const boxes = [...list.querySelectorAll('input')]; const all = boxes.every((b) => b.checked); boxes.forEach((b) => { b.checked = !all; }); counts(); });
+        $('#cloneSrc').addEventListener('change', fill);
         const open = (id) => {
-          const src = DB.byId('programs', Number(id));
-          if (!src) return;
-          root.querySelector('#cloneSrc').value = src.id;
-          root.querySelector('#cloneSrcName').textContent = `${src.name} (${src.code}) · ${src.year}`;
+          if (!id || !DB.byId('programs', Number(id))) return;
+          $('#cloneSrc').value = id; fill();
           dlg.querySelectorAll('.js-form-error').forEach((x) => x.remove());
-          dlg.showModal();
-          root.querySelector('#cloneCode').focus();
+          dlg.showModal(); $('#cloneCode').focus();
         };
         root.querySelectorAll('[data-clone]').forEach((b) => b.addEventListener('click', () => open(b.dataset.clone)));
         dlg.querySelectorAll('[data-dlg-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
         dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
         if (q.clone) open(q.clone);
-        root.querySelectorAll('.cps-seg [data-f]').forEach((b) => b.addEventListener('click', () => {
-          root.querySelectorAll('.cps-seg [data-f]').forEach((x) => x.classList.toggle('active', x === b));
-          root.querySelectorAll('.cps-chcard').forEach((c) => { c.hidden = !!b.dataset.f && c.dataset.st !== b.dataset.f; });
-        }));
       },
     };
   });
@@ -295,16 +341,20 @@
 
   actions['setup.clone'] = (f) => {
     UI.requireSetup();
-    const src = DB.byId('programs', f.get('source_id'));
-    const v = { code: String(f.get('code') || '').trim().toUpperCase(), name: String(f.get('name') || '').trim(), year: Number(f.get('year')),
-      period_start: f.get('period_start'), period_end: f.get('period_end') };
+    const src = DB.byId('programs', Number(f.get('source_id')));
+    if (!src) throw new Error('Pilih program sumber.');
+    const start = String(f.get('period_start') || '');
+    const v = { code: String(f.get('code') || '').trim().toUpperCase(), name: String(f.get('name') || '').trim(), year: Number(start.slice(0, 4)),
+      period_start: start, period_end: f.get('period_end'), channel_ids: f.all('channel_ids').map(Number) };
     const errs = headerErrors(v, null);
+    const srcCount = DB.where('programChannels', (c) => c.program_id === src.id).length;
+    if (srcCount && !v.channel_ids.length) errs.push('Pilih minimal satu channel yang disalin.');
     if (errs.length) throw new Error(errs.join(' · '));
     if (!DB.t('years').some((y) => y.year === v.year)) DB.t('years').push({ year: v.year, is_active: true, note: null });
     const p = E.cloneProgram(src.id, v, UI.currentUser().id);
-    E.audit(p.id, 'program', p.id, 'clone', null, { from: src.code, code: v.code });
+    E.audit(p.id, 'program', p.id, 'clone', null, { from: src.code, code: v.code, channels: v.channel_ids.length });
     if (v.year !== UI.currentYear()) UI.session.set({ year: v.year });
-    done('success', `"${esc(src.name)}" berhasil di-clone menjadi DRAFT <strong>${esc(v.name)}</strong>. Ubah hanya bagian yang berbeda.`, `/setup/${p.id}/channels`);
+    done('success', `"${esc(src.name)}" disalin menjadi DRAFT <strong>${esc(v.name)}</strong> (${v.channel_ids.length} channel). Ubah hanya bagian yang berbeda.`, `/setup/${p.id}/channels`);
   };
 
   // ---------------------------------------------------------------- 1B · header program (+ tipe program)
@@ -333,12 +383,194 @@
       </div></div>`;
   }
 
+  // ---------------------------------------------------------------- 1B · Buat Program: wizard 3 langkah (prototype layar 2–4)
+  // 1 Informasi program · 2 Setup Brand (group brand di level program) · 3 Channel. Semua disimpan sekali di langkah terakhir.
+  // Group brand = brand utama (pemilik matriks kelas) + brand anggota; di tiap channel menjadi satu brand skema dengan sub-brand anggota.
+  function brandGroupsOf(pid) {
+    const p = DB.byId('programs', pid);
+    if (p && p.brand_groups && p.brand_groups.length) return p.brand_groups;
+    const seen = {};
+    for (const pc of DB.where('programChannels', (c) => c.program_id === pid)) {
+      for (const b of DB.where('programChannelBrands', (x) => x.program_channel_id === pc.id).sort((a, b2) => (a.sort_order || 0) - (b2.sort_order || 0))) {
+        const g = seen[b.brand_code] || (seen[b.brand_code] = { lead: b.brand_code, members: [b.brand_code] });
+        for (const m of b.member_codes || []) if (!g.members.includes(m)) g.members.push(m);
+      }
+    }
+    const nameOf = (c) => (DB.t('brands').find((x) => x.code === c) || {}).name || c;
+    // channel lama bisa berbeda susunan: brand yang punya skema sendiri tetap jadi group sendiri, dan tiap brand hanya di satu group
+    const taken = new Set(Object.keys(seen));
+    return Object.values(seen).map((g) => {
+      const members = [g.lead, ...g.members.filter((m) => m !== g.lead && !taken.has(m))];
+      members.forEach((m) => taken.add(m));
+      return { name: nameOf(g.lead), lead: g.lead, members };
+    });
+  }
+  const WIZ_STEPS = ['Informasi Program', 'Setup Brand', 'Channel'];
+
   route('/setup/new', ({}, q, { year, path }) => {
     UI.requireSetup();
     const pend = UI.takePending(path);
-    const fv = pend ? pend.values : { code: '', name: '', program_type_id: (DB.t('programTypes')[0] || {}).id, year, period_start: `${year}-01-01`, period_end: `${year}-12-31`, description: '' };
-    return { title: 'Program baru', html: headerPage(null, fv, pend && pend.errors) };
+    const ny = year + 1;
+    const fv = pend ? pend.values : { code: `LOYALTY-${ny}`, name: `Loyalty Program ${ny}`, period_start: `${ny}-01-01`, period_end: `${ny}-12-31` };
+    const brands = DB.t('brands').filter((b) => b.is_active);
+    const last = DB.t('programs').slice().sort((a, b) => b.year - a.year || b.id - a.id)[0];
+    let groups = last ? brandGroupsOf(last.id) : [];
+    if (!groups.length) groups = brands.map((b) => ({ name: b.name, lead: b.code, members: [b.code] }));
+    if (pend && pend.values.groups_json) { try { groups = JSON.parse(pend.values.groups_json); } catch (e) { /* pakai default */ } }
+    const chans = DB.t('channels').filter((c) => c.is_active).sort((a, b) => (a.sort || 0) - (b.sort || 0))
+      .flatMap((c) => Object.entries(E.CHANNEL_TYPES).map(([t, l]) => ({ key: `${c.code}|${t}`, name: `${c.name} · ${l}`, code: c.code })));
+    const picked = pend ? new Set(String(pend.values.channels_csv || '').split(',').filter(Boolean)) : new Set(chans.filter((c) => c.key.endsWith('|ACTIVE')).map((c) => c.key));
+    const startStep = pend ? Math.min(2, Math.max(0, Number(pend.values.wiz_step) || 0)) : 0;
+    return {
+      title: 'Buat Program', html: `<div class="cps pv">
+      <section class="pv-card pv-detailhead"><div class="pv-detailhead-l">
+        <a href="#/setup" class="pv-back"><i class="bi bi-arrow-left"></i> Kembali</a>
+        <div class="pv-detailhead-t"><h1 class="pv-h1">Buat Program</h1><span class="pv-chip c-blue">Draft</span></div></div></section>
+      ${UI.errorsHtml(pend && pend.errors)}
+      <ol class="pv-steps" aria-label="Langkah">${WIZ_STEPS.map((l, i) => `<li data-wiz-mark="${i}"><span class="pv-steps-n">${i + 1}</span><span class="pv-steps-l">${l}</span></li>`).join('')}</ol>
+      <form data-action="setup.create" id="wizForm" novalidate>
+        <input type="hidden" name="groups_json" id="wizGroups"><input type="hidden" name="channels_csv" id="wizChannels"><input type="hidden" name="wiz_step" id="wizStep" value="0">
+        <section class="pv-card" data-wiz="0"><h2 class="pv-h3">Informasi Program</h2>
+          <div class="pv-grid2">
+            <label class="pv-field">Kode program<input class="pv-inp text-uppercase" name="code" value="${esc(fv.code)}" required></label>
+            <label class="pv-field">Nama program<input class="pv-inp" name="name" value="${esc(fv.name)}" required></label>
+            <label class="pv-field">Periode mulai<input class="pv-inp" type="date" name="period_start" value="${esc(fv.period_start)}" required></label>
+            <label class="pv-field">Periode selesai<input class="pv-inp" type="date" name="period_end" value="${esc(fv.period_end)}" required></label>
+          </div></section>
+        <section class="pv-card" data-wiz="1" hidden>
+          <div class="pv-cardhead"><div class="pv-cardhead-t"><h2 class="pv-h3">Setup Brand</h2>
+            <span class="pv-muted">Atur brand dan group brand yang terdapat pada program ini. Kelas memakai matriks brand utama; baseline dan target memakai jumlah semua brand anggota.</span></div>
+            <button type="button" class="btn pv-btn-s" id="wizAddGroup"><i class="bi bi-plus-lg"></i> Tambah Group Brand</button></div>
+          <div class="pv-tblbox"><table class="pv-table pv-table-edit">
+            <thead><tr><th style="width:220px">Group Brand</th><th style="width:200px">Brand utama</th><th>Brand anggota</th><th style="width:56px"></th></tr></thead>
+            <tbody id="wizGroupRows"></tbody></table></div>
+          <span class="pv-muted" id="wizUnused"></span></section>
+        <section class="pv-card" data-wiz="2" hidden>
+          <div class="pv-cardhead-t"><h2 class="pv-h3">Channel</h2><span class="pv-muted">Pilih channel yang ikut program. Channel bisa ditambah nanti.</span></div>
+          <div class="pv-tblbox"><table class="pv-table"><thead><tr><th>Channel</th></tr></thead>
+            <tbody>${chans.map((c) => `<tr><td><label class="pv-ck2"><input type="checkbox" data-ch="${c.key}" ${chk(picked.has(c.key))}><span><b>${esc(c.name)}</b><span class="pv-muted">${esc(c.code)}</span></span></label></td></tr>`).join('')}</tbody></table></div>
+        </section>
+        <section class="pv-card pv-wizfoot"><span class="pv-muted" id="wizNote"></span>
+          <div class="pv-actions"><button type="button" class="btn pv-btn-s" id="wizBack">Sebelumnya</button>
+            <button type="button" class="btn pv-btn-p" id="wizNext">Lanjut</button>
+            <button type="submit" class="btn pv-btn-p" id="wizDone">Buat Program</button></div></section>
+      </form></div>`,
+      after(root) {
+        const $ = (s) => root.querySelector(s);
+        const nameOf = Object.fromEntries(brands.map((b) => [b.code, b.name]));
+        let step = startStep;
+        let gs = groups.map((g) => ({ name: g.name, lead: g.lead, members: (g.members || []).slice() }));
+        const opts = (selCode, exclude) => brands.filter((b) => !exclude || !exclude.includes(b.code)).map((b) => `<option value="${b.code}" ${sel(b.code === selCode)}>${esc(b.name)}</option>`).join('');
+        const used = () => new Set(gs.flatMap((g) => g.members));
+        const renderGroups = () => {
+          const u = used();
+          $('#wizGroupRows').innerHTML = gs.map((g, i) => `<tr data-g="${i}">
+            <td><input class="pv-cellin" aria-label="Nama group brand" data-gname value="${esc(g.name)}" placeholder="Nama group brand"></td>
+            <td><select class="pv-cellin" aria-label="Brand utama" data-glead>${g.lead ? '' : '<option value="">Pilih brand</option>'}${opts(g.lead, [...u].filter((c) => !g.members.includes(c)))}</select></td>
+            <td><div class="pv-members">${g.members.map((m) => `<span class="pv-chip c-blue">${esc(nameOf[m] || m)}${m === g.lead ? '' : `<button type="button" class="pv-chip-x" aria-label="Hapus ${esc(nameOf[m] || m)}" data-gdel="${m}"><i class="bi bi-x"></i></button>`}</span>`).join('')}
+              <select class="pv-cellin pv-cellin-add" aria-label="Tambah brand anggota" data-gadd><option value="">+ Tambah brand</option>${opts(null, [...u])}</select></div></td>
+            <td><button type="button" class="pv-x" aria-label="Hapus group brand" data-gremove><i class="bi bi-trash"></i></button></td></tr>`).join('')
+            || '<tr><td colspan="4" class="pv-empty">Belum ada group brand. Klik <strong>Tambah Group Brand</strong>.</td></tr>';
+          const left = brands.filter((b) => !u.has(b.code)).map((b) => b.name);
+          $('#wizUnused').textContent = left.length ? `Brand tidak ikut program: ${left.join(', ')}.` : 'Semua brand ikut program.';
+        };
+        const tbody = $('#wizGroupRows');
+        tbody.addEventListener('input', (e) => { const tr = e.target.closest('[data-g]'); if (tr && e.target.matches('[data-gname]')) gs[tr.dataset.g].name = e.target.value; });
+        tbody.addEventListener('change', (e) => {
+          const tr = e.target.closest('[data-g]'); if (!tr) return; const g = gs[tr.dataset.g];
+          if (e.target.matches('[data-glead]')) {
+            const v = e.target.value; const prev = g.lead;
+            g.members = g.members.filter((m) => m !== prev || false); if (v && !g.members.includes(v)) g.members.unshift(v);
+            if (!g.name || g.name === nameOf[prev]) g.name = nameOf[v] || '';
+            g.lead = v; renderGroups();
+          } else if (e.target.matches('[data-gadd]') && e.target.value) { g.members.push(e.target.value); renderGroups(); }
+        });
+        tbody.addEventListener('click', (e) => {
+          const tr = e.target.closest('[data-g]'); if (!tr) return; const i = Number(tr.dataset.g);
+          const del = e.target.closest('[data-gdel]');
+          if (del) { gs[i].members = gs[i].members.filter((m) => m !== del.dataset.gdel); renderGroups(); }
+          if (e.target.closest('[data-gremove]')) { gs.splice(i, 1); renderGroups(); }
+        });
+        $('#wizAddGroup').addEventListener('click', () => {
+          const free = brands.find((b) => !used().has(b.code));
+          gs.push(free ? { name: free.name, lead: free.code, members: [free.code] } : { name: '', lead: '', members: [] });
+          renderGroups();
+        });
+        const chBoxes = () => [...root.querySelectorAll('[data-ch]')];
+        const notes = [() => 'Langkah 1 dari 3 · program dibuat dengan status Draft.',
+          () => `Langkah 2 dari 3 · ${gs.length} group brand.`,
+          () => `Langkah 3 dari 3 · ${chBoxes().filter((b) => b.checked).length} channel dipilih.`];
+        const show = () => {
+          root.querySelectorAll('[data-wiz]').forEach((s) => { s.hidden = Number(s.dataset.wiz) !== step; });
+          root.querySelectorAll('[data-wiz-mark]').forEach((li) => {
+            const i = Number(li.dataset.wizMark);
+            li.className = i < step ? 'is-done' : i === step ? 'is-on' : '';
+            li.querySelector('.pv-steps-n').innerHTML = i < step ? '<i class="bi bi-check-lg"></i>' : String(i + 1);
+          });
+          $('#wizBack').hidden = step === 0; $('#wizNext').hidden = step === 2; $('#wizDone').hidden = step !== 2;
+          $('#wizNote').textContent = notes[step]();
+          $('#wizStep').value = step;
+        };
+        root.addEventListener('change', (e) => { if (e.target.matches('[data-ch]')) show(); });
+        // validasi ringan per langkah (validasi lengkap tetap di aksi setup.create)
+        const stepError = () => {
+          if (step === 0) {
+            const bad = [...root.querySelectorAll('[data-wiz="0"] input')].find((x) => !x.value.trim());
+            if (bad) { bad.focus(); return 'Lengkapi informasi program.'; }
+          }
+          if (step === 1) {
+            if (!gs.length) return 'Tambahkan minimal satu group brand.';
+            if (gs.some((g) => !g.name.trim() || !g.lead)) return 'Setiap group brand perlu nama dan brand utama.';
+          }
+          return '';
+        };
+        const msg = (t) => { root.querySelectorAll('.pv-wizerr').forEach((x) => x.remove()); if (t) $('.pv-wizfoot').insertAdjacentHTML('beforebegin', `<div class="pv-alert pv-wizerr" role="alert">${esc(t)}</div>`); };
+        $('#wizNext').addEventListener('click', () => { const t = stepError(); msg(t); if (!t) { step++; show(); window.scrollTo(0, 0); } });
+        $('#wizBack').addEventListener('click', () => { msg(''); step--; show(); });
+        $('#wizForm').addEventListener('submit', () => {
+          $('#wizGroups').value = JSON.stringify(gs);
+          $('#wizChannels').value = chBoxes().filter((b) => b.checked).map((b) => b.dataset.ch).join(',');
+        }, true);
+        renderGroups(); show();
+      },
+    };
   });
+
+  actions['setup.create'] = (f) => {
+    UI.requireSetup();
+    const start = String(f.get('period_start') || '');
+    const v = { code: String(f.get('code') || '').trim().toUpperCase(), name: String(f.get('name') || '').trim(), year: Number(start.slice(0, 4)),
+      period_start: start, period_end: f.get('period_end') };
+    const errs = headerErrors(v, null);
+    let groups = [];
+    try { groups = JSON.parse(f.get('groups_json') || '[]'); } catch (e) { errs.push('Data group brand tidak terbaca.'); }
+    const brandCodes = new Set(DB.t('brands').map((b) => b.code));
+    groups = groups.map((g) => ({ name: String(g.name || '').trim(), lead: g.lead, members: (g.members || []).filter((m) => brandCodes.has(m)) }));
+    if (!groups.length) errs.push('Tambahkan minimal satu group brand.');
+    if (groups.some((g) => !g.name || !brandCodes.has(g.lead))) errs.push('Setiap group brand perlu nama dan brand utama.');
+    const all = groups.flatMap((g) => g.members);
+    if (new Set(all).size !== all.length) errs.push('Satu brand hanya boleh masuk satu group brand.');
+    const chKeys = String(f.get('channels_csv') || '').split(',').filter(Boolean)
+      .filter((k) => { const [c, t] = k.split('|'); return E.CHANNEL_TYPES[t] && DB.t('channels').some((x) => x.code === c); });
+    if (errs.length) { UI.retry(errs, f); return; }
+    if (!DB.t('years').some((y) => y.year === v.year)) DB.t('years').push({ year: v.year, is_active: true, note: null });
+    const type = DB.t('programTypes').find((t) => t.is_active) || DB.t('programTypes')[0];
+    const now = new Date().toISOString();
+    const p = DB.insert('programs', Object.assign({}, v, { program_type_id: type ? type.id : null, description: null, status: 'DRAFT', published_at: null, published_by: null,
+      cloned_from_program_id: null, lock_version: 1, brand_groups: groups, created_by: UI.currentUser().id, created_at: now, updated_at: now }));
+    for (const k of chKeys) {
+      const [code, ctype] = k.split('|');
+      const pc = DB.insert('programChannels', { program_id: p.id, channel_code: code, channel_type: ctype, pillar_framework_name: 'Vision Compass', monitoring_frequency: 'QUARTERLY',
+        elig_min_sell_out_months: null, elig_ratio_min: null, elig_ratio_max: null, elig_ratio_at_registration: false, elig_min_baseline: {}, elig_prior_payout_required: false,
+        elig_exclusive_program_ids: [], elig_exceptions: [] });
+      E.createChannelDefaults(pc, UI.currentUser().id);
+      groups.forEach((g, i) => DB.insert('programChannelBrands', { program_channel_id: pc.id, brand_code: g.lead, member_codes: g.members.filter((m) => m !== g.lead),
+        est_growth_pct: null, ir_growth_pct: null, sort_order: i + 1 }));
+    }
+    E.audit(p.id, 'program', p.id, 'create', null, Object.assign({}, v, { brand_groups: groups.length, channels: chKeys.length }));
+    if (v.year !== UI.currentYear()) UI.session.set({ year: v.year });
+    done('success', `Program DRAFT <strong>${esc(v.name)}</strong> dibuat dengan ${groups.length} group brand dan ${chKeys.length} channel.`, `/setup/${p.id}/channels`);
+  };
   route('/setup/:id/header', ({ id }, q, { path }) => {
     const p = getProgram(id);
     const pend = UI.takePending(path);

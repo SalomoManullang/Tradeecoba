@@ -649,9 +649,11 @@
     const p = DB.insert('programs', {
       code: v.code, name: v.name, program_type_id: src.program_type_id, year: v.year, period_start: v.period_start, period_end: v.period_end,
       description: src.description, status: 'DRAFT', published_at: null, published_by: null, cloned_from_program_id: src.id, lock_version: 1,
+      brand_groups: src.brand_groups ? clone(src.brand_groups) : null,
       created_by: actorId, created_at: nowIso(), updated_at: nowIso(),
     });
-    for (const pc of DB.where('programChannels', (x) => x.program_id === src.id)) cloneChannel(pc, p.id, actorId);
+    // v.channel_ids (opsional): hanya channel terpilih yang disalin
+    for (const pc of DB.where('programChannels', (x) => x.program_id === src.id && (!v.channel_ids || v.channel_ids.includes(x.id)))) cloneChannel(pc, p.id, actorId);
     return p;
   }
 

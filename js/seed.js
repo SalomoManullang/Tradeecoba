@@ -268,6 +268,8 @@
     window.SetupModel.seedDemo();
     // program demo presentasi (semua langkah terisi) — js/seed-presentation.js
     if (window.SeedPresentation) window.SeedPresentation.run();
+    // Loyalty Program (mockup Program Setup) — js/lp-seed.js
+    if (window.LpSeed) window.LpSeed.run();
     return DB.state;
   }
 

@@ -2,7 +2,8 @@
 (function () {
   // ---------------------------------------------------------------- helper format
   const ROLE_LABEL = { ADMIN_HO: 'Admin HO', SUPERADMIN: 'Admin IT (Superadmin)', CBD: 'CBD / CDT', ADMIN_DC: 'Admin DC', ABL: 'ABL',
-    CHADEV: 'Chadev', FINANCE: 'Finance', HEAD_FINANCE: 'Head of Finance' };
+    CHADEV: 'Chadev', FINANCE: 'Finance', HEAD_FINANCE: 'Head of Finance',
+    RSBL: 'RSBL', RTP: 'RTP', ADMIN_SALES_HO: 'Admin sales HO', AP: 'Accounts Payable', TAX: 'Tax', ADMIN_SALES_DC: 'Admin Sales DC' };
   // Hanya Admin HO & Superadmin yang boleh membuka Program Setup (PRD FR13)
   const SETUP_ROLES = ['ADMIN_HO', 'SUPERADMIN'];
   const STATUS = {
@@ -177,27 +178,19 @@
   // Registration (CBD) & Payout per program mengikuti status channel × fase: Registration = fase Pendaftaran PUBLISHED, Payout = fase Pencairan tidak DRAFT.
   function asideMenu(user, year, path = '/', query = {}) {
     const is = (...roles) => roles.includes(user.role);
-    const SM = window.SetupModel;
-    const programs = DB.where('programs', (p) => p.year === year);
-    const chs = (p) => DB.where('programChannels', (c) => c.program_id === p.id && SM.isPublished(c, 'REGISTRATION') &&
-      (!user.channel_codes || !user.channel_codes.length || user.channel_codes.includes(c.channel_code)));
-    const n = inboxCount(user, year);
-    const groups = [
-      { icon: 'flaticon-customer', title: 'Status Peserta', items: [['Semua peserta', '/registration/participants'], ['Disetujui', '/registration/participants?status=approved'],
-        ['Menunggu approval', '/registration/participants?status=in_review'], ['Dikembalikan', '/registration/participants?status=returned'], ['Ditolak', '/registration/participants?status=rejected']] },
-      { icon: 'flaticon2-graph-1', title: 'Monitoring & Payout', items: [['Monitoring', '/monitoring'], ['Ringkasan payout', '/payout'],
-        ...(is('ADMIN_DC', 'FINANCE', 'HEAD_FINANCE', ...SETUP_ROLES) ? programs.filter((p) => SM.programHas(p.id, 'PAYOUT', SM.isRunning)).map((p) => [`Payout ${p.name}`, `/payout/program/${p.id}`]) : []),
-        ['Inbox approval', '/inbox', n]] },
-      { icon: 'flaticon2-layers-1', title: 'Master Data', items: [
-        ...(is(...SETUP_ROLES) ? [['Data Sell Out', '/master/sales']] : []), ['Master Toko', '/master/stores'],
-        ...(is(...SETUP_ROLES) ? [['Channel & Brand', '/master/data'], ['Library rumus', '/master/formulas'], ['Field wajib', '/master/required-fields']] : [])] },
-    ];
-    if (is('CBD')) {
-      groups.unshift({ icon: 'flaticon2-writing', title: 'Registration', items: [
-        ...programs.filter((p) => SM.programHas(p.id, 'REGISTRATION', SM.isPublished)).flatMap((p) => chs(p).map((c) => [`${p.name} · ${window.Engine.channelName(c)}`, `/registration/program/${p.id}/${c.id}`])),
-        ['Semua program', '/registration']] });
-    }
-    if (is(...SETUP_ROLES)) groups.unshift({ icon: 'flaticon2-settings', title: 'Program Setup', items: [['Daftar program', '/setup'], ['Buat Program', '/setup/new']] });
+    // Menu mengikuti mockup Program Setup: Loyalty Program · Pendaftaran · Master Data (Monitoring & Pencairan lama disembunyikan)
+    const approver = Object.keys(window.LP.ROLES).includes(user.role) || ['ADMIN_HO', 'ADMIN_SALES_DC'].includes(user.role);
+    const n = approver ? window.LP.pendingCount(user) : 0;
+    const groups = [];
+    const lp = [];
+    if (is(...SETUP_ROLES)) lp.push(['Program Setup', '/setup']);
+    if (approver || is(...SETUP_ROLES)) lp.push(['Approval', '/approval', n]);
+    if (lp.length) groups.push({ icon: 'flaticon2-settings', title: 'Loyalty Program', items: lp });
+    const reg = [];
+    if (is('CBD', ...SETUP_ROLES)) reg.push(['Daftar Toko', '/pendaftaran']);
+    if (is(...SETUP_ROLES)) reg.push(['Toko Exception', '/exception']);
+    if (reg.length) groups.push({ icon: 'flaticon2-writing', title: 'Pendaftaran', items: reg });
+    if (is('CBD', ...SETUP_ROLES)) groups.push({ icon: 'flaticon2-layers-1', title: 'Master Data', items: [['Customer Group', '/customer-group']] });
     const saved = sideGroupState();
     // item aktif: href paling spesifik yang cocok dengan halaman sekarang
     const all = groups.flatMap((g) => g.items.map(([, href]) => href)).filter((href) => hrefActive(href, path, query));

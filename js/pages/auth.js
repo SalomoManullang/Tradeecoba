@@ -124,7 +124,13 @@
   };
 
   // ---------------------------------------------------------------- dashboard
-  route('/', ({}, q, { user, year }) => {
+  // Dashboard: langsung ke halaman utama role (mengikuti mockup Program Setup)
+  route('/', ({}, q, { user }) => {
+    if (h.SETUP_ROLES.includes(user.role)) UI.redirect('/setup');
+    if (user.role === 'CBD') UI.redirect('/pendaftaran');
+    UI.redirect('/approval');
+  });
+  route('/dashboard-lama', ({}, q, { user, year }) => {
     const programs = DB.where('programs', (p) => p.year === year);
     const isHo = h.SETUP_ROLES.includes(user.role);
     const pending = UI.pendingFor(user, year);

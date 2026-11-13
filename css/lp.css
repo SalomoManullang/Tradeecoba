@@ -106,7 +106,6 @@
 .lp .phase.on { background: #EEF0FC; border: 2px solid #304DDE; color: #1E308B !important; box-shadow: 0 2px 10px rgba(48,77,222,.18); }
 .lp .phase.on::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; border-radius: 6px 0 0 6px; background: #304DDE; }
 .lp .phase.off { background: #F2F3F5; border: 1px dashed #AEB6BF; color: #6B7883 !important; cursor: not-allowed; }
-.lp .phase.add { border: 1px dashed #304DDE; color: #304DDE !important; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; background: #fff; }
 .lp .phase-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; font-size: 15px; }
 .lp .phase-d { font-size: 12px; color: #5E6C77; }
 .lp .phase.on .phase-d { color: #33479E; }

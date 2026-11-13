@@ -30,7 +30,6 @@
 
   // Role approver (daftar tetap) — dipakai builder approval & user demo
   const ROLES = { RSBL: 'RSBL', RTP: 'RTP', ADMIN_SALES_HO: 'Admin sales HO', HEAD_FINANCE: 'Head of Finance', AP: 'Accounts Payable', TAX: 'Tax' };
-  const REVIEWERS = { ADMIN_HO: 'Admin HO', ADMIN_SALES_DC: 'Admin Sales DC' };
 
   // Objek kondisi approval per fase
   const COND = {
@@ -73,15 +72,17 @@
       program_id: programId, channel_code: code, reg_status: 'DRAFT', pay_status: 'DRAFT', reg_published_at: null, pay_published_at: null,
       saved: {}, settings: { semester: true, yearly: true, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null },
       matrix: {}, fr: DEFAULT_FR(), layers: { REGISTRATION: [], PAYOUT: [] }, payout_rules: { ratio_min: 95, carry_over: false },
-      mou: { revisions: [], docs: DEFAULT_DOCS(), reviewer: 'ADMIN_HO' }, extra_phases: [], audit: [], updated_at: now(),
+      mou: { revisions: [], docs: DEFAULT_DOCS() }, extra_phases: [], audit: [], updated_at: now(),
     };
   }
 
   // ---------------------------------------------------------------- akses data
   const programs = () => DB.t(T.programs);
   const program = (id) => DB.byId(T.programs, id);
-  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid));
-  const channel = (id) => DB.byId(T.channels, id);
+  // yearly rebate selalu aktif (toggle di Pengaturan dihapus); data lama yang menonaktifkannya ikut dinormalkan
+  const yearlyOn = (c) => { if (c && c.settings && c.settings.yearly !== true) c.settings.yearly = true; return c; };
+  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid)).map(yearlyOn);
+  const channel = (id) => yearlyOn(DB.byId(T.channels, id));
   const groupsOf = (p) => p.brand_groups || [];
   const stores = () => DB.t('lpStores');
   const store = (code) => stores().find((s) => s.code === code);
@@ -358,11 +359,11 @@
   const currentStep = (r) => (r.route || []).find((s) => s.status === 'RUN' && !s.decision) || null;
   function setStatus(r, to, note, by) { r.history = r.history || []; r.history.push({ from: r.status, to, by: by || null, at: now(), note: note || '' }); r.status = to; r.updated_at = now(); }
 
-  // Antrian approver: layer berjalan milik role user, atau review dokumen milik reviewer channel
+  // Antrian approver: layer berjalan milik role user; review dokumen (MOU dari Admin DC) selalu oleh Admin HO
   function myQueue(user) {
     return regs().filter((r) => {
       if (r.status === 'IN_APPROVAL') { const st = currentStep(r); return !!st && st.role === user.role; }
-      if (r.status === 'DOC_REVIEW') { const ch = channel(r.channel_id); return !!ch && ch.mou.reviewer === user.role && (!user.lp_dc || (store(r.codes[0]) || {}).dc === user.lp_dc); }
+      if (r.status === 'DOC_REVIEW') return user.role === 'ADMIN_HO';
       return false;
     });
   }
@@ -371,7 +372,7 @@
   window.LP = {
     myQueue, pendingCount, blankUnit, blankPlan, regCalc, makeRoute, currentStep, setStatus,
     T, esc, fp, fr, fj, pnum, rpNum, fmtThousand, dateTxt, periodTxt, MONTHS, today, now,
-    CHANNELS, BRANDS, DCS, channelOf, ROLES, REVIEWERS, COND, condMeta, OPS, DEFAULT_FR, DEFAULT_DOCS, newChannel,
+    CHANNELS, BRANDS, DCS, channelOf, ROLES, COND, condMeta, OPS, DEFAULT_FR, DEFAULT_DOCS, newChannel,
     programs, program, channels, channel, groupsOf, stores, store, custGroups, custGroup, groupOfStore, regs, reg, exceptions,
     FR, frName, TABS, tabsOf, matrixErrors, tabDone, completeness, channelStatus, programStatus, programClosed, STATUS_CHIP, regOpen, editable, layersErrors,
     salesFor, findClass, tierOf, calcUnit, checksOf, factsOf, testCond, phraseOf, buildRoute, sentenceOf,

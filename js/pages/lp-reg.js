@@ -1,5 +1,6 @@
 // Pendaftaran mengikuti mockup layar 16–18 + alur spesifikasi v2.5:
 // Daftar Toko (CBD) · Form Pendaftaran · Approval (Setujui / Kembalikan) · MOU & dokumen · Toko Exception (Admin HO) · Customer Group (CBD)
+// Dokumen: Admin DC mengunggah MOU & dokumen wajib (Dokumen Toko), Admin HO mereview kelengkapannya (Daftar Toko Admin HO)
 (function () {
   const { route, go, flash } = UI;
   const L = window.LP; const DB = window.DB;
@@ -33,7 +34,7 @@
     if (r.status === 'DRAFT') return `Disimpan ${L.dateTxt(r.updated_at)}`;
     if (r.status === 'IN_APPROVAL') { const run = r.route.filter((s) => s.status === 'RUN'); const cur = L.currentStep(r); return cur ? `Di ${L.ROLES[cur.role] || cur.role} (layer ${run.indexOf(cur) + 1} dari ${run.length})` : ''; }
     if (r.status === 'RETURNED') { const s = r.route.find((x) => x.decision === 'RETURNED'); return s ? `Dikembalikan ${L.ROLES[s.role] || s.role}: ${s.comment}` : 'Dikembalikan'; }
-    if (r.status === 'AWAITING_DOCS') return 'MOU siap ditandatangani';
+    if (r.status === 'AWAITING_DOCS') return r.review && r.review.status === 'REVISE' ? 'Dokumen direvisi Admin DC' : 'Menunggu dokumen dari Admin DC';
     if (r.status === 'DOC_REVIEW') return 'Dokumen sedang direview';
     if (r.status === 'REGISTERED') return `Terdaftar ${L.dateTxt(r.updated_at)}`;
     return '';
@@ -42,6 +43,7 @@
   // ---------------------------------------------------------------- 16 · Daftar Toko
   route('/pendaftaran', ({}, q, { user }) => {
     if (!['CBD', 'ADMIN_HO', 'SUPERADMIN'].includes(user.role)) UI.fail('Tidak ada akses', 'Daftar Toko untuk CBD dan Admin HO.');
+    if (isHo(user)) return docsPage(user, 'HO');
     const progs = L.programs().filter((p) => !L.programClosed(p) && L.channels(p.id).length).sort((a, b) => b.period_start.localeCompare(a.period_start) || a.code.localeCompare(b.code));
     const dc = userDc(user);
     return L.page('Pendaftaran', (root) => {
@@ -62,7 +64,7 @@
           const act = (x) => { const k = x.st.key; const href = `#/pendaftaran/form/${x.p.id}/${encodeURIComponent(x.part.code)}`;
             if (k === 'CLOSED' || x.st.blocked) return '<span class="btn btn-d sm" aria-disabled="true">Belum bisa</span>';
             if (!['CBD'].includes(user.role) && k === 'NEW') return '<span class="muted xs">Didaftarkan CBD</span>';
-            const [label, cls] = { NEW: ['Daftarkan', 'btn-p'], DRAFT: ['Lanjutkan', 'btn-o'], RETURNED: ['Perbaiki', 'btn-p'], AWAITING_DOCS: [user.role === 'CBD' ? 'Unggah Dokumen' : 'Lihat', user.role === 'CBD' ? 'btn-p' : 'btn-s'] }[k] || ['Lihat', 'btn-s'];
+            const [label, cls] = { NEW: ['Daftarkan', 'btn-p'], DRAFT: ['Lanjutkan', 'btn-o'], RETURNED: ['Perbaiki', 'btn-p'], AWAITING_DOCS: ['Lihat', 'btn-s'] }[k] || ['Lihat', 'btn-s'];
             return `<a class="btn sm ${cls}" href="${href}">${label}</a>`; };
           return `<div class="between" style="align-items:flex-end"><div class="col-f" style="gap:6px;max-width:640px"><h1 class="title">Pendaftaran</h1><p class="muted" style="margin:0">Toko dan customer group di area ${dc ? `Anda (${esc(dc)})` : 'semua DC'}.</p></div>
               <label class="lbl field" style="margin:0">Program<select class="inp" style="width:280px" data-chg="prog"><option value="ALL" ${allP ? 'selected' : ''}>Semua Program</option>${progs.map((p) => `<option value="${p.id}" ${Number(S.prog) === p.id ? 'selected' : ''}>${esc(p.code)} · ${esc(p.name)}</option>`).join('')}</select></label></div>
@@ -86,9 +88,90 @@
     });
   });
 
+  // ---------------------------------------------------------------- Dokumen toko: unggah (Admin DC) · review kelengkapan (Admin HO)
+  // Hanya pendaftaran yang sudah disetujui (MOU dibuat). Admin HO melihat yang sudah diunggah: menunggu review, dikembalikan untuk revisi, disetujui.
+  const isRevise = (r) => r.status === 'AWAITING_DOCS' && r.review && r.review.status === 'REVISE';
+  const docState = (r) => (r.status === 'DOC_REVIEW' ? 'review' : r.status === 'REGISTERED' ? 'done' : isRevise(r) ? 'revise' : r.status === 'AWAITING_DOCS' ? 'upload' : null);
+  const DOC_STATE = { upload: ['Menunggu dokumen', 'c-yellow'], revise: ['Perlu revisi', 'c-red'], review: ['Menunggu review', 'c-yellow'], done: ['Disetujui', 'c-green'] };
+  function docCount(r) {
+    const ch = L.channel(r.channel_id); const docs = ch ? ch.mou.docs.filter((d) => !d.locked) : [];
+    const files = (r.docs && r.docs.files) || {};
+    return { done: (r.docs && r.docs.mou ? 1 : 0) + docs.filter((d) => files[d.name]).length, total: 1 + docs.length };
+  }
+  const lastAt = (r, to) => { const h = (r.history || []).filter((x) => x.to === to); return h.length ? h[h.length - 1].at : r.updated_at; };
+  function docsPage(user, who) {
+    const ho = who === 'HO';
+    const tabs = ho ? [['review', 'Menunggu review'], ['revise', 'Dikembalikan untuk revisi'], ['done', 'Disetujui'], ['all', 'Semua']]
+      : [['upload', 'Perlu diunggah'], ['revise', 'Perlu revisi'], ['review', 'Menunggu review'], ['done', 'Disetujui'], ['all', 'Semua']];
+    const states = ho ? ['review', 'revise', 'done'] : ['upload', 'revise', 'review', 'done'];
+    const base = ho ? '#/pendaftaran/dokumen/' : '#/dokumen/';
+    return L.page(ho ? 'Daftar Toko' : 'Dokumen Toko', (root) => {
+      L.view(root, {
+        state: { tab: tabs[0][0], q: '' },
+        html: (S) => {
+          const dcOf = (r) => (L.store(r.codes[0]) || {}).dc || '';
+          const all = L.regs().filter((r) => states.includes(docState(r)) && (ho || !user.lp_dc || dcOf(r) === user.lp_dc))
+            .sort((a, b) => String(lastAt(b, b.status)).localeCompare(String(lastAt(a, a.status))));
+          const count = (k) => (k === 'all' ? all.length : all.filter((r) => docState(r) === k).length);
+          const qq = S.q.trim().toLowerCase();
+          const rows = all.filter((r) => (S.tab === 'all' || docState(r) === S.tab) && (!qq || (r.code + ' ' + r.name).toLowerCase().includes(qq)));
+          const cols = 'grid-template-columns: 130px minmax(180px,2fr) 170px 120px 110px minmax(180px,1.5fr) 160px;';
+          const note = (r) => { const k = docState(r);
+            if (k === 'review') return `Dikirim ${L.dateTxt(lastAt(r, 'DOC_REVIEW'))}`;
+            if (k === 'revise') return `Catatan: ${r.review.note}`;
+            if (k === 'done') return `${L.dateTxt(lastAt(r, 'REGISTERED'))}${r.review && r.review.by ? ' · ' + userName(r.review.by) : ''}`;
+            return r.mou_no || ''; };
+          const act = (r) => { const k = docState(r);
+            const main = ho ? k === 'review' && user.role === 'ADMIN_HO' && ['Review', 'btn-p'] : k === 'upload' ? ['Unggah Dokumen', 'btn-p'] : k === 'revise' && ['Perbaiki Dokumen', 'btn-p'];
+            const [label, cls] = main || ['Lihat', 'btn-s'];
+            return `<a class="btn sm ${cls}" href="${base}${r.id}">${label}</a>`; };
+          const tile = (l, v, n, c) => `<div class="card pad-s"><span class="lbl up">${l}</span><span class="kpi-v" style="color:${c}">${v}</span><span class="muted xs">${n}</span></div>`;
+          const intro = ho ? 'Toko yang MOU dan dokumen wajibnya sudah diunggah Admin DC. Review kelengkapan dokumen, lalu setujui atau minta revisi.'
+            : `Toko yang pendaftarannya sudah disetujui di area ${user.lp_dc ? esc(user.lp_dc) : 'semua DC'}. Unggah MOU yang sudah ditandatangani dan dokumen wajib untuk direview Admin HO.`;
+          return `<div class="col-f" style="gap:6px;max-width:720px"><h1 class="title">${ho ? 'Daftar Toko' : 'Dokumen Toko'}</h1><p class="muted" style="margin:0">${intro}</p></div>
+            <div class="grid-auto">${ho ? tile('Menunggu review', count('review'), 'dokumen dari Admin DC', '#8A6A00') + tile('Dikembalikan', count('revise'), 'menunggu revisi Admin DC', '#A3001A') + tile('Disetujui', count('done'), 'toko terdaftar', '#267346')
+              : tile('Perlu diunggah', count('upload'), 'MOU siap ditandatangani', '#304DDE') + tile('Perlu revisi', count('revise'), 'catatan dari Admin HO', '#A3001A') + tile('Menunggu review', count('review'), 'di Admin HO', '#8A6A00') + tile('Disetujui', count('done'), 'toko terdaftar', '#267346')}</div>
+            <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:16px">
+              <div class="between"><div class="seg" role="group" aria-label="Filter status dokumen">${tabs.map(([k, l]) => `<button type="button" class="${S.tab === k ? 'on' : ''}" data-on="tab" data-t="${k}">${l} (${count(k)})</button>`).join('')}</div>
+                <input class="inp" type="search" data-k="q" data-inp="q" value="${esc(S.q)}" placeholder="Cari kode atau nama toko..." style="width:240px" aria-label="Cari toko"></div>
+              <div class="tblbox"><div style="min-width:1050px"><div class="gr" style="${cols}"><div class="th">Kode</div><div class="th">Toko / Customer Group</div><div class="th">Program · Channel</div><div class="th">DC</div><div class="th">Dokumen</div><div class="th">Status</div><div class="th">Aksi</div></div>
+                ${rows.map((r) => { const p = L.program(r.program_id); const ch = L.channel(r.channel_id); const k = docState(r); const d = docCount(r);
+                  return `<div class="gr" style="${cols}"><div class="td b">${esc(r.code)}</div><div class="td c"><b>${esc(r.name)}</b><span class="muted">${esc(r.kind)}${r.via_exception ? ' · toko exception' : ''}</span></div>
+                  <div class="td c"><b>${esc(p ? p.code : '')}</b><span class="muted">${ch ? esc(L.channelOf(ch.channel_code).name) : ''}</span></div><div class="td">${esc(dcOf(r))}</div>
+                  <div class="td"><span class="${d.done < d.total ? '' : 'b'}">${d.done}/${d.total} diunggah</span></div>
+                  <div class="td c" style="gap:4px">${chip(DOC_STATE[k][0], DOC_STATE[k][1])}<span class="muted">${esc(note(r))}</span></div><div class="td">${act(r)}</div></div>`; }).join('')
+                  || '<div class="td muted" style="justify-content:center;padding:24px">Tidak ada toko untuk filter ini.</div>'}</div></div></section>`;
+        },
+        on: { tab: (S, el) => { S.tab = el.dataset.t; }, q: (S, el) => { S.q = el.value; return true; } },
+      });
+    });
+  }
+  // detail satu pendaftaran untuk halaman dokumen (form pendaftaran read-only + panel MOU & Dokumen)
+  function docDetail(id, user, who) {
+    const r = L.reg(id); if (!r || !docState(r)) UI.fail('Dokumen tidak ditemukan', 'Pendaftaran ini belum sampai tahap dokumen.');
+    const ho = who === 'HO';
+    if (ho && docState(r) === 'upload') UI.fail('Dokumen belum diunggah', 'Admin DC belum mengunggah MOU dan dokumen toko ini.');
+    const p = L.program(r.program_id); const ch = L.channel(r.channel_id);
+    const part = L.participant(r.code) || { code: r.code, name: r.name, kind: r.kind, sub: '', dc: '', channel: ch.channel_code, codes: r.codes };
+    const mode = ho && user.role === 'ADMIN_HO' && r.status === 'DOC_REVIEW' ? 'review' : 'view';
+    return L.page(`Dokumen · ${r.name}`, regForm(p, ch, Object.assign({}, part, { codes: r.codes }), r, mode, user, ho ? '#/pendaftaran' : '#/dokumen'));
+  }
+  route('/pendaftaran/dokumen/:id', ({ id }, q, { user }) => {
+    if (!isHo(user)) UI.fail('Tidak ada akses', 'Review dokumen untuk Admin HO.');
+    return docDetail(id, user, 'HO');
+  });
+  route('/dokumen', ({}, q, { user }) => {
+    if (user.role !== 'ADMIN_DC') UI.fail('Tidak ada akses', 'Dokumen Toko untuk Admin DC.');
+    return docsPage(user, 'DC');
+  });
+  route('/dokumen/:id', ({ id }, q, { user }) => {
+    if (user.role !== 'ADMIN_DC') UI.fail('Tidak ada akses', 'Dokumen Toko untuk Admin DC.');
+    return docDetail(id, user, 'DC');
+  });
+
   // ---------------------------------------------------------------- 17 · Form Pendaftaran (isi, lihat, approve, review)
-  function regForm(p, ch, part, r, mode, user) {
-    // mode: edit | view | approve | review
+  function regForm(p, ch, part, r, mode, user, back) {
+    // mode: edit | view | approve | review · back: tujuan tombol Kembali & setelah aksi dokumen (default sesuai mode)
     return (root) => {
       const units = {}; for (const g of L.groupsOf(p)) { units[g.id] = clone((r && r.units[g.id]) || L.blankUnit(ch)); if (!r) { const s_ = L.salesFor(part.codes, g.members); if (!s_.si && !s_.so) units[g.id].joined = false; } }
       const viaExc = r ? r.via_exception : !!L.exceptionOf(p.id, part.code);
@@ -200,7 +283,7 @@
           const reb = [['Conditional rebate (' + [set.semester && 'semester', set.yearly && 'yearly'].filter(Boolean).join(' + ') + ')', share(cond), fj(cond), '']].concat(FRon ? [[FRN, share(frT), fj(frT), '']] : []).concat([['Total rebate', share(cond + frT), fj(cond + frT), 'font-weight:700;background:#F8F9FD;']]);
           const blocked = hard > 0 || missing > 0;
           const blockText = hard ? `Perbaiki ${hard} temuan merah sebelum mengajukan.` : missing ? `Isi alasan untuk ${missing} kasus exception.` : appr.length ? `Alasan untuk ${appr.length} kasus sudah diisi. Siap diajukan.` : 'Siap diajukan.';
-          return `${headHtml(p, ch, part, r, mode)}${sidePanels(S, p, ch, part, r, mode, user)}
+          return `${headHtml(p, ch, part, r, mode, back)}${sidePanels(S, p, ch, part, r, mode, user)}
             <fieldset ${ro ? 'disabled' : ''} style="border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:20px">
             <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px"><div class="between"><h2 class="h3">1 · Baseline &amp; Target Yearly</h2><span class="muted xs">Hapus centang Ikut jika toko tidak ikut group brand tersebut. Growth yearly menentukan target tahunan${set.yearly ? ' dan tier yearly' : ''}.</span></div>
               <div class="tblbox" data-keep-scroll><div style="min-width:1084px"><div class="gr" style="${c1}"><div class="th">Ikut</div><div class="th">Group Brand</div><div class="th">Sell In · Sell Out / bln</div><div class="th">Tagging</div><div class="th">Baseline / bln</div><div class="th">Growth yearly %</div><div class="th">Target yearly</div><div class="th">Kelas · Tier</div></div>${sec1}</div></div></section>
@@ -234,7 +317,7 @@
           draft: (S) => { saveReg(S, p, ch, part, r, viaExc, false); return false; },
           submit: (S) => { const e = saveReg(S, p, ch, part, r, viaExc, true); if (e) { S.err = e; } else return false; },
           cancel: () => { if (!confirm('Batalkan pendaftaran ini? Data pendaftaran tidak bisa diajukan lagi.')) return false; L.setStatus(r, 'CANCELLED', 'Dibatalkan CBD', UI.currentUser().id); DB.save(); flash('success', 'Pendaftaran dibatalkan.'); go('/pendaftaran'); return false; },
-        }, sideOn(p, ch, part, r, mode, user)),
+        }, sideOn(p, ch, part, r, mode, user, back)),
       });
     };
   }
@@ -260,9 +343,9 @@
     L.setStatus(r, 'AWAITING_DOCS', `MOU dibuat dari template revisi ${r.mou_rev || '-'}`, null);
   }
 
-  function headHtml(p, ch, part, r, mode) {
+  function headHtml(p, ch, part, r, mode, back) {
     const st = r ? L.REG_STATUS[r.status] : L.REG_STATUS.NEW;
-    const back = mode === 'approve' || mode === 'review' ? '#/approval' : '#/pendaftaran';
+    back = back || (mode === 'approve' || mode === 'review' ? '#/approval' : '#/pendaftaran');
     return `<section class="card head"><div class="head-l"><a href="${back}" class="back">${L.ico.back}Kembali</a><div class="col-f" style="gap:8px">
       <div class="row-f" style="gap:10px"><h1 class="h1">${esc(part.name)}</h1>${chip(part.kind, 'c-grey')}${chip(st[0], st[1])}${r && r.via_exception ? chip('Toko exception', 'c-yellow') : ''}</div>
       <span class="muted sm">${esc(part.code)} · ${esc(part.sub)} · ${esc(part.dc)}${r && r.revision > 1 ? ` · revisi ${r.revision}` : ''}</span>
@@ -286,7 +369,7 @@
       <textarea class="ta" data-k="cmt" data-inp="cmt" placeholder="Komentar (wajib jika dikembalikan)">${esc(S.comment)}</textarea>
       <div class="row-f"><button type="button" class="btn btn-p" data-on="approve">Setujui</button><button type="button" class="btn btn-s" data-on="return">Kembalikan ke CBD</button></div></section>`);
     if (['AWAITING_DOCS', 'DOC_REVIEW', 'REGISTERED'].includes(r.status)) {
-      const docs = ch.mou.docs; const canUp = r.status === 'AWAITING_DOCS' && user.role === 'CBD';
+      const docs = ch.mou.docs; const canUp = r.status === 'AWAITING_DOCS' && user.role === 'ADMIN_DC';
       const fileRow = (name, req, val, key) => `<div class="between" style="padding:10px 0;border-top:1px solid #EBEBEB"><span><b>${esc(name)}</b>${req ? ' <span style="color:#B80016">*</span>' : ''}</span>
         <span class="row-f">${val ? `<span class="sm">📎 ${esc(val)}</span>` : '<span class="muted sm">Belum diunggah</span>'}${canUp ? `<label class="btn btn-s sm" style="margin:0">Pilih file<input type="file" hidden data-chg="docUp" data-key="${esc(key)}"></label>` : ''}</span></div>`;
       out.push(`<section class="card pad" style="gap:12px"><div class="between"><h2 class="h3">MOU &amp; Dokumen</h2>${r.review && r.review.status === 'REVISE' && r.status === 'AWAITING_DOCS' ? chip('Perlu revisi', 'c-red') : ''}</div>
@@ -300,11 +383,12 @@
     }
     return out.join('');
   }
-  function sideOn(p, ch, part, r, mode, user) {
+  function sideOn(p, ch, part, r, mode, user, back) {
+    const to = back ? back.slice(1) : null;
     return {
       cmt: (S, el) => { S.comment = el.value; },
       approve: (S) => { const s = L.currentStep(r); if (!s) return; Object.assign(s, { decision: 'APPROVED', by: user.id, at: L.now(), comment: S.comment.trim() });
-        if (!L.currentStep(r)) { finishApproval(r, ch); flash('success', `${esc(part.name)} disetujui. MOU dibuat dan menunggu dokumen CBD.`); }
+        if (!L.currentStep(r)) { finishApproval(r, ch); flash('success', `${esc(part.name)} disetujui. MOU dibuat dan menunggu dokumen dari Admin DC.`); }
         else { const n = L.currentStep(r); r.updated_at = L.now(); flash('success', `${esc(part.name)} disetujui, diteruskan ke ${esc(L.ROLES[n.role] || n.role)}.`); }
         DB.save(); go('/approval'); return false; },
       return: (S) => { if (!S.comment.trim()) { alert('Isi komentar untuk CBD.'); return false; } const s = L.currentStep(r);
@@ -322,10 +406,10 @@
         const miss = (S.files.mou ? [] : ['MOU ditandatangani']).concat(ch.mou.docs.filter((d) => !d.locked && d.req && !S.files.files[d.name]).map((d) => d.name));
         if (miss.length) { alert('Lengkapi dokumen wajib: ' + miss.join(', ')); return false; }
         r.docs = clone(S.files); r.review = { status: null, note: '' }; L.setStatus(r, 'DOC_REVIEW', 'Dokumen dikirim', user.id); DB.save();
-        flash('success', `Dokumen dikirim ke ${esc(L.REVIEWERS[ch.mou.reviewer])} untuk direview.`); go('/pendaftaran'); return false; },
-      docOk: (S) => { r.review = { status: 'OK', note: S.comment.trim(), by: user.id, at: L.now() }; L.setStatus(r, 'REGISTERED', 'Dokumen OK', user.id); DB.save(); flash('success', `${esc(part.name)} terdaftar.`); go('/approval'); return false; },
-      docRev: (S) => { if (!S.comment.trim()) { alert('Isi catatan revisi untuk CBD.'); return false; } r.review = { status: 'REVISE', note: S.comment.trim(), by: user.id, at: L.now() };
-        L.setStatus(r, 'AWAITING_DOCS', 'Dokumen perlu revisi: ' + S.comment.trim(), user.id); DB.save(); flash('success', 'Dikembalikan ke CBD untuk revisi dokumen.'); go('/approval'); return false; },
+        flash('success', 'Dokumen dikirim ke Admin HO untuk direview.'); go(to || '/dokumen'); return false; },
+      docOk: (S) => { r.review = { status: 'OK', note: S.comment.trim(), by: user.id, at: L.now() }; L.setStatus(r, 'REGISTERED', 'Dokumen OK', user.id); DB.save(); flash('success', `Dokumen ${esc(part.name)} disetujui, toko terdaftar.`); go(to || '/approval'); return false; },
+      docRev: (S) => { if (!S.comment.trim()) { alert('Isi catatan revisi untuk Admin DC.'); return false; } r.review = { status: 'REVISE', note: S.comment.trim(), by: user.id, at: L.now() };
+        L.setStatus(r, 'AWAITING_DOCS', 'Dokumen perlu revisi: ' + S.comment.trim(), user.id); DB.save(); flash('success', 'Dikembalikan ke Admin DC untuk revisi dokumen.'); go(to || '/approval'); return false; },
     };
   }
 
@@ -359,7 +443,7 @@
               ${list.map((r) => { const p = L.program(r.program_id); const ch = L.channel(r.channel_id); const cur = L.currentStep(r); const m = L.REG_STATUS[r.status]; const isMine = mine.includes(r);
                 return `<div class="gr" style="${cols}"><div class="td b">${esc(r.code)}</div><div class="td c"><b>${esc(r.name)}</b><span class="muted">${esc(r.kind)}${r.via_exception ? ' · toko exception' : ''}</span></div>
                 <div class="td c"><b>${esc(p.code)}</b><span class="muted">${esc(L.channelOf(ch.channel_code).name)}</span></div><div class="td c"><span>${L.dateTxt(r.submitted_at)}</span><span class="muted">${esc(userName(r.created_by))}</span></div>
-                <div class="td c" style="gap:4px">${chip(m[0], m[1])}<span class="muted">${r.status === 'DOC_REVIEW' ? 'Reviewer: ' + esc(L.REVIEWERS[ch.mou.reviewer]) : cur ? 'Di ' + esc(L.ROLES[cur.role] || cur.role) : ''}</span></div>
+                <div class="td c" style="gap:4px">${chip(m[0], m[1])}<span class="muted">${r.status === 'DOC_REVIEW' ? 'Reviewer: Admin HO' : cur ? 'Di ' + esc(L.ROLES[cur.role] || cur.role) : ''}</span></div>
                 <div class="td"><a class="btn sm ${isMine ? 'btn-p' : 'btn-s'}" href="#/approval/${r.id}">${isMine ? (r.status === 'DOC_REVIEW' ? 'Review' : 'Putuskan') : 'Lihat'}</a></div></div>`; }).join('')
                 || `<div class="td muted" style="justify-content:center;padding:24px">${S.tab === 'mine' ? 'Tidak ada yang menunggu Anda.' : 'Tidak ada pendaftaran dalam proses.'}</div>`}</div></div></section>`;
         },

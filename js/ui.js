@@ -189,6 +189,8 @@
     const reg = [];
     if (is('CBD', ...SETUP_ROLES)) reg.push(['Daftar Toko', '/pendaftaran']);
     if (is(...SETUP_ROLES)) reg.push(['Toko Exception', '/exception']);
+    // Admin DC: unggah MOU & dokumen toko yang sudah disetujui (badge = menunggu unggahan / revisi)
+    if (is('ADMIN_DC')) reg.push(['Dokumen Toko', '/dokumen', window.LP.regs().filter((r) => r.status === 'AWAITING_DOCS' && (!user.lp_dc || (window.LP.store(r.codes[0]) || {}).dc === user.lp_dc)).length]);
     if (reg.length) groups.push({ icon: 'flaticon2-writing', title: 'Pendaftaran', items: reg });
     if (is('CBD', ...SETUP_ROLES)) groups.push({ icon: 'flaticon2-layers-1', title: 'Master Data', items: [['Customer Group', '/customer-group']] });
     const saved = sideGroupState();

@@ -96,14 +96,13 @@
       const rowSw = (key, title, desc, extra = '') => `<div class="row-f box" style="gap:14px 24px;justify-content:space-between;padding:14px 16px;border-radius:8px">
         <div class="row-f" style="gap:14px;align-items:flex-start;flex:1 1 360px;flex-wrap:nowrap">${sw(s[key], `data-on="tg_${key}" aria-label="${esc(title)}"`)}<div class="col-f"><span class="b">${title}</span><span class="muted sm">${desc}</span></div></div>${extra}</div>`;
       return `${banner}
-        <section class="card pad" style="flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center"><div class="col-f" style="flex:1 1 420px"><h2 class="h3">Salin Setup</h2><span class="muted sm">Ambil matriks kelas, fixed rebate detail, atau approval dari channel lain di program ini.</span></div>
+        <section class="card pad" style="flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center"><div class="col-f" style="flex:1 1 420px"><h2 class="h3">Salin Setup</h2></div>
           <button class="btn btn-s" type="button" data-on="openCopy" ${ro ? 'disabled' : ''}>${L.ico.copy}Salin Setup dari Channel Lain</button></section>
         <fieldset ${ro ? 'disabled' : ''} style="display:flex;flex-direction:column;gap:20px;border:0;padding:0;margin:0;min-width:0">
         <section class="card pad"><div class="between"><h2 class="h3">Mekanisme</h2><button type="button" class="btn btn-g" data-on="openApply">Terapkan juga ke channel lain…</button></div>
           ${rowSw('semester', 'Semester rebate', 'CBD mengisi growth S1 / S2, semester %, dan pembagian batas cair S1 / S2 di form pendaftaran.',
             s.semester ? `<label class="field lbl" style="width:240px;margin:0">Min. alokasi batas cair per semester %<input class="inp" data-k="alloc" data-chg="alloc" inputmode="decimal" value="${nv(s.alloc_min)}"></label>` : '')}
-          ${rowSw('yearly', 'Yearly rebate', 'CBD mengisi yearly % dari target tahunan.')}
-          ${!s.semester && !s.yearly && !FRon ? '<div class="note-r">Minimal satu jenis rebate harus aktif (semester, yearly, atau fixed rebate).</div>' : ''}</section>
+</section>
         <section class="card pad"><div class="col-f" style="max-width:760px"><h2 class="h3">Batas Minimum Rate</h2>
           <span class="muted sm">Opsional, kosongkan jika tidak ada batas. Batas maksimum mengikuti tier di Matriks Kelas: ${[s.semester && 'semester %', s.yearly && 'yearly %', FRon && 'fixed rebate %'].filter(Boolean).join(' + ') || '—'} per group brand per kelas.</span></div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
@@ -114,7 +113,6 @@
     },
     on: (p, ch) => ({
       tg_semester: (S) => { S.s.semester = !S.s.semester; },
-      tg_yearly: (S) => { S.s.yearly = !S.s.yearly; },
       alloc: (S, el) => { S.s.alloc_min = numOrNull(el.value); },
       minY: (S, el) => { S.s.min_yearly = numOrNull(el.value); },
       minF: (S, el) => { S.s.min_fr = numOrNull(el.value); },
@@ -140,7 +138,7 @@
       apGo: (S) => {
         const targets = L.channels(p.id).filter((c) => c.id !== ch.id && L.editable(c) && S.pick[c.id]);
         for (const t of targets) {
-          if (S.what.mech) Object.assign(t.settings, { semester: S.s.semester, yearly: S.s.yearly, alloc_min: S.s.alloc_min });
+          if (S.what.mech) Object.assign(t.settings, { semester: S.s.semester, yearly: true, alloc_min: S.s.alloc_min });
           if (S.what.min) Object.assign(t.settings, { min_yearly: S.s.min_yearly, min_fr: S.s.min_fr, min_sem: S.s.min_sem });
           t.saved.settings = true; L.audit(t, 'Pengaturan diterapkan', `Dari ${chName(ch)}`);
         }
@@ -149,11 +147,10 @@
     }),
     save: (S, p) => {
       const s = S.s; const e = [];
-      if (!s.semester && !s.yearly && !L.FR(p)) e.push('Minimal satu jenis rebate harus aktif.');
       if (s.semester && !(s.alloc_min > 0 && s.alloc_min <= 50)) e.push('Min. alokasi batas cair per semester harus di antara 0 dan 50%.');
       return e;
     },
-    commit: (S, p, ch) => { ch.settings = clone(S.s); },
+    commit: (S, p, ch) => { ch.settings = Object.assign(clone(S.s), { yearly: true }); }, // yearly rebate selalu aktif (tanpa toggle)
   };
   const copyParts = (p, c) => ['matrix', 'fr', 'appr'].filter((k) => (k !== 'fr' || L.FR(p)) && (k === 'matrix' ? L.tabDone(p, c, 'matrix') : k === 'fr' ? c.saved.fr : L.tabDone(p, c, 'approval')));
   function copyDlg(S, p, ch) {
@@ -176,7 +173,7 @@
     const minTxt = [s.yearly && `Yearly ${s.min_yearly === null ? 'tanpa batas' : fp(s.min_yearly) + '%'}`, L.FR(p) && `${esc(L.frName(p))} ${s.min_fr === null ? 'tanpa batas' : fp(s.min_fr) + '%'}`, s.semester && `Semester ${s.min_sem === null ? 'tanpa batas' : fp(s.min_sem) + '%'}`].filter(Boolean).join(' · ');
     const body = `<span class="muted sm">Salin pengaturan ${esc(chName(ch))} ke channel lain di program ini. Nilai di channel tujuan akan diganti.</span>
       <div class="field"><span class="lbl">Yang diterapkan</span><div class="box">
-        <label class="ck"><input type="checkbox" data-chg="apWhat" data-key="mech" ${S.what.mech ? 'checked' : ''}><span class="col-f" style="gap:0"><b>Mekanisme</b><span class="muted xs">Semester ${s.semester ? `aktif · min. alokasi ${nv(s.alloc_min)}%` : 'tidak aktif'} · Yearly ${s.yearly ? 'aktif' : 'tidak aktif'}</span></span></label>
+        <label class="ck"><input type="checkbox" data-chg="apWhat" data-key="mech" ${S.what.mech ? 'checked' : ''}><span class="col-f" style="gap:0"><b>Mekanisme</b><span class="muted xs">Semester ${s.semester ? `aktif · min. alokasi ${nv(s.alloc_min)}%` : 'tidak aktif'}</span></span></label>
         <label class="ck"><input type="checkbox" data-chg="apWhat" data-key="min" ${S.what.min ? 'checked' : ''}><span class="col-f" style="gap:0"><b>Batas minimum rate</b><span class="muted xs">${minTxt || '—'}</span></span></label></div></div>
       <div class="field"><span class="lbl">Channel tujuan · ${chosen.length} dipilih</span><div class="box">${others.map((c) => { const lock = !L.editable(c); const st = L.channelStatus(p, c);
         return `<label class="ck ${lock ? 'lock' : ''}"><input type="checkbox" data-chg="apPick" data-id="${c.id}" ${!lock && S.pick[c.id] ? 'checked' : ''} ${lock ? 'disabled' : ''}><span class="col-f" style="flex:1;gap:0"><span>${esc(chName(c))}</span><span class="muted xs">${lock ? 'Pendaftaran sudah dibuka, pengaturan tidak bisa diubah' : S.pick[c.id] ? 'Pengaturan akan diganti' : 'Tidak berubah'}</span></span>${chip(L.STATUS_CHIP[st][0], L.STATUS_CHIP[st][1] + ' s')}</label>`; }).join('')}</div></div>`;
@@ -377,8 +374,8 @@
   }
   L.mouPreview = mouPreview;
   TAB.mou = {
-    init: (p, ch) => ({ docs: clone(ch.mou.docs), reviewer: ch.mou.reviewer, sample: true, newDoc: '', note: '', dlg: null }),
-    data: (S) => ({ d: S.docs, r: S.reviewer }),
+    init: (p, ch) => ({ docs: clone(ch.mou.docs), sample: true, newDoc: '', note: '', dlg: null }),
+    data: (S) => ({ d: S.docs }),
     html: (S, p, ch, ro) => {
       const revs = ch.mou.revisions; const last = revs[revs.length - 1];
       const others = L.channels(p.id).filter((c) => c.id !== ch.id && c.mou.revisions.length);
@@ -400,7 +397,7 @@
             ${S.docs.map((d, i) => `<div class="between" style="padding:10px 0;border-top:1px solid #EBEBEB"><span class="b">${esc(d.name)}</span><span class="row-f"><label class="row-f sm" style="margin:0;cursor:pointer"><input type="checkbox" data-chg="docReq" data-i="${i}" ${d.req ? 'checked' : ''} ${d.locked ? 'disabled' : ''}>Wajib</label>
               ${d.locked ? '' : `<button type="button" class="x" aria-label="Hapus dokumen" data-on="docDel" data-i="${i}">${L.ico.trash}</button>`}</span></div>`).join('')}
             <div class="row-f"><input class="inp sm" style="flex:1" data-k="newDoc" data-inp="docNew" value="${esc(S.newDoc)}" placeholder="Nama dokumen baru"><button type="button" class="btn btn-g" data-on="docAdd">+ Tambah dokumen</button></div>
-            <label class="field lbl" style="margin:0">Reviewer dokumen<select class="inp" data-chg="reviewer">${Object.entries(L.REVIEWERS).map(([k, v]) => `<option value="${k}" ${S.reviewer === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label></fieldset></section>
+            <span class="muted xs">Dokumen diunggah Admin DC dan direview Admin HO.</span></fieldset></section>
           <section class="card pad" style="gap:10px"><h2 class="h3">Riwayat Revisi</h2>${revs.slice().reverse().map((r, i) => `<div class="between sm" style="${i ? 'border-top:1px solid #EBEBEB;padding-top:10px' : ''}"><span><b>Revisi ${r.no}</b> · ${esc(r.note || r.file)}</span><span class="muted">${L.dateTxt(r.at)}</span></div>`).join('') || '<span class="muted sm">Belum ada revisi.</span>'}</section></div></div>
         ${S.dlg === 'other' ? L.dialog('Pakai Template Channel Lain', `<span class="muted sm">Template terakhir channel yang dipilih menjadi revisi baru ${esc(chName(ch))}.</span><div class="box">${others.map((c) => { const r = c.mou.revisions[c.mou.revisions.length - 1];
           return `<label class="ck"><input type="radio" name="mouo" data-chg="mouPick" value="${c.id}" ${S.pick === c.id ? 'checked' : ''}><span class="col-f" style="gap:0"><b>${esc(chName(c))}</b><span class="muted xs">${esc(r.file)} · revisi ${r.no}</span></span></label>`; }).join('')}</div>`,
@@ -423,12 +420,11 @@
         docDel: (S, el) => { S.docs.splice(Number(el.dataset.i), 1); },
         docNew: (S, el) => { S.newDoc = el.value; },
         docAdd: (S) => { const v = S.newDoc.trim(); if (v && !S.docs.some((d) => d.name.toLowerCase() === v.toLowerCase())) { S.docs.push({ name: v, req: true }); S.newDoc = ''; } },
-        reviewer: (S, el) => { S.reviewer = el.value; },
       };
     },
     save: (S, p, ch) => (ch.mou.revisions.length ? [] : ['Unggah template MOU (.docx) dulu.']),
     softSave: true,
-    commit: (S, p, ch) => { ch.mou.docs = clone(S.docs); ch.mou.reviewer = S.reviewer; },
+    commit: (S, p, ch) => { ch.mou.docs = clone(S.docs); },
   };
 
   // ---- Pencairan
@@ -479,7 +475,7 @@
     return L.page(`${name} · ${p.name}`, (root) => {
       const base = T.init(p, ch);
       const snap = JSON.stringify(T.data(base));
-      const state = Object.assign(base, { _err: [], _pubErr: [], _dlg: null, _phName: '' });
+      const state = Object.assign(base, { _err: [], _pubErr: [], _dlg: null });
       const tabOn = T.on(p, ch);
       const ph = tabPhase(tab);
       const v = L.view(root, {
@@ -494,7 +490,7 @@
           const phases = `<div class="phases" role="navigation" aria-label="Fase channel">
             ${phaseCard('REG', 1, 'Pendaftaran', regPub ? chip('Published', 'c-green') : chip('Draft', 'c-blue'), regPub ? `Dipublikasikan ${L.dateTxt(ch.reg_published_at)} · setup terkunci, MOU tetap bisa diubah` : ['Pengaturan', 'matriks kelas', L.FR(p) && 'fixed rebate', 'approval', 'MOU'].filter(Boolean).join(', '), `#/setup/${p.id}/ch/${ch.id}/settings`, false)}
             ${phaseCard('PAY', 2, 'Pencairan', !regPub ? chip('Menunggu pendaftaran', 'c-grey') : payPub ? chip('Published', 'c-green') : chip('Draft', 'c-blue'), regPub ? 'Aturan pencairan dan approval pencairan' : 'Bisa disetup setelah pendaftaran dipublikasikan', `#/setup/${p.id}/ch/${ch.id}/payout-rules`, !regPub)}
-            ${extra}${L.programClosed(p) ? '' : '<button type="button" class="phase add" data-on="phAdd">+ Tambah fase</button>'}</div>`;
+            ${extra}</div>`;
           const tabsList = ph === 'REG' ? PHASE_TABS.REG.filter(([k]) => k !== 'fr' || L.FR(p)) : ph === 'PAY' ? PHASE_TABS.PAY : [[tab, 'Approval']];
           const doneOf = (k) => (ph === 'REG' ? L.tabDone(p, ch, k) : !!ch.saved[savedKey(k)]);
           const tabs = `<nav class="tabs" aria-label="Setup fase">${tabsList.map(([k, l]) => `<a class="tab ${k === tab ? 'on' : ''}" href="#/setup/${p.id}/ch/${ch.id}/${k}">${esc(l)}<span class="dot ${doneOf(k) ? 'ok' : ''}" title="${doneOf(k) ? 'Sudah disimpan' : 'Belum disimpan'}"></span></a>`).join('')}</nav>`;
@@ -507,15 +503,12 @@
           const lockNote = ro ? `<div class="note-b">${ph === 'REG' && tab !== 'mou' ? 'Pendaftaran sudah dipublikasikan: bagian ini hanya bisa dilihat. MOU &amp; Dokumen tetap bisa diubah.' : L.programClosed(p) ? 'Periode program sudah lewat: setup hanya bisa dilihat.' : 'Fase ini sudah dipublikasikan: bagian ini hanya bisa dilihat.'}</div>` : '';
           const errs = S._err.length ? `<div class="note-r"><b>Belum bisa disimpan</b><ul>${S._err.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
           const pubErr = S._pubErr.length ? `<div class="note-r"><b>Belum bisa dipublikasikan</b><ul>${S._pubErr.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>` : '';
-          const phDlg = S._dlg === 'phase' ? L.dialog('Tambah Fase', `<span class="muted sm">Fase tambahan punya layer approval sendiri dan dipublikasikan terpisah, setelah pendaftaran dibuka.</span>
-            <label class="field lbl">Nama fase<input class="inp" data-k="phName" data-inp="phName" value="${esc(S._phName)}" placeholder="mis. Monitoring"></label>`,
-            '<button type="button" class="btn btn-s" data-on="closeX">Batal</button><button type="button" class="btn btn-p" data-on="phCreate">Tambah Fase</button>', 'w520') : '';
           const pubDlg = S._dlg === 'pub' ? L.dialog(S._pubTitle, `<span>${S._pubText}</span>`, `<button type="button" class="btn btn-s" data-on="closeX">Batal</button><button type="button" class="btn btn-p" data-on="pubDo">${esc(S._pubTitle)}</button>`, 'w520') : '';
           const phaseTools = ph === 'EXTRA' && !L.programClosed(p) ? `<div class="row-f">${phase.status === 'PUBLISHED' ? '' : `<button type="button" class="btn btn-g" data-on="phRename">Ubah nama fase</button><button type="button" class="btn btn-g" style="color:#B80016 !important" data-on="phDel">Hapus fase</button>`}</div>` : '';
           return `<section class="card head"><div class="head-l"><a href="#/setup/${p.id}" class="back">${L.ico.back}Kembali</a><div class="col-f" style="gap:6px"><h1 class="h1">${esc(name)}</h1><span class="muted sm">${esc(p.name)}</span></div></div>
             <div class="row-f"><a class="btn btn-s" href="#/setup/${p.id}/ch/${ch.id}/simulate">Simulasi</a>${ro ? '' : '<button class="btn btn-s" type="button" data-on="save">Simpan Draft</button>'}${pubBtn}</div></section>
             ${phases}${tabs}${phaseTools}${pubErr}${lockNote}${errs}${T.html(S, p, ch, ro)}
-            ${ro ? '' : `<div class="row-f" style="justify-content:flex-end"><button class="btn btn-p" type="button" data-on="save">Simpan</button></div>`}${phDlg}${pubDlg}`;
+            ${ro ? '' : `<div class="row-f" style="justify-content:flex-end"><button class="btn btn-p" type="button" data-on="save">Simpan</button></div>`}${pubDlg}`;
         },
         on: Object.assign({}, tabOn, {
           save: (S) => {
@@ -526,17 +519,8 @@
             flash(S._err.length ? 'warning' : 'success', S._err.length ? 'Disimpan sebagai draft. Masih ada isian yang perlu diperbaiki sebelum publikasi.' : 'Tersimpan.');
             UI.render(); return false;
           },
-          phAdd: (S) => { S._dlg = 'phase'; S._phName = ''; },
-          phName: (S, el) => { S._phName = el.value; },
           closeX: (S) => { S._dlg = null; },
           closeDlg: (S) => { if (tabOn.closeDlg) tabOn.closeDlg(S); S._dlg = null; },
-          phCreate: (S) => {
-            const n = S._phName.trim(); if (!n) return;
-            const x = { id: Date.now(), name: n, status: 'DRAFT', layers: [] };
-            ch.extra_phases = ch.extra_phases || []; ch.extra_phases.push(x); L.audit(ch, 'Tambah fase', n); DB.save();
-            flash('success', `Fase <b>${esc(n)}</b> ditambahkan${ch.reg_status === 'PUBLISHED' ? '' : '. Fase ini bisa disetup setelah pendaftaran dipublikasikan'}.`);
-            go(ch.reg_status === 'PUBLISHED' ? `/setup/${p.id}/ch/${ch.id}/phase-${x.id}` : `/setup/${p.id}/ch/${ch.id}/${tab}`); return false;
-          },
           phRename: () => { const n = prompt('Nama fase', phase.name); if (n && n.trim()) { phase.name = n.trim(); DB.save(); UI.render(); } return false; },
           phDel: () => { if (!confirm(`Hapus fase ${phase.name}?`)) return false; ch.extra_phases = ch.extra_phases.filter((x) => x.id !== phase.id); L.audit(ch, 'Hapus fase', phase.name); DB.save(); go(`/setup/${p.id}/ch/${ch.id}/payout-rules`); return false; },
           pubReg: (S) => {

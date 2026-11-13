@@ -171,7 +171,7 @@
           return `<section class="card head"><div class="head-l"><a href="#/setup" class="back">${ico.back}Kembali</a><div class="row-f" style="gap:10px"><h1 class="h1">Buat Program</h1>${chip('Draft', 'c-blue')}</div></div></section>
             <ol class="steps" aria-label="Langkah">${labels.map((l, i) => `<li class="${i < S.step ? 'done' : i === S.step ? 'cur' : ''}"><span class="n">${i < S.step ? '✓' : i + 1}</span>${l}</li>`).join('')}</ol>
             ${body}${S.err ? `<div class="note-r">${esc(S.err)}</div>` : ''}
-            <section class="card head" style="padding:16px 24px"><span class="muted sm">${['Kode program dibuat otomatis.', 'Satu brand hanya boleh masuk satu group brand. Setup brand tidak bisa diubah setelah program dibuat.', `${Object.values(S.chans).filter(Boolean).length} channel dipilih.`][S.step]}</span>
+            <section class="card head" style="padding:16px 24px"><span class="muted sm">${[' ', ' ', `${Object.values(S.chans).filter(Boolean).length} channel dipilih.`][S.step]}</span>
               <div class="row-f">${S.step > 0 ? '<button type="button" class="btn btn-s" data-on="back">Sebelumnya</button>' : ''}${S.step < 2 ? '<button type="button" class="btn btn-p" data-on="next">Lanjut</button>' : '<button type="button" class="btn btn-p" data-on="create">Buat Program</button>'}</div></section>${conf}`;
         },
         on: {

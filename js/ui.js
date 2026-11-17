@@ -179,8 +179,10 @@
   function asideMenu(user, year, path = '/', query = {}) {
     const is = (...roles) => roles.includes(user.role);
     // Menu mengikuti mockup Program Setup: Loyalty Program · Pendaftaran · Master Data (Monitoring & Pencairan lama disembunyikan)
-    const approver = Object.keys(window.LP.ROLES).includes(user.role) || ['ADMIN_HO', 'ADMIN_SALES_DC'].includes(user.role);
-    const n = approver ? window.LP.pendingCount(user) : 0;
+    const LP = window.LP;
+    const approver = Object.keys(LP.ROLES).includes(user.role) || is('ADMIN_HO');
+    const n = approver ? LP.pendingCount(user) : 0;
+    const bc = (k) => (LP.berkasCount ? LP.berkasCount(user, k) : 0);
     const groups = [];
     const lp = [];
     if (is(...SETUP_ROLES)) lp.push(['Program Setup', '/setup']);
@@ -188,10 +190,12 @@
     if (lp.length) groups.push({ icon: 'flaticon2-settings', title: 'Loyalty Program', items: lp });
     const reg = [];
     if (is('CBD', ...SETUP_ROLES)) reg.push(['Daftar Toko', '/pendaftaran']);
+    // Admin Sales DC: Generate MoU → Upload Berkas Toko → Review from HO (mockup "Pendaftaran: MOU & Review HO")
+    if (is('ADMIN_SALES_DC', 'ADMIN_DC')) reg.push(['Generate MoU', '/berkas/generate', bc('generate')], ['Upload Berkas Toko', '/berkas/upload', bc('upload')], ['Review from HO', '/berkas/revisi', bc('revisi')]);
+    if (is('ADMIN_HO', 'SUPERADMIN')) reg.push(['Review Berkas', '/berkas/review', bc('review')]);
     if (is(...SETUP_ROLES)) reg.push(['Toko Exception', '/exception']);
-    // Admin DC: unggah MOU & dokumen toko yang sudah disetujui (badge = menunggu unggahan / revisi)
-    if (is('ADMIN_DC')) reg.push(['Dokumen Toko', '/dokumen', window.LP.regs().filter((r) => r.status === 'AWAITING_DOCS' && (!user.lp_dc || (window.LP.store(r.codes[0]) || {}).dc === user.lp_dc)).length]);
     if (reg.length) groups.push({ icon: 'flaticon2-writing', title: 'Pendaftaran', items: reg });
+    if (is('ADMIN_SALES_HO')) groups.push({ icon: 'flaticon2-writing', title: 'Berkas Pendaftaran', items: [['Review Berkas', '/berkas/review', bc('review')]] });
     if (is('CBD', ...SETUP_ROLES)) groups.push({ icon: 'flaticon2-layers-1', title: 'Master Data', items: [['Customer Group', '/customer-group']] });
     const saved = sideGroupState();
     // item aktif: href paling spesifik yang cocok dengan halaman sekarang

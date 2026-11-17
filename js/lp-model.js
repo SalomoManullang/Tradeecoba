@@ -80,9 +80,8 @@
   const programs = () => DB.t(T.programs);
   const program = (id) => DB.byId(T.programs, id);
   // yearly rebate selalu aktif (toggle di Pengaturan dihapus); data lama yang menonaktifkannya ikut dinormalkan
-  const yearlyOn = (c) => { if (c && c.settings && c.settings.yearly !== true) c.settings.yearly = true; return c; };
-  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid)).map(yearlyOn);
-  const channel = (id) => yearlyOn(DB.byId(T.channels, id));
+  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid));
+  const channel = (id) => DB.byId(T.channels, id);
   const groupsOf = (p) => p.brand_groups || [];
   const stores = () => DB.t('lpStores');
   const store = (code) => stores().find((s) => s.code === code);
@@ -96,7 +95,7 @@
   // ---------------------------------------------------------------- status
   const FR = (p) => !!p.fr_enabled;
   const frName = (p) => (p.fr_enabled ? String(p.fr_name || '').trim() || 'Fixed Rebate' : '');
-  const TABS = [['settings', 'Pengaturan', 'Pengaturan'], ['matrix', 'Matriks Kelas', 'Matriks'], ['fr', 'Fixed Rebate Detail', 'Fixed Rebate'], ['approval', 'Approval', 'Approval'], ['mou', 'MOU & Dokumen', 'MOU']];
+  const TABS = [['settings', 'Pengaturan', 'Pengaturan'], ['matrix', 'Matriks Kelas', 'Matriks'], ['fr', 'Fixed Rebate Detail', 'Fixed Rebate'], ['approval', 'Layer Approval', 'Approval'], ['mou', 'MOU dan Dokumen', 'MOU']];
   const tabsOf = (p) => TABS.filter(([k]) => k !== 'fr' || FR(p));
   function matrixErrors(p, ch) {
     const errs = [];
@@ -144,7 +143,7 @@
   }
   const STATUS_CHIP = { DRAFT: ['Draft', 'c-blue'], PUBLISHED: ['Published', 'c-green'], CLOSED: ['Closed', 'c-grey'] };
   const regOpen = (ch) => ch.reg_status === 'PUBLISHED';
-  const editable = (ch) => ch.reg_status !== 'PUBLISHED';
+  const editable = (ch) => ch.reg_status === 'DRAFT';
 
   function layersErrors(layers) {
     const e = [];
@@ -204,9 +203,9 @@
     const rentSum = fset.rent.on ? P.rent.reduce((a, r) => a + rpNum(r.val), 0) : 0;
     const actSum = fset.act.on ? P.act.reduce((a, r) => a + (r.on ? rpNum(r.val) : 0), 0) : 0;
     const othSum = fset.oth.on ? P.oth.reduce((a, r) => a + (r.on ? rpNum(r.val) : 0), 0) : 0;
-    const incomplete = !frOn || !joined ? 0 : (fset.rent.on ? P.rent.filter((r) => !rpNum(r.val)).length : 0)
-      + (fset.act.on ? P.act.filter((r) => (r.on ? !rpNum(r.val) : !String(r.note || '').trim())).length : 0)
-      + (fset.oth.on ? P.oth.filter((r) => (r.on ? !String(r.obj || '').trim() || !rpNum(r.val) : !String(r.note || '').trim())).length : 0);
+    const incomplete = !frOn || !joined ? 0 : (fset.rent.on ? P.rent.filter((r) => !rpNum(r.val) || (codes.length > 1 && !r.store)).length : 0)
+      + (fset.act.on ? P.act.filter((r) => (r.on ? !rpNum(r.val) : !String(r.note || '').trim()) || (codes.length > 1 && !r.store)).length : 0)
+      + (fset.oth.on ? P.oth.filter((r) => (r.on ? !String(r.obj || '').trim() || !rpNum(r.val) : !String(r.note || '').trim()) || (codes.length > 1 && !r.store)).length : 0);
     return { g, u, joined, sales, recTag, tag, base, g0, gOk, g1, g2, gs, gsOk, monthly, annual, t1, t2, semAnnual, k, viaExc, tierY, tierS, rec, semV, yrV, frV, total, cap,
       semBudget, yrRp, frBudget, totalRp: semBudget + yrRp + frBudget, rentSum, actSum, othSum, used: joined && frOn ? rentSum + actSum + othSum : 0, incomplete };
   }
@@ -285,7 +284,8 @@
   // ---------------------------------------------------------------- pendaftaran: toko & status
   const REG_STATUS = {
     NEW: ['Belum didaftarkan', 'c-grey', 'todo'], DRAFT: ['Draft', 'c-blue', 'proc'], IN_APPROVAL: ['Menunggu approval', 'c-yellow', 'proc'],
-    RETURNED: ['Dikembalikan', 'c-red', 'ret'], AWAITING_DOCS: ['Menunggu dokumen', 'c-yellow', 'proc'], DOC_REVIEW: ['Review dokumen', 'c-yellow', 'proc'],
+    RETURNED: ['Dikembalikan', 'c-red', 'ret'], MOU_PENDING: ['Menunggu MoU', 'c-yellow', 'proc'], AWAITING_DOCS: ['Menunggu berkas', 'c-yellow', 'proc'],
+    DOC_REVIEW: ['Review berkas HO', 'c-yellow', 'proc'], DOC_REVISION: ['Revisi berkas', 'c-red', 'proc'],
     REGISTERED: ['Terdaftar', 'c-green', 'done'], CANCELLED: ['Dibatalkan', 'c-grey', 'todo'], CLOSED: ['Belum dibuka', 'c-grey', 'locked'],
   };
   // Peserta = toko single (tidak di group) atau customer group. code: kode toko / kode group
@@ -308,7 +308,12 @@
   const exceptionOf = (pid, code) => exceptions().find((e) => e.program_id === Number(pid) && e.code === code);
   const activeReg = (pid, code) => regs().filter((r) => r.program_id === Number(pid) && r.code === code && r.status !== 'CANCELLED').sort((a, b) => b.id - a.id)[0];
 
-  function audit(ch, action, note) { ch.audit = ch.audit || []; const u = window.UI && UI.currentUser(); ch.audit.push({ at: now(), by: u ? u.name : 'Sistem', action, note: note || '' }); ch.updated_at = now(); }
+  // Riwayat Perubahan per channel: step = nama langkah, note = apa yang berubah
+  function audit(ch, step, note) { ch.audit = ch.audit || []; const u = window.UI && UI.currentUser(); ch.audit.push({ at: now(), by: u ? u.name : 'Sistem', action: step, step, note: note || '' }); ch.updated_at = now(); }
+  // "Tersimpan <tanggal> oleh <user>" per langkah setup
+  function markSaved(ch, key) { const u = window.UI && UI.currentUser(); ch.saved = ch.saved || {}; ch.saved[key] = true; ch.saved_at = ch.saved_at || {}; ch.saved_at[key] = { at: now(), by: u ? u.name : 'Sistem' }; }
+  // komentar per pendaftaran (CBD, approver, Admin Sales DC/HO) — histori sejak pendaftaran
+  function addComment(r, text) { const u = window.UI && UI.currentUser(); r.comments = r.comments || []; r.comments.push({ at: now(), by: u ? u.id : null, name: u ? u.name : 'Sistem', role: u ? u.role : '', text }); }
   function touchProgram(p) { const u = window.UI && UI.currentUser(); p.updated_at = now(); p.updated_by = u ? u.name : ''; }
 
   // ---------------------------------------------------------------- tampilan kecil
@@ -363,14 +368,13 @@
   function myQueue(user) {
     return regs().filter((r) => {
       if (r.status === 'IN_APPROVAL') { const st = currentStep(r); return !!st && st.role === user.role; }
-      if (r.status === 'DOC_REVIEW') return user.role === 'ADMIN_HO';
       return false;
     });
   }
   const pendingCount = (user) => myQueue(user).length;
 
   window.LP = {
-    myQueue, pendingCount, blankUnit, blankPlan, regCalc, makeRoute, currentStep, setStatus,
+    myQueue, pendingCount, markSaved, addComment, blankUnit, blankPlan, regCalc, makeRoute, currentStep, setStatus,
     T, esc, fp, fr, fj, pnum, rpNum, fmtThousand, dateTxt, periodTxt, MONTHS, today, now,
     CHANNELS, BRANDS, DCS, channelOf, ROLES, COND, condMeta, OPS, DEFAULT_FR, DEFAULT_DOCS, newChannel,
     programs, program, channels, channel, groupsOf, stores, store, custGroups, custGroup, groupOfStore, regs, reg, exceptions,

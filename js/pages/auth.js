@@ -128,6 +128,7 @@
   route('/', ({}, q, { user }) => {
     if (h.SETUP_ROLES.includes(user.role)) UI.redirect('/setup');
     if (user.role === 'CBD') UI.redirect('/pendaftaran');
+    if (['ADMIN_SALES_DC', 'ADMIN_DC'].includes(user.role)) UI.redirect('/berkas/generate');
     UI.redirect('/approval');
   });
   route('/dashboard-lama', ({}, q, { user, year }) => {

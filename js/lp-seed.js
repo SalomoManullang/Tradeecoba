@@ -51,13 +51,12 @@
     tiers: [20, 25, 30].map((g, i) => ({ g, sem: sem + i * 0.25, yr: [1, 1.25, 1.5][i] })) }));
 
   const REG_LAYERS = () => [
-    { role: 'RSBL', rule: 'IF', match: 'ANY', conds: [{ code: 'GROWTH_YEARLY_MIN', op: 'gte', val: '40' }] },
+    { role: 'RSBL', rule: 'IF', match: 'ANY', conds: [{ code: 'BELOW_LOWEST_TIER', op: '', val: '', type: 'flag' }, { code: 'RATE_BELOW_MIN', op: '', val: '', type: 'flag' }] },
     { role: 'RTP', rule: 'ALWAYS', match: 'ANY', conds: [] },
   ];
   const PAY_LAYERS = () => [
-    { role: 'RSBL', rule: 'ALWAYS', match: 'ANY', conds: [] },
-    { role: 'RTP', rule: 'IF', match: 'ANY', conds: [{ code: 'PAYOUT_TOTAL', op: 'gt', val: '100' }, { code: 'PAYOUT_ADJUSTED', op: '', val: '' }] },
-    { role: 'HEAD_FINANCE', rule: 'IF', match: 'ANY', conds: [{ code: 'PAYOUT_TOTAL', op: 'gt', val: '500' }] },
+    { role: 'HEAD_FINANCE', rule: 'ALWAYS', match: 'ANY', conds: [] },
+    { role: 'AP', rule: 'ALWAYS', match: 'ANY', conds: [] },
   ];
 
   function run() {
@@ -85,6 +84,16 @@
       ch.mou.revisions = [{ no: 1, file: 'MOU_LP2027_rev1.docx', note: 'Disalin dari LP-2026-001', by: admin.name, at: '2026-10-28T09:00:00Z' },
         { no: 2, file: 'MOU_LP2027_rev2.docx', note: 'Nama penanda tangan Paragon ditambahkan', by: admin.name, at: '2026-10-30T09:00:00Z' }];
       ch.saved = { settings: true, matrix: true, fr: true, approval: true, mou: true };
+      if (o.pay_status === 'PUBLISHED') ch.saved.payout_approval = true;
+      ch.mou.reviewer = 'ADMIN_SALES_HO';
+      ch.mou.docs = [{ name: 'MOU bertanda tangan', req: true, locked: true }, { name: 'NPWP toko', req: true }, { name: 'KTP penanggung jawab', req: true }, { name: 'Surat kuasa', req: false }];
+      // "Tersimpan <tanggal> oleh <user>" & Riwayat Perubahan (mengikuti contoh mockup)
+      const at = { settings: '2026-11-02T02:12:00Z', fr: '2026-11-02T02:40:00Z', matrix: '2026-11-04T03:15:00Z', approval: '2026-11-06T04:02:00Z', mou: '2026-11-09T07:20:00Z' };
+      ch.saved_at = Object.fromEntries(Object.entries(at).map(([k, v]) => [k, { at: v, by: admin.name }]));
+      ch.audit = [['settings', 'Pengaturan', 'Minimum alokasi batas cair per semester: 20% menjadi 30%'], ['fr', 'Fixed Rebate Detail', 'Menambah pilihan Visibility Rent "Floor display"'],
+        ['matrix', 'Matriks Kelas', 'Mengimpor matriks Wardah (18 baris); baseline maks kelas B: 350.000.000 menjadi 400.000.000'], ['approval', 'Layer Approval', 'Layer 1 RSBL: menambah kondisi "Ada rate di bawah minimum channel"'],
+        ['mou', 'MOU dan Dokumen', 'Mengunggah template MOU revisi 2 (sebelumnya revisi 1)']].map(([k, step, note]) => ({ at: at[k], by: admin.name, action: step, step, note, key: k }));
+      if (o.reg_published_at) ch.audit.push({ at: o.reg_published_at, by: admin.name, action: 'Tinjau dan Publikasikan', step: 'Tinjau dan Publikasikan', note: 'Mempublikasikan Fase Pendaftaran' });
       return ch;
     };
     // channel sebagian: done = jumlah tab yang sudah disimpan (urutan Pengaturan, Matriks, FR, Approval, MOU)
@@ -96,13 +105,14 @@
       if (!ch.saved.approval) ch.layers.REGISTRATION = [];
       if (!ch.saved.mou) ch.mou.revisions = [];
       if (!ch.saved.settings) ch.settings = { semester: true, yearly: true, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null };
+      ch.audit = ch.audit.filter((a) => ch.saved[a.key]); for (const k of Object.keys(ch.saved_at)) if (!ch.saved[k]) delete ch.saved_at[k];
       return ch;
     };
     const ins = (ch) => DB.insert(LP.T.channels, ch);
 
     // LP-2027-001: 7 channel, CS Lifestyle pendaftaran dibuka
     const p1 = mkProgram({ code: 'LP-2027-001', name: 'Loyalty Program 2027', year: 2027, period_start: '2027-01-01', period_end: '2027-12-31', fr_enabled: true, fr_name: 'Vision Compass', brand_groups: mkGroups(GROUPS), updated_at: '2026-11-02T08:00:00Z' });
-    const c1 = ins(fullChannel(p1, 'CS_LIFESTYLE', { reg_status: 'PUBLISHED', reg_published_at: '2026-11-01T08:00:00Z' }));
+    const c1 = ins(fullChannel(p1, 'CS_LIFESTYLE', { reg_status: 'PUBLISHED', reg_published_at: '2026-11-11T02:41:00Z' }));
     ins(partial(p1, 'CS_RETAIL', 4)); ins(partial(p1, 'CS_WS_PASSIVE', 3)); ins(partial(p1, 'CS_WS_ACTIVE', 2));
     ins(partial(p1, 'GT_WS', 1)); ins(partial(p1, 'GT_RETAIL', 0)); ins(partial(p1, 'OTHERS', 0));
 
@@ -148,22 +158,36 @@
       g4: unit({ joined: false }), g5: unit({ joined: false }), g6: unit({ joined: false }),
     }, 'DRAFT', { created_at: ago(1), updated_at: ago(0) });
     const plain = (o = {}) => ({ g1: unit(Object.assign({}, W, o)), g2: unit({ growth: '30', g1: '28', g2: '32', s1: '50' }), g3: unit({ growth: '25', g1: '24', g2: '26', s1: '50' }), g4: unit({ joined: false }), g5: unit({ joined: false }), g6: unit({ joined: false }) });
-    // Ayu Kosmetik — menunggu RSBL (layer 1 dari 2)
-    mkReg(p1, c1, '149002-000', { g1: unit({ growth: '43', g1: '40', g2: '44', s1: '50' }), g2: unit({ growth: '41', g1: '40', g2: '42', s1: '50' }), g3: unit({ growth: '45', g1: '44', g2: '46', s1: '50' }), g4: unit({ joined: false }), g5: unit({ joined: false }), g6: unit({ joined: false }) }, 'SUBMIT');
+    // Ayu Kosmetik — Make Over di bawah tier terendah → RSBL berjalan (layer 1 dari 2)
+    mkReg(p1, c1, '149002-000', { g1: unit({ growth: '43', g1: '40', g2: '44', s1: '50' }), g2: unit({ growth: '41', g1: '40', g2: '42', s1: '50' }), g3: unit({ growth: '15', g1: '14', g2: '16', s1: '50' }), g4: unit({ joined: false }), g5: unit({ joined: false }), g6: unit({ joined: false }) }, 'SUBMIT');
     // Group Melati — dikembalikan RTP
     const rm = mkReg(p1, c1, 'G-PKU-03', plain({ growth: '22' }), 'SUBMIT');
     decide(rm, 3, 'RETURNED', U.rtp, 'Cek lagi growth Wardah, terlalu rendah untuk kelas B.'); LP.setStatus(rm, 'RETURNED', 'Cek lagi growth Wardah, terlalu rendah untuk kelas B.', U.rtp.id);
-    // Sinar Jaya — disetujui, menunggu dokumen
-    const rs = mkReg(p1, c1, '148990-000', plain(), 'SUBMIT');
-    rs.route.filter((s) => s.status === 'RUN').forEach((s) => Object.assign(s, { decision: 'APPROVED', by: (s.role === 'RSBL' ? U.rsbl : U.rtp).id, at: ago(5) }));
-    LP.setStatus(rs, 'AWAITING_DOCS', 'MOU dibuat dari template revisi 2', null); rs.mou_rev = 2; rs.mou_no = 'MOU/LP2027/CS/0398';
-    // Dewi Beauty — terdaftar
-    const rd = mkReg(p1, c1, '148650-000', plain({ growth: '26' }), 'SUBMIT');
-    rd.route.filter((s) => s.status === 'RUN').forEach((s) => Object.assign(s, { decision: 'APPROVED', by: (s.role === 'RSBL' ? U.rsbl : U.rtp).id, at: ago(9) }));
-    rd.mou_rev = 2; rd.mou_no = 'MOU/LP2027/CS/0377'; rd.docs = { mou: 'MOU_Dewi_Beauty_ttd.pdf', files: { 'KTP pemilik toko': 'ktp_dewi.jpg', 'NPWP': 'npwp_dewi.pdf', 'Foto toko': 'foto_dewi.jpg' } };
-    rd.review = { status: 'OK', note: '' }; LP.setStatus(rd, 'REGISTERED', 'Dokumen lengkap', admin.id);
-    // LP-2027-002 · Lestari Beauty — draft
-    mkReg(p2, c2, '152001-000', { g1: unit({ growth: '30', g1: '28', g2: '31', s1: '50' }), g2: unit({ growth: '25', g1: '24', g2: '26', s1: '50' }) }, 'DRAFT');
+    // setelah approval: Generate MoU → Upload Berkas → Review Berkas (Admin Sales DC & Admin Sales HO)
+    const dcU = U['admin.sales.dc']; const hoU = U['admin.sales.ho'];
+    const approveAll = (r, n) => { r.route.filter((s) => s.status === 'RUN').forEach((s) => Object.assign(s, { decision: 'APPROVED', by: (s.role === 'RSBL' ? U.rsbl : U.rtp).id, at: ago(n) })); LP.setStatus(r, 'MOU_PENDING', 'Approval selesai, menunggu generate MoU', null); };
+    let seq = 395;
+    const generate = (r, n) => { r.mou_no = `LP/CS/01/2027/${String(seq++).padStart(4, '0')}`; r.mou_rev = 2; r.mou_at = ago(n); r.mou_by = dcU.name; r.files = []; LP.setStatus(r, 'AWAITING_DOCS', `MoU ${r.mou_no} di-generate dari template revisi 2`, dcU.id); };
+    const files = (r, names, n) => { r.files = names.map((name) => ({ name, at: ago(n), by: dcU.name })); };
+    const say = (r, u, text, n) => { r.comments = r.comments || []; r.comments.push({ at: ago(n), by: u.id, name: u.name, role: u.role, text }); };
+    // Glow Beauty & Medan Beauty Center — menunggu generate MoU
+    approveAll(mkReg(p1, c1, '148801-000', plain({ growth: '28' }), 'SUBMIT'), 2);
+    approveAll(mkReg(p1, c1, '161510-000', plain({ growth: '30' }), 'SUBMIT'), 2);
+    // Sinar Jaya — MoU sudah di-generate, berkas baru 2 (Kurang)
+    const rs = mkReg(p1, c1, '148990-000', plain(), 'SUBMIT'); approveAll(rs, 6); generate(rs, 5); files(rs, ['KTP_SinarJaya.jpg', 'MoU_SinarJaya_ttd.pdf'], 4);
+    // Lestari Beauty — berkas dikembalikan HO (Review from HO)
+    const rl = mkReg(p1, c1, '152001-000', plain({ growth: '27' }), 'SUBMIT'); approveAll(rl, 8); generate(rl, 7); files(rl, ['KTP_Lestari.jpg', 'NPWP_Lestari.pdf', 'MoU_Lestari.pdf'], 6);
+    LP.setStatus(rl, 'DOC_REVIEW', 'Submit to HO', dcU.id); say(rl, hoU, 'MoU belum ditandatangani pemilik toko. Mohon unggah ulang MoU bertanda tangan.', 2);
+    rl.reviews = [{ decision: 'DC', at: ago(2), by: hoU.id, name: hoU.name, note: 'MoU belum ditandatangani pemilik toko. Mohon unggah ulang MoU bertanda tangan.' }];
+    LP.setStatus(rl, 'DOC_REVISION', 'MoU belum ditandatangani pemilik toko. Mohon unggah ulang MoU bertanda tangan.', hoU.id);
+    // Anggun Kosmetik (DC Padang) — menunggu Review Berkas HO
+    const ra = mkReg(p1, c1, '152402-000', plain({ growth: '29' }), 'SUBMIT'); approveAll(ra, 7); generate(ra, 6); files(ra, ['KTP_Anggun.jpg', 'NPWP_Anggun.pdf', 'MoU_Anggun_ttd.pdf'], 3);
+    LP.setStatus(ra, 'DOC_REVIEW', 'Submit to HO', dcU.id); say(ra, dcU, 'Berkas lengkap, MoU sudah ditandatangani pemilik.', 3);
+    // Dewi Beauty — terdaftar (Histori Review)
+    const rd = mkReg(p1, c1, '148650-000', plain({ growth: '26' }), 'SUBMIT'); approveAll(rd, 12); generate(rd, 11); files(rd, ['KTP_Dewi.jpg', 'NPWP_Dewi.pdf', 'MoU_Dewi_Beauty_ttd.pdf'], 10);
+    LP.setStatus(rd, 'DOC_REVIEW', 'Submit to HO', dcU.id); rd.reviews = [{ decision: 'APPROVE', at: ago(8), by: hoU.id, name: hoU.name, note: '' }]; LP.setStatus(rd, 'REGISTERED', 'Berkas di-approve', hoU.id);
+    // LP-2027-002 · Mega Beauty — draft
+    mkReg(p2, c2, '150112-000', { g1: unit({ growth: '30', g1: '28', g2: '31', s1: '50' }), g2: unit({ growth: '25', g1: '24', g2: '26', s1: '50' }) }, 'DRAFT');
 
     // Toko Exception: Elok Kosmetik sudah diajukan Admin HO
     DB.insert(LP.T.exc, { program_id: p1.id, code: '171455-000', status: 'SUBMITTED', note: 'Toko baru, potensi area tinggi.', by: admin.id, at: '2027-01-08T08:00:00Z' });

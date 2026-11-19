@@ -125,7 +125,7 @@
             if (!S.start || !S.end || S.end <= S.start) S.err.end = 'Periode selesai harus setelah periode mulai.';
             if (!ids.length) S.err.ch = 'Pilih minimal satu channel.';
             if (Object.keys(S.err).length) return;
-            L._prefill = { from: src.id, chIds: ids, name: S.name.trim(), start: S.start, end: S.end, fr: src.fr_enabled, frName: src.fr_name || '', multi: src.multi_program !== false,
+            L._prefill = { from: src.id, chIds: ids, name: S.name.trim(), start: S.start, end: S.end, sem: src.rebate_semester !== false, yr: src.rebate_yearly !== false, fr: src.fr_enabled, frName: src.fr_name || '', multi: src.multi_program !== false,
               groups: src.brand_groups.map((g) => ({ name: g.name, members: g.members.slice(), others: (g.others || []).slice() })),
               chans: Object.fromEntries(L.channels(src.id).filter((c) => ids.includes(c.id)).map((c) => [c.channel_code, true])) };
             go('/setup/new'); return false;
@@ -156,8 +156,8 @@
     const y = new Date().getFullYear() + 1;
     return page('Buat Program', (root) => {
       L.view(root, {
-        state: pre ? { step: 0, name: pre.name, start: pre.start, end: pre.end, fr: pre.fr, frName: pre.frName, multi: pre.multi, groups: pre.groups, chans: pre.chans, from: pre.from, err: {}, dlg: null, pick: {}, bq: '', cq: '' }
-          : { step: 0, name: `Loyalty Program ${y}`, start: `${y}-01-01`, end: `${y}-12-31`, fr: true, frName: 'Vision Compass', multi: true,
+        state: pre ? { step: 0, name: pre.name, start: pre.start, end: pre.end, sem: pre.sem, yr: pre.yr, fr: pre.fr, frName: pre.frName, multi: pre.multi, groups: pre.groups, chans: pre.chans, from: pre.from, err: {}, dlg: null, pick: {}, bq: '', cq: '' }
+          : { step: 0, name: `Loyalty Program ${y}`, start: `${y}-01-01`, end: `${y}-12-31`, sem: true, yr: true, fr: true, frName: 'Vision Compass', multi: true,
             groups: [{ name: '', members: [], others: [] }], chans: {}, from: null, err: {}, dlg: null, pick: {}, bq: '', cq: '' },
         html: (S) => {
           const used = new Set(S.groups.flatMap((g) => g.members));
@@ -174,7 +174,10 @@
               ${field('Nama program', `<input class="cx-in ${S.err.name ? 'bad' : ''}" data-k="name" data-inp="name" value="${esc(S.name)}">`, { req: true, err: S.err.name })}
               <div class="cx-grid2">${field('Periode mulai', `<input class="cx-in" type="date" data-chg="start" value="${S.start}">`, { req: true })}
                 ${field('Periode selesai', `<input class="cx-in ${S.err.end ? 'bad' : ''}" type="date" data-chg="end" value="${S.end}">`, { req: true, err: S.err.end })}</div>
-              <hr class="cx-hr"><div class="cx-row">${sw(S.fr, 'data-on="fr" aria-label="Program memiliki fixed rebate"')}<span class="t-strong">Program memiliki fixed rebate</span></div>
+              <hr class="cx-hr"><div class="cx-col"><h3 class="t-h5">Mekanisme</h3><span class="t-sm">Berlaku untuk semua channel di program ini.</span></div>
+              ${[['sem', 'Rebate semester', 'Target dan batas cair per semester (S1 dan S2).'], ['yr', 'Rebate yearly', 'Rebate tahunan berdasarkan growth yearly.'], ['fr', 'Fixed rebate', 'Rebate tetap dengan rincian (Visibility Rent, Aktivitas, Lainnya).']]
+                .map(([k, t, d]) => `<div class="cx-row" style="flex-wrap:nowrap;align-items:flex-start">${sw(S[k], `data-on="mech" data-f="${k}" aria-label="${t}"`)}<div class="cx-col" style="gap:2px"><span class="t-strong">${t}</span><span class="t-sm">${d}</span></div></div>`).join('')}
+              ${S.err.mech ? `<span class="cx-err">${esc(S.err.mech)}</span>` : ''}
               ${S.fr ? field('Nama fixed rebate', `<input class="cx-in ${S.err.fr ? 'bad' : ''}" data-k="frName" data-inp="frName" value="${esc(S.frName)}" placeholder="Contoh: Vision Compass">`, { req: true, err: S.err.fr }) : ''}
               <hr class="cx-hr"><div class="cx-row" style="align-items:flex-start;flex-wrap:nowrap">${sw(S.multi, 'data-on="multi" aria-label="Toko boleh mengikuti program lain"')}
                 <div class="cx-col"><span class="t-strong">Toko boleh mengikuti program lain</span><span class="t-sm">${S.multi ? 'Toko yang sudah terdaftar di program lain tetap bisa didaftarkan ke program ini.' : 'Toko yang sudah terdaftar di program lain dengan periode beririsan tidak bisa didaftarkan ke program ini.'}</span></div></div>`;
@@ -217,7 +220,7 @@
             dlg = modal('Buat Program?', `<span class="t-body">Setelah dibuat, group brand dan anggotanya terkunci dan tidak dapat diubah. Setup tiap channel disiapkan dari halaman program.</span>
               <div class="cx-soft" style="gap:12px;padding:16px"><span class="t-h5">Ringkasan</span><hr class="cx-hr">
                 <div class="cx-col"><span class="t-sm-b">Informasi</span><span class="t-body">${esc(code)} · ${esc(S.name)}</span><span class="t-body">${L.periodTxt(S.start, S.end)}</span>
-                  <span class="t-body">Fixed rebate: ${S.fr ? esc(S.frName) : 'Tidak ada'}</span><span class="t-body">Toko boleh mengikuti program lain: ${S.multi ? 'Ya' : 'Tidak'}</span>${src ? `<span class="t-body">Disalin dari ${esc(src.code)} (setup channel ikut tersalin)</span>` : ''}</div><hr class="cx-hr">
+                  <span class="t-body">Mekanisme: ${[S.sem && 'semester', S.yr && 'yearly', S.fr && `fixed rebate ${esc(S.frName)}`].filter(Boolean).join(', ')}</span><span class="t-body">Toko boleh mengikuti program lain: ${S.multi ? 'Ya' : 'Tidak'}</span>${src ? `<span class="t-body">Disalin dari ${esc(src.code)} (setup channel ikut tersalin)</span>` : ''}</div><hr class="cx-hr">
                 <div class="cx-col"><span class="t-sm-b">Group Brand · ${S.groups.length}</span>${S.groups.map((g) => `<span class="t-body">${esc(g.name)} · ${g.members.length} brand</span>`).join('')}<span class="t-body">${free.length} brand tidak ikut program</span></div><hr class="cx-hr">
                 <div class="cx-col"><span class="t-sm-b">Channel · ${chs.length} dipilih</span><span class="t-body">${esc(chs.join(', '))}</span></div></div>`,
               '<button type="button" class="cx-btn cx-t" data-on="closeDlg">Batal</button><button type="button" class="cx-btn cx-p" data-on="create">Buat Program</button>');
@@ -230,7 +233,7 @@
         on: {
           name: (S, el) => { S.name = el.value; }, frName: (S, el) => { S.frName = el.value; },
           start: (S, el) => { S.start = el.value; }, end: (S, el) => { S.end = el.value; },
-          fr: (S) => { S.fr = !S.fr; }, multi: (S) => { S.multi = !S.multi; },
+          mech: (S, el) => { S[el.dataset.f] = !S[el.dataset.f]; }, multi: (S) => { S.multi = !S.multi; },
           addGroup: (S) => { S.groups.push({ name: '', members: [], others: [] }); },
           rmGroup: (S, el) => { S.groups.splice(Number(el.dataset.i), 1); },
           gName: (S, el) => { S.groups[el.dataset.i].name = el.value; },
@@ -248,6 +251,7 @@
             if (S.step === 0) {
               if (!S.name.trim()) S.err.name = 'Nama program wajib diisi.';
               if (!S.start || !S.end || S.end <= S.start) S.err.end = 'Periode selesai harus setelah periode mulai.';
+              if (!S.sem && !S.yr && !S.fr) S.err.mech = 'Aktifkan minimal satu mekanisme rebate.';
               if (S.fr && !S.frName.trim()) S.err.fr = 'Nama fixed rebate wajib diisi jika program memiliki fixed rebate.';
               if (Object.keys(S.err).length) return;
             }
@@ -263,7 +267,7 @@
           create: (S) => {
             const codes = L.CHANNELS.map((c) => c.code).filter((c) => S.chans[c]);
             const p = DB.insert(L.T.programs, { code: nextCode(S.start.slice(0, 4)), name: S.name.trim(), year: Number(S.start.slice(0, 4)), period_start: S.start, period_end: S.end,
-              fr_enabled: S.fr, fr_name: S.fr ? S.frName.trim() : '', multi_program: S.multi, cloned_from: S.from || null,
+              rebate_semester: S.sem, rebate_yearly: S.yr, fr_enabled: S.fr, fr_name: S.fr ? S.frName.trim() : '', multi_program: S.multi, cloned_from: S.from || null,
               brand_groups: S.groups.map((g, i) => ({ id: 'g' + (i + 1), name: g.name.trim(), members: g.members.slice(), others: (g.others || []).slice() })),
               brand_locked_at: L.now(), created_at: L.now(), updated_at: L.now(), updated_by: UI.currentUser().name });
             const src = S.from ? L.program(S.from) : null;

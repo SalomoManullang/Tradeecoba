@@ -92,29 +92,25 @@
 
   // ---------------------------------------------------------------- langkah Fase Pendaftaran
   const TAB = {};
-  const SET_LABEL = { semester: 'Rebate semester', yearly: 'Rebate yearly', alloc_min: 'Minimum alokasi batas cair per semester', min_yearly: 'Yearly % minimum', min_fr: 'Fixed rebate % minimum', min_sem: 'Semester % minimum' };
+  const SET_LABEL = { alloc_min: 'Minimum alokasi batas cair per semester', min_yearly: 'Yearly % minimum', min_fr: 'Fixed rebate % minimum', min_sem: 'Semester % minimum' };
   TAB.settings = {
     init: (p, ch) => ({ s: clone(ch.settings) }),
     data: (S) => S.s,
     html: (S, p, ch, ro) => {
       const s = S.s; const FRon = L.FR(p);
-      const swRow = (k, title, desc) => `<div class="cx-row" style="flex-wrap:nowrap;align-items:flex-start;gap:12px">${sw(s[k], `data-on="tg" data-f="${k}" aria-label="${title}"`)}<div class="cx-col" style="gap:2px"><span class="t-strong">${title}</span><span class="t-sm">${desc}</span></div></div>`;
       return `<div class="cx-col"><h2 class="t-h4">Pengaturan</h2><span class="t-sm">Mekanisme rebate dan batas minimum untuk channel ini. Batas maksimum berasal dari Matriks Kelas.</span></div>
         <fieldset ${ro ? 'disabled' : ''} class="cx-grid2" style="gap:24px;align-items:start;border:0;padding:0;margin:0">
-          <div class="cx-col" style="gap:20px"><h3 class="t-h5">Mekanisme</h3>
-            ${swRow('semester', 'Rebate semester', 'Target dan batas cair per semester (S1 dan S2).')}
-            ${swRow('yearly', 'Rebate yearly', 'Rebate tahunan berdasarkan growth yearly.')}
-            ${FRon ? `<div class="cx-soft"><span class="t-strong">${esc(L.frName(p))}</span><span class="t-sm">Aktif. Fixed rebate diatur di tingkat program, bukan di channel.</span></div>` : ''}
+          <div class="cx-col" style="gap:20px"><div class="cx-col"><h3 class="t-h5">Mekanisme</h3>
+            <span class="t-sm">Diatur di Informasi Program: ${[s.semester && 'rebate semester', s.yearly && 'rebate yearly', FRon && `fixed rebate ${esc(L.frName(p))}`].filter(Boolean).join(', ') || 'tidak ada'} aktif.</span></div>
             ${s.semester ? field('Minimum alokasi batas cair per semester', `<div class="cx-suffix"><input class="cx-in" data-k="alloc" data-inp="num" data-f="alloc_min" inputmode="decimal" value="${nv(s.alloc_min)}"><span>%</span></div>`, { help: 'Setiap sisi S1 dan S2 harus memenuhi minimum ini.' }) : ''}</div>
           <div class="cx-col" style="gap:20px"><div class="cx-col"><h3 class="t-h5">Batas Minimum Rate</h3><span class="t-sm">Semua isian opsional. Kosong berarti tidak ada batas bawah.</span></div>
             ${s.yearly ? field('Yearly % minimum', pctIn('mY', s.min_yearly, 'data-inp="num" data-f="min_yearly"')) : ''}
             ${FRon ? field(`${esc(L.frName(p))} % minimum`, pctIn('mF', s.min_fr, 'data-inp="num" data-f="min_fr"')) : ''}
             ${s.semester ? field('Semester % minimum', pctIn('mS', s.min_sem, 'data-inp="num" data-f="min_sem"')) : ''}
-            ${!s.yearly && !s.semester && !FRon ? '<span class="t-sm">Aktifkan minimal satu mekanisme rebate.</span>' : ''}</div></fieldset>`;
+            </div></fieldset>`;
     },
     on: () => ({ tg: (S, el) => { S.s[el.dataset.f] = !S.s[el.dataset.f]; }, num: (S, el) => { S.s[el.dataset.f] = numOrNull(el.value); } }),
     save: (S, p) => { const s = S.s; const e = [];
-      if (!s.semester && !s.yearly && !L.FR(p)) e.push('Aktifkan minimal satu mekanisme rebate.');
       if (s.semester && !(s.alloc_min > 0 && s.alloc_min <= 50)) e.push('Minimum alokasi batas cair per semester harus di antara 0 dan 50%.');
       return e; },
     note: (S, p, ch) => { const a = ch.settings; const b = S.s; const v = (k, x) => (typeof x === 'boolean' ? (x ? 'aktif' : 'nonaktif') : x === null || x === undefined ? 'kosong' : nv(x) + '%');

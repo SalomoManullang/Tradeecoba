@@ -80,8 +80,11 @@
   const programs = () => DB.t(T.programs);
   const program = (id) => DB.byId(T.programs, id);
   // yearly rebate selalu aktif (toggle di Pengaturan dihapus); data lama yang menonaktifkannya ikut dinormalkan
-  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid));
-  const channel = (id) => DB.byId(T.channels, id);
+  // mekanisme rebate (semester / yearly) diatur di Informasi Program dan berlaku untuk semua channel
+  const mechOf = (p) => ({ semester: !p || p.rebate_semester !== false, yearly: !p || p.rebate_yearly !== false });
+  const syncMech = (c) => { if (c && c.settings) Object.assign(c.settings, mechOf(DB.byId(T.programs, c.program_id))); return c; };
+  const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid)).map(syncMech);
+  const channel = (id) => syncMech(DB.byId(T.channels, id));
   const groupsOf = (p) => p.brand_groups || [];
   const stores = () => DB.t('lpStores');
   const store = (code) => stores().find((s) => s.code === code);

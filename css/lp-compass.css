@@ -207,3 +207,19 @@
 @media (max-width: 900px) { .cx .cx-apgrid { grid-template-columns: 1fr; } }
 .cx fieldset.cx-grid2, .cx fieldset.cx-col { min-width: 0; }
 .cx .cx-table input.cx-in.sm { height: 36px; }
+
+/* form pendaftaran toko (5 langkah + Ringkasan) */
+.cx .cx-sidecol { position: sticky; top: 88px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 1100px) { .cx .cx-sidecol { position: static; } }
+.cx .cx-brandrow { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 16px; }
+.cx .cx-brandrow.off { background: #FCFCFE; }
+.cx .cx-brandrow.off .t-h5, .cx .cx-brandrow.off .t-sm { color: #77848D; }
+.cx .cx-rgrid { display: grid; gap: 16px; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)) 180px; align-items: start; }
+.cx .cx-pgrid { display: grid; gap: 12px 16px; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+.cx .cx-frblock { display: flex; flex-direction: column; gap: 12px; padding: 14px 0; border-top: 1px solid #EBEBEB; }
+.cx .cx-frrow { display: grid; gap: 12px; align-items: end; }
+.cx .cx-chkrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; padding: 14px 0; border-top: 1px solid #EBEBEB; }
+.cx .cx-in.need { border-color: #FFCD00; background: #FFFBE4; }
+@media (max-width: 900px) { .cx .cx-rgrid { grid-template-columns: 1fr 1fr; } .cx .cx-frrow { grid-template-columns: 1fr 1fr !important; } .cx .cx-chkrow { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .cx .cx-frrow { grid-template-columns: 1fr !important; } .cx .cx-brandrow label { width: 100% !important; } }
+.cx .cx-frrow select.cx-in { padding-right: 4px; }

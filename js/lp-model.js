@@ -70,7 +70,7 @@
   function newChannel(programId, code) {
     return {
       program_id: programId, channel_code: code, reg_status: 'DRAFT', pay_status: 'DRAFT', reg_published_at: null, pay_published_at: null,
-      saved: {}, settings: { semester: true, yearly: true, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null },
+      saved: {}, settings: { semester: true, yearly: true, ratio_s1: 50, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null },
       matrix: {}, fr: DEFAULT_FR(), layers: { REGISTRATION: [], PAYOUT: [] }, payout_rules: { ratio_min: 95, carry_over: false },
       mou: { revisions: [], docs: DEFAULT_DOCS() }, extra_phases: [], audit: [], updated_at: now(),
     };
@@ -82,7 +82,9 @@
   // yearly rebate selalu aktif (toggle di Pengaturan dihapus); data lama yang menonaktifkannya ikut dinormalkan
   // mekanisme rebate (semester / yearly) diatur di Informasi Program dan berlaku untuk semua channel
   const mechOf = (p) => ({ semester: !p || p.rebate_semester !== false, yearly: !p || p.rebate_yearly !== false });
-  const syncMech = (c) => { if (c && c.settings) Object.assign(c.settings, mechOf(DB.byId(T.programs, c.program_id))); return c; };
+  const syncMech = (c) => { if (c && c.settings) { Object.assign(c.settings, mechOf(DB.byId(T.programs, c.program_id))); if (!isFinite(c.settings.ratio_s1) || c.settings.ratio_s1 === null) c.settings.ratio_s1 = 50; } return c; };
+  // rasio pencairan semester (S1 : S2) dari Pengaturan channel
+  const ratioOf = (ch) => { const a = ch && ch.settings && isFinite(ch.settings.ratio_s1) && ch.settings.ratio_s1 !== null ? Number(ch.settings.ratio_s1) : 50; return { s1: a, s2: 100 - a }; };
   const channels = (pid) => DB.where(T.channels, (c) => c.program_id === Number(pid)).map(syncMech);
   const channel = (id) => syncMech(DB.byId(T.channels, id));
   const groupsOf = (p) => p.brand_groups || [];
@@ -165,7 +167,8 @@
   const tierOf = (k, g) => { let t = -1; if (k && isFinite(g)) k.tiers.forEach((x, i) => { if (g >= x.g) t = i; }); return t; };
   const near = (a, b) => Math.abs(a - b) < 0.0001;
 
-  // u = input unit (dari registrasi / simulasi): { joined, tag, growth, g1, g2, s1, sem, yr, fr, plan }
+  // u = input unit (dari registrasi / simulasi): { joined, tag, growth, sem, yr, fr, plan }
+  // Target semester tidak diisi per toko: target S1 / S2 = target yearly x rasio pencairan semester di Pengaturan channel.
   function calcUnit(p, ch, g, codes, u, opt = {}) {
     const S = ch.settings; const frOn = FR(p);
     const sales = opt.sales || salesFor(codes, g.members);
@@ -174,15 +177,15 @@
     const tag = u.tag || recTag;
     const base = joined ? (tag === 'SI' ? sales.si : sales.so) : 0;
     const cls = ch.matrix[g.id] || [];
-    const g0 = pnum(u.growth), g1 = pnum(u.g1), g2 = pnum(u.g2);
-    const gOk = isFinite(g0), g1Ok = isFinite(g1), g2Ok = isFinite(g2);
+    const g0 = pnum(u.growth); const gOk = isFinite(g0); const g1 = g0, g2 = g0;
     const monthly = base * (1 + (gOk ? g0 : 0) / 100);
     const annual = monthly * 12;
-    const t1 = S.semester ? base * (1 + (g1Ok ? g1 : 0) / 100) * 6 : 0;
-    const t2 = S.semester ? base * (1 + (g2Ok ? g2 : 0) / 100) * 6 : 0;
+    const ratio = ratioOf(ch);
+    const t1 = S.semester ? annual * ratio.s1 / 100 : 0;
+    const t2 = S.semester ? annual * ratio.s2 / 100 : 0;
     const semAnnual = t1 + t2;
-    const gsOk = S.semester && g1Ok && g2Ok && base > 0;
-    const gs = gsOk ? (semAnnual / (base * 12) - 1) * 100 : NaN;
+    const gsOk = S.semester && gOk && base > 0;
+    const gs = gsOk ? g0 : NaN;
     let k = joined ? findClass(cls, base) : null;
     const viaExc = !!opt.viaException && joined && !k && cls.length && base > 0 && base < cls[0].bmin * 1e6;
     if (viaExc) k = cls[0];
@@ -209,7 +212,7 @@
     const incomplete = !frOn || !joined ? 0 : (fset.rent.on ? P.rent.filter((r) => !rpNum(r.val) || (codes.length > 1 && !r.store)).length : 0)
       + (fset.act.on ? P.act.filter((r) => (r.on ? !rpNum(r.val) : !String(r.note || '').trim()) || (codes.length > 1 && !r.store)).length : 0)
       + (fset.oth.on ? P.oth.filter((r) => (r.on ? !String(r.obj || '').trim() || !rpNum(r.val) : !String(r.note || '').trim()) || (codes.length > 1 && !r.store)).length : 0);
-    return { g, u, joined, sales, recTag, tag, base, g0, gOk, g1, g2, gs, gsOk, monthly, annual, t1, t2, semAnnual, k, viaExc, tierY, tierS, rec, semV, yrV, frV, total, cap,
+    return { g, u, joined, sales, recTag, tag, base, g0, gOk, g1, g2, gs, gsOk, monthly, annual, ratio, t1, t2, semAnnual, semS1: semBudget * ratio.s1 / 100, semS2: semBudget * ratio.s2 / 100, k, viaExc, tierY, tierS, rec, semV, yrV, frV, total, cap,
       semBudget, yrRp, frBudget, totalRp: semBudget + yrRp + frBudget, rentSum, actSum, othSum, used: joined && frOn ? rentSum + actSum + othSum : 0, incomplete };
   }
 
@@ -218,21 +221,25 @@
     const S = ch.settings; const out = [];
     const add = (c, code, label, kind) => out.push({ unit: c.g.name, code, label, kind, key: code + '_' + c.g.id });
     const tiers0 = (c) => (c.k && c.k.tiers[0] ? c.k.tiers[0].g : NaN);
+    const out_ = calc.filter((c) => !c.joined);
+    if (out_.length && out_.length < calc.length) out.push({ unit: 'Pengajuan', code: 'BRAND_EXCLUDED', label: `Toko tidak ikut ${out_.map((c) => c.g.name).join(', ')}. Tidak ada target, rebate, dan Fixed Rebate Detail untuk group brand ini; tidak masuk MOU.`, kind: 'info', key: 'BRAND_EXCLUDED' });
     calc.forEach((c) => {
-      if (!c.joined) { add(c, 'BRAND_EXCLUDED', 'Toko tidak ikut group brand ini. Tidak ada target, rebate, dan Fixed Rebate Detail; tidak masuk MOU.', 'info'); return; }
+      if (!c.joined) return;
       if (!c.base) { add(c, 'NO_SALES', 'Belum ada data penjualan untuk group brand ini.', 'hard'); return; }
+      if (!c.gOk) add(c, 'GROWTH_EMPTY', 'Growth yearly belum diisi.', 'hard');
       if (!c.k) add(c, 'OUTSIDE_CLASS', `Baseline ${fj(c.base)} di luar semua kelas${(ch.matrix[c.g.id] || [])[0] ? ` (kelas terendah mulai ${fj(ch.matrix[c.g.id][0].bmin * 1e6)})` : ''}. Rate diisi manual.`, 'appr');
-      else if ((S.yearly && c.tierY < 0) || (S.semester && c.tierS < 0)) add(c, 'BELOW_LOWEST_TIER', [S.yearly && c.tierY < 0 ? `Growth yearly ${c.gOk ? c.g0 : 0}%` : '', S.semester && c.tierS < 0 ? `growth semester gabungan ${c.gsOk ? fp(c.gs) : '0'}%` : ''].filter(Boolean).join(' dan ') + ` di bawah tier terendah (${tiers0(c)}%).`, 'appr');
+      else if ((S.yearly && c.tierY < 0) || (S.semester && c.tierS < 0)) add(c, 'BELOW_LOWEST_TIER', `Growth yearly ${c.gOk ? c.g0 : 0}% di bawah tier terendah (${tiers0(c)}%).`, 'appr');
       const keys = [S.semester && 'sem', S.yearly && 'yr', FR(p) && 'fr'].filter(Boolean);
       if (keys.some((key) => c.u[key] !== null && c.u[key] !== undefined && String(c.u[key]).trim() !== '' && c.rec[key] !== null && !near(pnum(c.u[key]), c.rec[key]))) add(c, 'RATE_CHANGED', 'Rate berbeda dari rekomendasi tier.', 'appr');
       const below = (S.semester && isFinite(S.min_sem) && isFinite(c.semV) && c.semV < S.min_sem) || (S.yearly && isFinite(S.min_yearly) && isFinite(c.yrV) && c.yrV < S.min_yearly) || (FR(p) && isFinite(S.min_fr) && isFinite(c.frV) && c.frV < S.min_fr);
       if (below) add(c, 'RATE_BELOW_MIN', 'Ada rate di bawah minimum channel.', 'appr');
-      if (FR(p) && c.used > c.frBudget) add(c, 'VALUE_OVER_BUDGET', `Nilai Fixed Rebate Detail ${fj(c.used)} melebihi budget fixed rebate ${fj(c.frBudget)}.`, 'appr');
-      if (S.semester) { const s1 = pnum(c.u.s1); if (!(s1 >= S.alloc_min && 100 - s1 >= S.alloc_min)) add(c, 'SPLIT_INVALID', `Pembagian batas cair harus minimal ${S.alloc_min}% per semester.`, 'hard'); }
       if (c.incomplete) add(c, 'FR_INCOMPLETE', `Lengkapi ${c.incomplete} baris Fixed Rebate Detail (isian wajib masih kosong).`, 'hard');
       if (c.tag !== c.recTag) add(c, 'TAGGING_CHANGED', `Tagging diubah dari rekomendasi sistem (${c.recTag === 'SI' ? 'Sell In' : 'Sell Out'}, nilai terbesar).`, 'info');
-      if (isFinite(c.cap) && c.total > c.cap + 0.0001) add(c, 'TOTAL_OVER_CAP', `Total ${fp(c.total)}% melebihi maks tier ${fp(c.cap)}%.`, 'hard');
+      if (isFinite(c.cap) && c.total > c.cap + 0.0001) add(c, 'TOTAL_OVER_CAP', `Total ${fp(c.total)}% melebihi maksimum tier ${fp(c.cap)}%.`, 'appr');
     });
+    // budget Fixed Rebate Detail dihitung untuk seluruh pengajuan (semua group brand yang diikuti)
+    const jn = calc.filter((c) => c.joined); const usedAll = jn.reduce((a, c) => a + c.used, 0); const budAll = jn.reduce((a, c) => a + c.frBudget, 0);
+    if (FR(p) && usedAll > budAll + 0.5) out.push({ unit: 'Fixed Rebate Detail', code: 'VALUE_OVER_BUDGET', label: `Total bernilai ${fj(usedAll)} melebihi budget fixed rebate ${fj(budAll)}.`, kind: 'appr', key: 'VALUE_OVER_BUDGET' });
     if (calc.length && calc.every((c) => !c.joined)) out.push({ unit: 'Pengajuan', code: 'NO_BRAND_JOINED', label: 'Minimal satu group brand harus ikut.', kind: 'hard', key: 'NB' });
     return out;
   }
@@ -246,7 +253,7 @@
       OUTSIDE_CLASS: has('OUTSIDE_CLASS'), BELOW_LOWEST_TIER: has('BELOW_LOWEST_TIER'), RATE_CHANGED: has('RATE_CHANGED'), RATE_BELOW_MIN: has('RATE_BELOW_MIN'),
       VALUE_OVER_BUDGET: has('VALUE_OVER_BUDGET'), BRAND_EXCLUDED: calc.some((c) => !c.joined), TAGGING_CHANGED: has('TAGGING_CHANGED'),
       GROWTH_YEARLY_MIN: min(inc.filter((c) => c.gOk).map((c) => c.g0)),
-      GROWTH_SEMESTER_MIN: min(inc.flatMap((c) => [c.g1, c.g2].filter(isFinite))),
+      GROWTH_SEMESTER_MIN: min(inc.filter((c) => c.gOk).map((c) => c.g0)),
       TOTAL_PCT_MAX: max(inc.map((c) => c.total)),
       TOTAL_TARGET: calc.reduce((a, c) => a + (c.joined ? c.annual : 0), 0) / 1e6,
     };
@@ -351,7 +358,7 @@
 
   // ---------------------------------------------------------------- pengajuan: hitung semua group brand + rute
   const blankPlan = () => ({ rent: [], act: [], oth: [] });
-  const blankUnit = (ch) => ({ joined: true, tag: null, growth: '', g1: '', g2: '', s1: '50', sem: null, yr: null, fr: null, plan: blankPlan(), _alloc: ch ? ch.settings.alloc_min : 30 });
+  const blankUnit = (ch) => ({ joined: true, tag: null, growth: '', sem: null, yr: null, fr: null, plan: blankPlan(), _alloc: ch ? ch.settings.alloc_min : 30 });
   function regCalc(r) {
     const p = program(r.program_id); const ch = channel(r.channel_id);
     const calc = groupsOf(p).map((g) => calcUnit(p, ch, g, r.codes, r.units[g.id] || blankUnit(ch), { viaException: r.via_exception }));
@@ -383,6 +390,6 @@
     programs, program, channels, channel, groupsOf, stores, store, custGroups, custGroup, groupOfStore, regs, reg, exceptions,
     FR, frName, TABS, tabsOf, matrixErrors, tabDone, completeness, channelStatus, programStatus, programClosed, STATUS_CHIP, regOpen, editable, layersErrors,
     salesFor, findClass, tierOf, calcUnit, checksOf, factsOf, testCond, phraseOf, buildRoute, sentenceOf,
-    REG_STATUS, participants, participant, eligibility, exceptionOf, activeReg, audit, touchProgram, chip, statusChip, sw, view,
+    ratioOf, REG_STATUS, participants, participant, eligibility, exceptionOf, activeReg, audit, touchProgram, chip, statusChip, sw, view,
   };
 })();

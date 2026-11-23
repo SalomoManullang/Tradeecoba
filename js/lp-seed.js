@@ -80,7 +80,7 @@
       const ch = Object.assign(LP.newChannel(p.id, code), o);
       for (const g of p.brand_groups) ch.matrix[g.id] = mkMatrix(g.name);
       ch.layers = { REGISTRATION: REG_LAYERS(), PAYOUT: PAY_LAYERS() };
-      ch.settings = { semester: true, yearly: true, alloc_min: 30, min_yearly: 0.5, min_fr: null, min_sem: 0.5 };
+      ch.settings = { semester: true, yearly: true, ratio_s1: 50, alloc_min: 30, min_yearly: 0.5, min_fr: null, min_sem: 0.5 };
       ch.mou.revisions = [{ no: 1, file: 'MOU_LP2027_rev1.docx', note: 'Disalin dari LP-2026-001', by: admin.name, at: '2026-10-28T09:00:00Z' },
         { no: 2, file: 'MOU_LP2027_rev2.docx', note: 'Nama penanda tangan Paragon ditambahkan', by: admin.name, at: '2026-10-30T09:00:00Z' }];
       ch.saved = { settings: true, matrix: true, fr: true, approval: true, mou: true };
@@ -104,7 +104,7 @@
       if (!ch.saved.matrix) ch.matrix = {};
       if (!ch.saved.approval) ch.layers.REGISTRATION = [];
       if (!ch.saved.mou) ch.mou.revisions = [];
-      if (!ch.saved.settings) ch.settings = { semester: true, yearly: true, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null };
+      if (!ch.saved.settings) ch.settings = { semester: true, yearly: true, ratio_s1: 50, alloc_min: 30, min_yearly: null, min_fr: null, min_sem: null };
       ch.audit = ch.audit.filter((a) => ch.saved[a.key]); for (const k of Object.keys(ch.saved_at)) if (!ch.saved[k]) delete ch.saved_at[k];
       return ch;
     };

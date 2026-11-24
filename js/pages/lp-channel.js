@@ -92,7 +92,7 @@
 
   // ---------------------------------------------------------------- langkah Fase Pendaftaran
   const TAB = {};
-  const SET_LABEL = { ratio_s1: 'Rasio pencairan S1', alloc_min: 'Minimum alokasi batas cair per semester', min_yearly: 'Yearly % minimum', min_fr: 'Fixed rebate % minimum', min_sem: 'Semester % minimum' };
+  const SET_LABEL = { ratio_s1: 'Rasio pencairan S1', min_yearly: 'Yearly % minimum', min_fr: 'Fixed rebate % minimum', min_sem: 'Semester % minimum' };
   TAB.settings = {
     init: (p, ch) => ({ s: clone(ch.settings) }),
     data: (S) => S.s,
@@ -102,14 +102,13 @@
         <fieldset ${ro ? 'disabled' : ''} class="cx-grid2" style="gap:24px;align-items:start;border:0;padding:0;margin:0">
           <div class="cx-col" style="gap:20px"><div class="cx-col"><h3 class="t-h5">Mekanisme</h3>
             <span class="t-sm">Diatur di Informasi Program: ${[s.semester && 'rebate semester', s.yearly && 'rebate yearly', FRon && `fixed rebate ${esc(L.frName(p))}`].filter(Boolean).join(', ') || 'tidak ada'} aktif.</span></div>
-            ${s.semester ? (() => { const r1 = isFinite(s.ratio_s1) && s.ratio_s1 !== null ? s.ratio_s1 : NaN; const r2 = isFinite(r1) ? 100 - r1 : NaN; const bad = !(r1 >= s.alloc_min && r2 >= s.alloc_min);
+            ${s.semester ? (() => { const r1 = isFinite(s.ratio_s1) && s.ratio_s1 !== null ? s.ratio_s1 : NaN; const r2 = isFinite(r1) ? 100 - r1 : NaN; const bad = !(r1 > 0 && r2 > 0);
               return `<div class="cx-col" style="gap:16px"><div class="cx-col"><h3 class="t-h5">Pencairan Semester</h3><span class="t-sm">Target dan pencairan semester toko dibagi dengan rasio ini. CBD tidak mengisi pembagian per toko.</span></div>
               <div class="cx-field"><span class="cx-label">Pembagian rasio pencairan semester</span>
                 <div class="cx-grid2" style="gap:12px"><label class="cx-col" style="gap:6px"><span class="t-sm-b">S1 · Jan – Jun</span><div class="cx-suffix"><input class="cx-in ${bad ? 'bad' : ''}" data-k="r1" data-chg="ratio" data-f="s1" inputmode="decimal" value="${nv(r1)}" aria-label="Rasio S1 (%)"><span>%</span></div></label>
                   <label class="cx-col" style="gap:6px"><span class="t-sm-b">S2 · Jul – Des</span><div class="cx-suffix"><input class="cx-in ${bad ? 'bad' : ''}" data-k="r2" data-chg="ratio" data-f="s2" inputmode="decimal" value="${nv(r2)}" aria-label="Rasio S2 (%)"><span>%</span></div></label></div>
                 <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#EBEBEB" role="img" aria-label="Rasio S1 ${nv(r1)}% dan S2 ${nv(r2)}%"><div style="width:${isFinite(r1) ? Math.max(0, Math.min(100, r1)) : 0}%;background:#304DDE"></div><div style="flex:1;background:#ADB7F2"></div></div>
-                ${bad ? `<span class="cx-err">S1 dan S2 masing-masing minimal ${nv(s.alloc_min)}% dan jumlahnya 100%.</span>` : `<span class="cx-help">S1 ${nv(r1)}% : S2 ${nv(r2)}%. Isi salah satu, sisi lain menyesuaikan otomatis.</span>`}</div>
-              ${field('Minimum alokasi batas cair per semester', `<div class="cx-suffix"><input class="cx-in" data-k="alloc" data-inp="num" data-f="alloc_min" inputmode="decimal" value="${nv(s.alloc_min)}"><span>%</span></div>`, { help: 'Setiap sisi S1 dan S2 harus memenuhi minimum ini.' })}</div>`; })() : ''}</div>
+                ${bad ? '<span class="cx-err">S1 dan S2 harus di antara 0 dan 100%, jumlahnya 100%.</span>' : `<span class="cx-help">S1 ${nv(r1)}% : S2 ${nv(r2)}%. Isi salah satu, sisi lain menyesuaikan otomatis.</span>`}</div></div>`; })() : ''}</div>
           <div class="cx-col" style="gap:20px"><div class="cx-col"><h3 class="t-h5">Batas Minimum Rate</h3><span class="t-sm">Semua isian opsional. Kosong berarti tidak ada batas bawah.</span></div>
             ${s.yearly ? field('Yearly % minimum', pctIn('mY', s.min_yearly, 'data-inp="num" data-f="min_yearly"')) : ''}
             ${FRon ? field(`${esc(L.frName(p))} % minimum`, pctIn('mF', s.min_fr, 'data-inp="num" data-f="min_fr"')) : ''}
@@ -119,8 +118,7 @@
     on: () => ({ tg: (S, el) => { S.s[el.dataset.f] = !S.s[el.dataset.f]; }, num: (S, el) => { S.s[el.dataset.f] = numOrNull(el.value); },
       ratio: (S, el) => { const v = numOrNull(el.value); S.s.ratio_s1 = v === null ? null : el.dataset.f === 's1' ? v : 100 - v; } }),
     save: (S, p) => { const s = S.s; const e = [];
-      if (s.semester && !(s.alloc_min > 0 && s.alloc_min <= 50)) e.push('Minimum alokasi batas cair per semester harus di antara 0 dan 50%.');
-      if (s.semester && !(s.ratio_s1 >= s.alloc_min && 100 - s.ratio_s1 >= s.alloc_min)) e.push(`Rasio pencairan semester: S1 dan S2 masing-masing minimal ${nv(s.alloc_min)}%.`);
+      if (s.semester && !(s.ratio_s1 > 0 && s.ratio_s1 < 100)) e.push('Rasio pencairan semester: S1 dan S2 harus di antara 0 dan 100%.');
       return e; },
     note: (S, p, ch) => { const a = ch.settings; const b = S.s; const v = (k, x) => (typeof x === 'boolean' ? (x ? 'aktif' : 'nonaktif') : x === null || x === undefined ? 'kosong' : nv(x) + '%');
       const d = Object.keys(SET_LABEL).filter((k) => a[k] !== b[k]).map((k) => `${SET_LABEL[k]}: ${v(k, a[k])} menjadi ${v(k, b[k])}`); return d.join('; ') || 'Menyimpan pengaturan'; },
@@ -347,7 +345,7 @@
     const frParts = [ch.fr.rent.on && `Visibility Rent ${ch.fr.rent.items.length} pilihan`, ch.fr.act.on && `Aktivitas ${ch.fr.act.items.length} pilihan`, ch.fr.oth.on && 'Lainnya'].filter(Boolean);
     const req = ch.mou.docs.filter((d) => d.req);
     return {
-      settings: [`${mech.length ? mech.map((x, i) => (i ? x : x[0].toUpperCase() + x.slice(1))).join(' dan ') + ' aktif' : 'Tanpa semester dan yearly'}${s.semester ? `, rasio S1 ${nv(L.ratioOf(ch).s1)}% : S2 ${nv(L.ratioOf(ch).s2)}%, minimum alokasi ${nv(s.alloc_min)}%` : ''}`,
+      settings: [`${mech.length ? mech.map((x, i) => (i ? x : x[0].toUpperCase() + x.slice(1))).join(' dan ') + ' aktif' : 'Tanpa semester dan yearly'}${s.semester ? `, rasio S1 ${nv(L.ratioOf(ch).s1)}% : S2 ${nv(L.ratioOf(ch).s2)}%` : ''}`,
         `${mech.length ? 'Rebate ' + mech.join(' dan ') + ' aktif' : 'Rebate semester dan yearly nonaktif'}${L.FR(p) ? `; fixed rebate ${L.frName(p)} aktif` : ''}`],
       matrix: [`${gs.length} group brand, ${clsN.length === 1 ? clsN[0] : clsN.join('–')} kelas dan ${tierN.length === 1 ? tierN[0] : tierN.join('–')} tier per kelas`, `${gs.map((g) => g.name).join(', ')}: ${clsN.length === 1 ? clsN[0] : clsN.join('–')} kelas per group brand`],
       fr: [frParts.join(', ') || 'Semua bagian disembunyikan', frParts.length ? [ch.fr.rent.on && 'Visibility Rent', ch.fr.act.on && 'Aktivitas', ch.fr.oth.on && 'Lainnya'].filter(Boolean).join(', ') + ' tampil' : 'Tidak ada bagian yang tampil'],

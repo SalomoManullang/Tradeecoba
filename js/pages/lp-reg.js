@@ -151,12 +151,17 @@
                 const k = c.k || (out ? L.findClass(ch.matrix[c.g.id] || [], bv) : null);
                 const kTag = !has ? tag('Tanpa penjualan', 'plain') : k ? tag(`Kelas ${k.code}${c.viaExc ? ' (exception)' : ''}`, 'info plain') : tag('Di luar kelas', 'warn plain');
                 return `<div class="cx-sub cx-brandrow ${out ? 'off' : ''}">${sw(c.joined, `data-on="ikut" data-g="${c.g.id}" aria-label="Ikut ${esc(c.g.name)}"`)}
-                  <div class="cx-col" style="flex:1 1 240px"><span class="t-h5">${esc(c.g.name)}</span><span class="t-sm">${has ? `Baseline rata-rata ${jt(bv)} per bulan · 6 bulan terakhir` : 'Belum ada data penjualan untuk group brand ini'}</span></div>
+                  <div class="cx-col" style="flex:1 1 240px"><span class="t-h5">${esc(c.g.name)}</span><span class="t-sm">${has ? `${tagNow === 'SI' ? '<b>' : ''}Sell-in (SI) ${jt(c.sales.si)}${tagNow === 'SI' ? '</b>' : ''} · ${tagNow === 'SO' ? '<b>' : ''}Sell-out (SO) ${jt(c.sales.so)}${tagNow === 'SO' ? '</b>' : ''} per bulan · rata-rata 6 bulan terakhir` : 'Belum ada data penjualan untuk group brand ini'}</span>
+                    ${has && k ? `<span class="t-sm">Kelas ${esc(k.code)}: baseline ${jt(k.bmin * 1e6)}${k.bmax !== null && isFinite(k.bmax) ? ' – ' + jt(k.bmax * 1e6) : ' ke atas'} · growth minimum ${nv(k.tiers[0] ? k.tiers[0].g : NaN)}% untuk tier 1 · ${k.tiers.length} tier</span>` : ''}</div>
                   <span style="${out ? 'opacity:.6' : ''}">${kTag}</span>
                   <label class="cx-col" style="gap:6px;width:220px"><span class="t-sm-b">Tagging</span><select class="cx-in md" data-chg="tag" data-g="${c.g.id}" ${out ? 'disabled' : ''} aria-label="Tagging ${esc(c.g.name)}"><option value="SI" ${tagNow === 'SI' ? 'selected' : ''}>Sell-in (SI)</option><option value="SO" ${tagNow === 'SO' ? 'selected' : ''}>Sell-out (SO)</option></select>
                     ${!out && c.tag !== c.recTag ? `<span class="cx-help">Rekomendasi sistem: ${c.recTag === 'SI' ? 'Sell-in' : 'Sell-out'}</span>` : ''}</label></div>`; }).join('')}`;
           }
-          // ---- 2 · Target
+          // ---- 2 · Target (beserta tabel tier kelas: growth minimum dan rate tiap tier)
+          const tierInfo = (k, cur) => (!k || !k.tiers.length ? '' : `<div class="cx-col" style="gap:8px"><span class="t-sm-b">Tier Kelas ${esc(k.code)} · growth minimum ${nv(k.tiers[0].g)}% untuk masuk tier 1</span>
+            <div class="cx-table sm"><table><thead><tr><th>Tier</th><th>Growth yearly</th>${set.semester ? '<th class="num">Semester</th>' : ''}${set.yearly ? '<th class="num">Yearly</th>' : ''}${FRon ? `<th class="num">${esc(FRN)}</th>` : ''}<th class="num">Maksimum total</th></tr></thead><tbody>
+            ${k.tiers.map((t, i) => { const on = i === cur; const nx = k.tiers[i + 1]; return `<tr class="${on ? 'sel' : ''}"><td>${on ? '<b>' : ''}Tier ${i + 1}${on ? ' · saat ini</b>' : ''}</td><td>${nx ? `${nv(t.g)}% sampai di bawah ${nv(nx.g)}%` : `${nv(t.g)}% ke atas`}</td>
+              ${set.semester ? `<td class="num">${pc(t.sem)}</td>` : ''}${set.yearly ? `<td class="num">${pc(t.yr)}</td>` : ''}${FRon ? `<td class="num">${pc(k.fr)}</td>` : ''}<td class="num">${pc((set.semester ? t.sem || 0 : 0) + (set.yearly ? t.yr || 0 : 0) + (FRon ? k.fr || 0 : 0))}</td></tr>`; }).join('')}</tbody></table></div></div>`);
           if (key === 'target') {
             body = `<div class="cx-col"><h2 class="t-h4">Target</h2><span class="t-sm">${set.semester ? `Isi growth yearly. Target S1 dan S2 dihitung dari rasio pencairan semester di setup (S1 ${nv(ratio.s1)}% · S2 ${nv(ratio.s2)}%).` : 'Isi growth yearly untuk menghitung target yearly.'}</span></div>
               ${tg.map((c) => { const u = S.units[c.g.id]; const tn = set.yearly ? c.tierY : c.tierS;
@@ -165,7 +170,8 @@
                 return `<div class="cx-sub"><div class="cx-between"><span class="t-h5">${esc(c.g.name)}</span>${tierTag}</div>
                   <div class="cx-grid3" style="align-items:stretch"><div class="cx-field"><span class="cx-label">Growth yearly</span><div class="cx-suffix"><input class="cx-in" data-k="gy${c.g.id}" data-inp="uIn" data-f="growth" data-g="${c.g.id}" inputmode="decimal" value="${esc(u.growth)}" aria-label="Growth yearly ${esc(c.g.name)} (%)"><span>%</span></div>
                     <span class="cx-help">Target yearly: <b>${c.gOk ? jt(c.annual) : '—'}</b></span></div>
-                    ${set.semester ? [['S1 · Jan – Jun', c.t1, ratio.s1], ['S2 · Jul – Des', c.t2, ratio.s2]].map(([l, v, rr]) => `<div class="cx-soft"><span class="t-sm-b">Target ${l}</span><span class="t-h5">${c.gOk ? jt(v) : '—'}</span><span class="t-sm">${nv(rr)}% dari target yearly</span></div>`).join('') : ''}</div></div>`; }).join('') || '<span class="t-sm">Belum ada group brand yang diikuti.</span>'}`;
+                    ${set.semester ? [['S1 · Jan – Jun', c.t1, ratio.s1], ['S2 · Jul – Des', c.t2, ratio.s2]].map(([l, v, rr]) => `<div class="cx-soft"><span class="t-sm-b">Target ${l}</span><span class="t-h5">${c.gOk ? jt(v) : '—'}</span><span class="t-sm">${nv(rr)}% dari target yearly</span></div>`).join('') : ''}</div>
+                  ${tierInfo(c.k, c.gOk ? tn : -1)}</div>`; }).join('') || '<span class="t-sm">Belum ada group brand yang diikuti.</span>'}`;
           }
           // ---- 3 · Rate dan Batas Cair
           if (key === 'rate') {
